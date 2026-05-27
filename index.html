@@ -8,11 +8,28 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
-.app{display:flex;height:680px;width:100%;max-width:900px;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;background:#fff;}
-.sidebar{width:240px;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;flex-shrink:0;background:#fff;}
-.sidebar-header{padding:14px 14px 10px;border-bottom:1px solid #e5e5e5;}
-.campaign-tag{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;}
-.campaign-name{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:8px;word-break:break-word;}
+.app{display:flex;flex-direction:column;height:700px;width:100%;max-width:920px;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;background:#fff;}
+
+/* Top campaign bar */
+.campaign-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #e5e5e5;background:#fafafa;flex-shrink:0;}
+.campaign-bar-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+.campaign-select-wrap{position:relative;flex:1;max-width:260px;}
+.campaign-select-wrap select{width:100%;padding:5px 28px 5px 10px;font-size:13px;font-weight:500;color:#1a1a1a;background:#fff;border:1px solid #e0e0e0;border-radius:7px;outline:none;appearance:none;cursor:pointer;}
+.campaign-select-wrap select:focus{border-color:#ccc;}
+.campaign-select-wrap .ti{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:13px;color:#aaa;pointer-events:none;}
+.bar-btn{font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.bar-btn:hover{background:#f5f5f5;}
+.bar-btn.new{border-color:#7F77DD55;color:#534AB7;background:#f0efff;}
+.bar-btn.new:hover{background:#e4e2ff;}
+.bar-btn.danger{color:#e24b4a;border-color:#e24b4a44;}
+.bar-btn.danger:hover{background:#fff5f5;}
+.campaign-badge{font-size:10px;padding:3px 8px;border-radius:20px;background:#1D9E7510;color:#1D9E75;border:1px solid #1D9E7530;white-space:nowrap;}
+.bar-spacer{flex:1;}
+
+/* Body */
+.body-wrap{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:230px;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;flex-shrink:0;background:#fff;}
+.sidebar-header{padding:10px 12px;border-bottom:1px solid #e5e5e5;}
 .header-actions{display:flex;gap:5px;flex-wrap:wrap;}
 .hbtn{font-size:11px;padding:4px 8px;border-radius:7px;border:1px solid #e0e0e0;background:transparent;color:#555;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
 .hbtn:hover{background:#f5f5f5;}
@@ -34,7 +51,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ppill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:20px;flex-shrink:0;background:#f0f0f0;color:#aaa;}
 .empty-msg{font-size:12px;color:#aaa;text-align:center;padding:16px 8px;}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:#fff;}
-.main-header{padding:14px 18px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.main-header{padding:12px 18px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .main-title{font-size:14px;font-weight:600;color:#1a1a1a;}
 .main-sub{font-size:11px;color:#aaa;margin-top:2px;}
 .sbadge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid;cursor:pointer;white-space:nowrap;}
@@ -56,6 +73,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .fbtn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#1a1a1a;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;}
 .fbtn:hover{background:#f5f5f5;}
 mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
+
+/* Overlay */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.25);z-index:100;align-items:flex-start;justify-content:center;padding-top:40px;}
 .overlay.open{display:flex;}
 .panel{background:#fff;border-radius:12px;border:1px solid #e5e5e5;width:500px;max-height:580px;display:flex;flex-direction:column;overflow:hidden;}
@@ -82,11 +101,10 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
 .dibtn{font-size:12px;color:#bbb;background:none;border:none;cursor:pointer;padding:2px 3px;opacity:0;}
 .irow:hover .dibtn{opacity:1;}
 .dibtn:hover{color:#e24b4a;}
-.ai-area{display:flex;flex-direction:column;gap:10px;}
 .ai-textarea{width:100%;min-height:160px;font-size:12px;padding:10px;border-radius:8px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;resize:vertical;outline:none;font-family:inherit;}
 .ai-textarea:focus{border-color:#ccc;background:#fff;}
-.ai-status{font-size:12px;color:#aaa;min-height:18px;}
-.ai-hint{font-size:11px;color:#aaa;line-height:1.6;}
+.ai-status{font-size:12px;color:#aaa;min-height:18px;margin-top:6px;}
+.hint{font-size:11px;color:#aaa;line-height:1.6;margin-bottom:10px;}
 .drop-zone{border:1.5px dashed #ddd;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:background 0.1s;}
 .drop-zone:hover,.drop-zone.drag{background:#f5f5f5;}
 .drop-zone p{font-size:12px;color:#666;margin-top:6px;}
@@ -95,60 +113,75 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
 .csv-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:11px;color:#1a1a1a;}
 .csv-row:last-child{border-bottom:none;}
 .csv-row span{color:#aaa;}
-.notion-area{display:flex;flex-direction:column;gap:10px;}
-.notion-input{width:100%;padding:8px 10px;font-size:12px;border-radius:8px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;outline:none;font-family:inherit;}
+.notion-input{width:100%;padding:8px 10px;font-size:12px;border-radius:8px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;outline:none;font-family:inherit;margin-bottom:8px;}
 .notion-input:focus{border-color:#ccc;background:#fff;}
-.notion-hint{font-size:11px;color:#aaa;line-height:1.6;}
-.notion-status{font-size:12px;min-height:18px;}
+.field-label{font-size:11px;color:#aaa;margin-bottom:4px;display:block;}
 .apply-btn{font-size:11px;font-weight:500;padding:6px 14px;border-radius:7px;border:1px solid #1D9E7555;background:#1D9E7510;color:#1D9E75;cursor:pointer;}
 .apply-btn:hover{background:#1D9E7520;}
 .ai-gen-btn{font-size:11px;font-weight:500;padding:6px 14px;border-radius:7px;border:1px solid #7F77DD55;background:#f0efff;color:#534AB7;cursor:pointer;display:flex;align-items:center;gap:5px;}
 .ai-gen-btn:hover{background:#e4e2ff;}
 .ai-gen-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.new-campaign-form{display:flex;flex-direction:column;gap:10px;}
+.nc-input{width:100%;padding:8px 10px;font-size:13px;border-radius:8px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;outline:none;font-family:inherit;}
+.nc-input:focus{border-color:#ccc;background:#fff;}
 </style>
 </head>
 <body>
-
 <div class="app">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div class="campaign-tag">Campaign</div>
-      <div class="campaign-name" id="campaignName">No campaign loaded</div>
-      <div class="header-actions">
-        <button class="hbtn ai" onclick="openPanel('ai')"><i class="ti ti-sparkles"></i> AI guideline</button>
-        <button class="hbtn" onclick="openPanel('csv')"><i class="ti ti-upload"></i> CSV</button>
-        <button class="hbtn" onclick="openPanel('master')"><i class="ti ti-adjustments-horizontal"></i></button>
-        <button class="hbtn" onclick="openPanel('notion')"><i class="ti ti-brand-notion"></i> Notion</button>
-      </div>
+
+  <!-- Campaign switcher bar -->
+  <div class="campaign-bar">
+    <span class="campaign-bar-label">Campaign</span>
+    <div class="campaign-select-wrap">
+      <select id="campaignSelect" onchange="switchCampaign(this.value)">
+        <option value="">— select —</option>
+      </select>
+      <i class="ti ti-chevron-down"></i>
     </div>
-    <div class="search-wrap">
-      <i class="ti ti-search"></i>
-      <input id="searchInput" type="text" placeholder="Search by name, handle, #ID..." oninput="filterCreators(this.value)"/>
-    </div>
-    <div class="creator-list" id="creatorList">
-      <div class="empty-msg" id="noCreators">Import a CSV to load creators</div>
-    </div>
-    <div class="empty-msg" id="noSearch" style="display:none;">No creators found</div>
+    <button class="bar-btn new" onclick="openPanel('newcampaign')"><i class="ti ti-plus"></i> New campaign</button>
+    <div class="bar-spacer"></div>
+    <div class="bar-btn danger" onclick="deleteCampaign()" id="delCampaignBtn" style="display:none"><i class="ti ti-trash"></i> Delete</div>
+    <button class="bar-btn" onclick="openPanel('notion')"><i class="ti ti-brand-notion"></i> Notion</button>
   </div>
 
-  <div class="main">
-    <div class="main-header">
-      <div>
-        <div class="main-title" id="mainTitle">Select a creator</div>
-        <div class="main-sub" id="mainSub"></div>
+  <div class="body-wrap">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="header-actions">
+          <button class="hbtn ai" onclick="openPanel('ai')"><i class="ti ti-sparkles"></i> AI guideline</button>
+          <button class="hbtn" onclick="openPanel('csv')"><i class="ti ti-upload"></i> CSV</button>
+          <button class="hbtn" onclick="openPanel('master')"><i class="ti ti-adjustments-horizontal"></i> Master</button>
+        </div>
       </div>
-      <div class="sbadge" id="sbadge" style="display:none" onclick="cycleStatus()"></div>
-    </div>
-    <div class="checklist-area" id="checklistArea">
-      <div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2;">
-        <i class="ti ti-arrow-up-left" style="font-size:18px;"></i><br>
-        Start by importing creators (CSV)<br>and a campaign guideline (AI)
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input id="searchInput" type="text" placeholder="Search creator..." oninput="filterCreators(this.value)"/>
       </div>
+      <div class="creator-list" id="creatorList">
+        <div class="empty-msg" id="noCreators">Create or select a campaign first</div>
+      </div>
+      <div class="empty-msg" id="noSearch" style="display:none;">No creators found</div>
     </div>
-    <div class="footer">
-      <span class="ftext" id="ftext">— / — items</span>
-      <div class="pbar-wrap"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
-      <button class="fbtn" onclick="saveToNotion()"><i class="ti ti-device-floppy"></i> Save to Notion</button>
+
+    <div class="main">
+      <div class="main-header">
+        <div>
+          <div class="main-title" id="mainTitle">No campaign selected</div>
+          <div class="main-sub" id="mainSub">Create a new campaign to get started</div>
+        </div>
+        <div class="sbadge" id="sbadge" style="display:none" onclick="cycleStatus()"></div>
+      </div>
+      <div class="checklist-area" id="checklistArea">
+        <div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;">
+          <i class="ti ti-layout-kanban" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+          Click <strong>+ New campaign</strong> to get started
+        </div>
+      </div>
+      <div class="footer">
+        <span class="ftext" id="ftext">— / — items</span>
+        <div class="pbar-wrap"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+        <button class="fbtn" onclick="saveToNotion()"><i class="ti ti-device-floppy"></i> Save to Notion</button>
+      </div>
     </div>
   </div>
 </div>
@@ -156,10 +189,7 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
 <div class="overlay" id="overlay" onclick="bgClick(event)">
   <div class="panel" id="panel">
     <div class="ph">
-      <div>
-        <div class="ph-title" id="panelTitle"></div>
-        <div class="ph-sub" id="panelSub"></div>
-      </div>
+      <div><div class="ph-title" id="panelTitle"></div><div class="ph-sub" id="panelSub"></div></div>
       <button class="xbtn" onclick="closePanel()"><i class="ti ti-x"></i></button>
     </div>
     <div class="pb" id="panelBody"></div>
@@ -168,149 +198,207 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
 </div>
 
 <script>
+const AVC=["#e8e6ff","#d1f5e8","#fde8d8","#fce4ef","#daeaf8","#e5f5ce","#fff3d6","#fde8f0"];
+const AVT=["#534AB7","#085041","#712B13","#72243E","#0C447C","#27500A","#7a5200","#7a1a3a"];
 const STATUSES=["Pending Review","In Review","Revision Requested","Approved"];
 const SCOL={"Pending Review":"#888","In Review":"#378ADD","Revision Requested":"#EF9F27","Approved":"#1D9E75"};
-const AVC=["#e8e6ff","#d1f5e8","#fde8d8","#fce4ef","#daeaf8","#e5f5ce"];
-const AVT=["#534AB7","#085041","#712B13","#72243E","#0C447C","#27500A"];
 
-let creators=[], master=[], state={}, activeId=null, idc=200;
+let campaigns={};
+let activeCampaignId=null;
+let activeCreatorId=null;
 let notionToken="", notionDbId="";
-
+let idc=500;
 function uid(){return"u"+(++idc);}
 
+function getCampaign(){return activeCampaignId?campaigns[activeCampaignId]:null;}
+
+function newCampaign(name){
+  const id=uid();
+  campaigns[id]={id,name,creators:[],master:[],state:{}};
+  return id;
+}
+
+function refreshCampaignSelect(){
+  const sel=document.getElementById("campaignSelect");
+  const ids=Object.keys(campaigns);
+  sel.innerHTML='<option value="">— select —</option>'+ids.map(id=>`<option value="${id}" ${id===activeCampaignId?"selected":""}>${campaigns[id].name}</option>`).join("");
+}
+
+function switchCampaign(id){
+  if(!id){activeCampaignId=null;resetUI();return;}
+  activeCampaignId=id;
+  activeCreatorId=null;
+  document.getElementById("searchInput").value="";
+  document.getElementById("delCampaignBtn").style.display="flex";
+  renderSidebar();
+  resetMainPanel();
+}
+
+function deleteCampaign(){
+  if(!activeCampaignId)return;
+  const name=campaigns[activeCampaignId].name;
+  if(!confirm(`Delete campaign "${name}"? This cannot be undone.`))return;
+  delete campaigns[activeCampaignId];
+  activeCampaignId=null;
+  activeCreatorId=null;
+  document.getElementById("delCampaignBtn").style.display="none";
+  refreshCampaignSelect();
+  resetUI();
+}
+
+function resetUI(){
+  document.getElementById("mainTitle").textContent="No campaign selected";
+  document.getElementById("mainSub").textContent="Create a new campaign to get started";
+  document.getElementById("sbadge").style.display="none";
+  document.getElementById("checklistArea").innerHTML=`<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;"><i class="ti ti-layout-kanban" style="font-size:24px;display:block;margin-bottom:8px;"></i>Click <strong>+ New campaign</strong> to get started</div>`;
+  document.getElementById("ftext").textContent="— / — items";
+  document.getElementById("pbarFill").style.width="0%";
+  document.getElementById("creatorList").innerHTML=`<div class="empty-msg" id="noCreators">Create or select a campaign first</div>`;
+  document.getElementById("noSearch").style.display="none";
+}
+
+function resetMainPanel(){
+  activeCreatorId=null;
+  const c=getCampaign();
+  document.getElementById("mainTitle").textContent=c?c.name:"No campaign selected";
+  document.getElementById("mainSub").textContent=c?`${c.creators.length} creators · ${c.master.reduce((a,s)=>a+s.items.length,0)} checklist items`:"";
+  document.getElementById("sbadge").style.display="none";
+  document.getElementById("checklistArea").innerHTML=`<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;"><i class="ti ti-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>${c&&c.creators.length?"Select a creator from the sidebar":"Import creators via CSV and a guideline via AI"}</div>`;
+  document.getElementById("ftext").textContent="— / — items";
+  document.getElementById("pbarFill").style.width="0%";
+}
+
 function buildState(){
-  creators.forEach(c=>{
-    if(!state[c.id])state[c.id]={status:"Pending Review",checks:{}};
-    const ex=state[c.id].checks, nc={};
-    master.forEach(s=>s.items.forEach(it=>{nc[it.id]=ex[it.id]||false;}));
-    state[c.id].checks=nc;
+  const c=getCampaign();if(!c)return;
+  c.creators.forEach(cr=>{
+    if(!c.state[cr.id])c.state[cr.id]={status:"Pending Review",checks:{}};
+    const ex=c.state[cr.id].checks,nc={};
+    c.master.forEach(s=>s.items.forEach(it=>{nc[it.id]=ex[it.id]||false;}));
+    c.state[cr.id].checks=nc;
   });
 }
 
 function initials(n){return n.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2);}
 
-function initSidebar(){
+function renderSidebar(){
+  const c=getCampaign();
   const list=document.getElementById("creatorList");
-  const noC=document.getElementById("noCreators");
-  if(!creators.length){noC.style.display="block";list.innerHTML="";return;}
-  noC.style.display="none";
-  list.innerHTML=creators.map((c,i)=>`
-    <div class="creator-item" id="ci-${c.id}" onclick="selectCreator('${c.id}')">
-      <div class="avatar" style="background:${AVC[i%AVC.length]};color:${AVT[i%AVT.length]}">${initials(c.nick)}</div>
+  if(!c||!c.creators.length){
+    list.innerHTML=`<div class="empty-msg" id="noCreators">Import a CSV to load creators</div>`;
+    return;
+  }
+  list.innerHTML=c.creators.map((cr,i)=>`
+    <div class="creator-item ${cr.id===activeCreatorId?"active":""}" id="ci-${cr.id}" onclick="selectCreator('${cr.id}')">
+      <div class="avatar" style="background:${AVC[i%AVC.length]};color:${AVT[i%AVT.length]}">${initials(cr.nick)}</div>
       <div class="creator-info">
-        <div class="creator-handle">${c.handle}</div>
-        <div class="creator-nick">#${c.applyNum} · ${c.nick}</div>
+        <div class="creator-handle">${cr.handle}</div>
+        <div class="creator-nick">#${cr.applyNum} · ${cr.nick}</div>
       </div>
-      <div class="ppill" id="pp-${c.id}">0%</div>
+      <div class="ppill" id="pp-${cr.id}">${getPct(c,cr.id)}%</div>
     </div>`).join("");
+  updateAllPills();
+}
+
+function getPct(c,id){
+  if(!c.state[id])return 0;
+  const ch=c.state[id].checks,total=Object.keys(ch).length,done=Object.values(ch).filter(Boolean).length;
+  return total?Math.round(done/total*100):0;
 }
 
 function filterCreators(q){
-  q=q.trim().toLowerCase();
-  let vis=0;
-  creators.forEach(c=>{
-    const el=document.getElementById("ci-"+c.id);
-    if(!el)return;
-    const match=!q||c.handle.toLowerCase().includes(q)||c.nick.toLowerCase().includes(q)||c.applyNum.includes(q);
+  const c=getCampaign();if(!c)return;
+  q=q.trim().toLowerCase();let vis=0;
+  c.creators.forEach(cr=>{
+    const el=document.getElementById("ci-"+cr.id);if(!el)return;
+    const match=!q||cr.handle.toLowerCase().includes(q)||cr.nick.toLowerCase().includes(q)||cr.applyNum.includes(q);
     el.classList.toggle("hidden",!match);
-    if(match){
-      vis++;
-      el.querySelector(".creator-handle").innerHTML=hl(c.handle,q);
-      el.querySelector(".creator-nick").innerHTML=hl("#"+c.applyNum+" · "+c.nick,q);
-    }else{
-      el.querySelector(".creator-handle").textContent=c.handle;
-      el.querySelector(".creator-nick").textContent="#"+c.applyNum+" · "+c.nick;
-    }
+    if(match){vis++;el.querySelector(".creator-handle").innerHTML=hl(cr.handle,q);el.querySelector(".creator-nick").innerHTML=hl("#"+cr.applyNum+" · "+cr.nick,q);}
+    else{el.querySelector(".creator-handle").textContent=cr.handle;el.querySelector(".creator-nick").textContent="#"+cr.applyNum+" · "+cr.nick;}
   });
-  document.getElementById("noSearch").style.display=(vis===0&&creators.length>0)?"block":"none";
+  document.getElementById("noSearch").style.display=(vis===0&&c.creators.length>0)?"block":"none";
 }
 
-function hl(t,q){
-  if(!q)return t;
-  return t.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>");
-}
+function hl(t,q){if(!q)return t;return t.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>");}
 
 function selectCreator(id){
-  activeId=id;
+  const c=getCampaign();if(!c)return;
+  activeCreatorId=id;
   document.querySelectorAll(".creator-item").forEach(e=>e.classList.remove("active"));
   document.getElementById("ci-"+id)?.classList.add("active");
-  const c=creators.find(x=>x.id===id);
-  document.getElementById("mainTitle").textContent=c.nick;
-  document.getElementById("mainSub").textContent=c.handle+" · Apply #"+c.applyNum;
+  const cr=c.creators.find(x=>x.id===id);
+  document.getElementById("mainTitle").textContent=cr.nick;
+  document.getElementById("mainSub").textContent=cr.handle+" · Apply #"+cr.applyNum+" · "+c.name;
   document.getElementById("sbadge").style.display="block";
-  renderBadge(); renderChecklist();
+  renderBadge();renderChecklist();
 }
 
 function renderBadge(){
-  const s=state[activeId].status, b=document.getElementById("sbadge");
-  b.textContent=s; b.style.color=SCOL[s]; b.style.borderColor=SCOL[s]+"55"; b.style.background=SCOL[s]+"18";
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const s=c.state[activeCreatorId].status,b=document.getElementById("sbadge");
+  b.textContent=s;b.style.color=SCOL[s];b.style.borderColor=SCOL[s]+"55";b.style.background=SCOL[s]+"18";
 }
 
 function cycleStatus(){
-  state[activeId].status=STATUSES[(STATUSES.indexOf(state[activeId].status)+1)%STATUSES.length];
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  c.state[activeCreatorId].status=STATUSES[(STATUSES.indexOf(c.state[activeCreatorId].status)+1)%STATUSES.length];
   renderBadge();
 }
 
 function renderChecklist(){
-  if(!activeId)return;
-  const checks=state[activeId].checks;
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const checks=c.state[activeCreatorId].checks;
   let html="";
-  master.forEach(s=>{
+  c.master.forEach(s=>{
     if(!s.items.length)return;
     html+=`<div class="sec-label">${s.name}</div>`;
     s.items.forEach(it=>{
       const done=checks[it.id];
-      html+=`<div class="chk-item" onclick="toggle('${activeId}','${it.id}')">
+      html+=`<div class="chk-item" onclick="toggle('${activeCreatorId}','${it.id}')">
         <div class="chk-box ${done?"on":""}"><i class="ti ti-check chk-ic"></i></div>
         <span class="chk-lbl ${done?"done":""}">${it.text}</span></div>`;
     });
   });
-  if(!html)html=`<div style="color:#aaa;font-size:12px;margin-top:40px;text-align:center;">No checklist items yet — use AI guideline or Master.</div>`;
+  if(!html)html=`<div style="color:#aaa;font-size:12px;margin-top:40px;text-align:center;">No checklist items — use AI guideline or Master.</div>`;
   document.getElementById("checklistArea").innerHTML=html;
   updateFooter();
 }
 
-function toggle(id,iid){
-  state[id].checks[iid]=!state[id].checks[iid];
-  renderChecklist(); updatePill(id);
+function toggle(creatorId,iid){
+  const c=getCampaign();if(!c)return;
+  c.state[creatorId].checks[iid]=!c.state[creatorId].checks[iid];
+  renderChecklist();updatePill(creatorId);
 }
 
 function updateFooter(){
-  if(!activeId)return;
-  const ch=state[activeId].checks;
-  const total=Object.keys(ch).length, done=Object.values(ch).filter(Boolean).length;
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const ch=c.state[activeCreatorId].checks;
+  const total=Object.keys(ch).length,done=Object.values(ch).filter(Boolean).length;
   const pct=total?Math.round(done/total*100):0;
   document.getElementById("ftext").textContent=`${done} / ${total} items`;
   document.getElementById("pbarFill").style.width=pct+"%";
 }
 
 function updatePill(id){
-  const ch=state[id].checks;
-  const total=Object.keys(ch).length, done=Object.values(ch).filter(Boolean).length;
-  const pct=total?Math.round(done/total*100):0;
-  const p=document.getElementById("pp-"+id);
-  if(!p)return;
+  const c=getCampaign();if(!c)return;
+  const pct=getPct(c,id);
+  const p=document.getElementById("pp-"+id);if(!p)return;
   p.textContent=pct+"%";
   if(pct===100){p.style.background="#1D9E7520";p.style.color="#1D9E75";}
   else if(pct>0){p.style.background="#378ADD20";p.style.color="#378ADD";}
   else{p.style.background="#f0f0f0";p.style.color="#aaa";}
 }
 
+function updateAllPills(){const c=getCampaign();if(!c)return;c.creators.forEach(cr=>updatePill(cr.id));}
+
 async function saveToNotion(){
-  if(!activeId){alert("Select a creator first.");return;}
+  const c=getCampaign();
+  if(!activeCreatorId||!c){alert("Select a creator first.");return;}
   if(!notionToken||!notionDbId){openPanel("notion");return;}
-  const c=creators.find(x=>x.id===activeId);
-  const s=state[activeId];
-  const total=Object.keys(s.checks).length;
-  const done=Object.values(s.checks).filter(Boolean).length;
-  const pct=total?Math.round(done/total*100):0;
-  const checklistText=master.map(sec=>
-    sec.name+":\n"+sec.items.map(it=>(s.checks[it.id]?"[x] ":"[ ] ")+it.text).join("\n")
-  ).join("\n\n");
-
+  const cr=c.creators.find(x=>x.id===activeCreatorId);
+  const s=c.state[activeCreatorId];
+  const checklistText=c.master.map(sec=>sec.name+":\n"+sec.items.map(it=>(s.checks[it.id]?"[x] ":"[ ] ")+it.text).join("\n")).join("\n\n");
   const btn=document.querySelector(".fbtn");
-  btn.textContent="Saving..."; btn.disabled=true;
-
+  btn.textContent="Saving...";btn.disabled=true;
   try{
     const res=await fetch("https://api.notion.com/v1/pages",{
       method:"POST",
@@ -318,8 +406,8 @@ async function saveToNotion(){
       body:JSON.stringify({
         parent:{database_id:notionDbId},
         properties:{
-          "Creator Name":{title:[{text:{content:c.nick}}]},
-          "Campaign":{rich_text:[{text:{content:document.getElementById("campaignName").textContent}}]},
+          "Creator Name":{title:[{text:{content:cr.nick}}]},
+          "Campaign":{rich_text:[{text:{content:c.name}}]},
           "Status":{select:{name:s.status}},
         },
         children:[{object:"block",type:"paragraph",paragraph:{rich_text:[{text:{content:checklistText}}]}}]
@@ -331,28 +419,58 @@ async function saveToNotion(){
   setTimeout(()=>{btn.innerHTML='<i class="ti ti-device-floppy"></i> Save to Notion';btn.style.color="";btn.disabled=false;},2500);
 }
 
-let currentPanel=null, masterDraft=[], parsedCreators=[];
+let parsedCreators=[], masterDraft=[];
 
 function openPanel(type){
-  currentPanel=type;
-  document.getElementById("overlay").classList.add("open");
-  const titles={ai:"AI guideline parser",csv:"Import creators",master:"Master checklist",notion:"Notion settings"};
-  const subs={ai:"Paste your campaign guideline — AI builds the checklist",csv:"Upload CSV with apply number, ID (username), nickname",master:"Edit sections and items — applies to all creators",notion:"Connect your Notion database to save checklists"};
+  const c=getCampaign();
+  const overlay=document.getElementById("overlay");
+  overlay.classList.add("open");
+  const titles={newcampaign:"New campaign",ai:"AI guideline parser",csv:"Import creators",master:"Master checklist",notion:"Notion settings"};
+  const subs={newcampaign:"Give your campaign a name to get started",ai:"Paste guideline — AI builds the checklist automatically",csv:"Upload CSV with apply number, ID (username), nickname",master:"Edit sections and items — applies to all creators in this campaign",notion:"Connect your Notion database"};
   document.getElementById("panelTitle").textContent=titles[type];
   document.getElementById("panelSub").textContent=subs[type];
-  if(type==="ai")renderAIPanel();
+  if(type==="newcampaign")renderNewCampaignPanel();
+  else if(type==="ai")renderAIPanel();
   else if(type==="csv")renderCSVPanel();
-  else if(type==="master"){masterDraft=JSON.parse(JSON.stringify(master));renderMasterPanel();}
+  else if(type==="master"){masterDraft=JSON.parse(JSON.stringify(c?c.master:[]));renderMasterPanel();}
   else if(type==="notion")renderNotionPanel();
 }
 
 function closePanel(){document.getElementById("overlay").classList.remove("open");}
 function bgClick(e){if(e.target===document.getElementById("overlay"))closePanel();}
 
-function renderAIPanel(){
+function renderNewCampaignPanel(){
   document.getElementById("panelBody").innerHTML=`
-    <div class="ai-area">
-      <p class="ai-hint">Paste your campaign guideline below. AI will read it and automatically build the master checklist — sections, required phrases, prohibited words, tagging rules, and more.</p>
+    <div class="new-campaign-form">
+      <p class="hint">Each campaign has its own creators, guideline, and checklist. You can switch between them anytime.</p>
+      <label class="field-label">Campaign name</label>
+      <input class="nc-input" id="ncName" type="text" placeholder="e.g. Magis Lene · iWorld Q3" autofocus/>
+    </div>`;
+  document.getElementById("panelFooter").innerHTML=`
+    <span class="pf-warn" id="pfWarn"></span>
+    <button class="apply-btn" onclick="createCampaign()">Create campaign</button>`;
+  setTimeout(()=>document.getElementById("ncName")?.focus(),100);
+  document.getElementById("ncName")?.addEventListener("keydown",e=>{if(e.key==="Enter")createCampaign();});
+}
+
+function createCampaign(){
+  const name=document.getElementById("ncName")?.value.trim();
+  if(!name){document.getElementById("pfWarn").textContent="Please enter a campaign name.";return;}
+  const id=newCampaign(name);
+  activeCampaignId=id;
+  activeCreatorId=null;
+  document.getElementById("delCampaignBtn").style.display="flex";
+  refreshCampaignSelect();
+  renderSidebar();
+  resetMainPanel();
+  closePanel();
+}
+
+function renderAIPanel(){
+  if(!activeCampaignId){document.getElementById("panelBody").innerHTML=`<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>`;document.getElementById("panelFooter").innerHTML="";return;}
+  document.getElementById("panelBody").innerHTML=`
+    <div>
+      <p class="hint">Paste your campaign guideline. AI will extract sections, required phrases, prohibited words, tagging rules and more.</p>
       <textarea class="ai-textarea" id="guidelineText" placeholder="Paste campaign guideline here..."></textarea>
       <div class="ai-status" id="aiStatus"></div>
     </div>`;
@@ -362,12 +480,12 @@ function renderAIPanel(){
 }
 
 async function runAI(){
-  const text=document.getElementById("guidelineText").value.trim();
+  const text=document.getElementById("guidelineText")?.value.trim();
   if(!text){document.getElementById("pfWarn").textContent="Please paste a guideline first.";return;}
   document.getElementById("pfWarn").textContent="";
   const status=document.getElementById("aiStatus");
   const btn=document.getElementById("aiBtn");
-  status.textContent="Reading guideline..."; status.style.color="#aaa";
+  status.textContent="Reading guideline...";status.style.color="#aaa";
   btn.disabled=true;
   try{
     const res=await fetch("https://api.anthropic.com/v1/messages",{
@@ -377,10 +495,10 @@ async function runAI(){
         model:"claude-sonnet-4-20250514",max_tokens:1000,
         messages:[{role:"user",content:`You are a campaign review assistant. Read this campaign guideline and extract a structured checklist for reviewing creator content.
 
-Return ONLY valid JSON, no preamble, no markdown backticks:
+Return ONLY valid JSON, no preamble, no markdown:
 {"campaignName":"short campaign name","sections":[{"name":"Section Name","items":["checklist item 1","checklist item 2"]}]}
 
-Group into logical sections (Content, Claims, Branding, Delivery etc). Keep items concise and checkable. Extract required phrases, prohibited words, tagging rules, hashtags, product usage.
+Group into logical sections (Content, Claims, Branding, Delivery etc). Keep items concise and checkable.
 
 Guideline:\n${text}`}]
       })
@@ -388,12 +506,15 @@ Guideline:\n${text}`}]
     const data=await res.json();
     const raw=data.content.filter(b=>b.type==="text").map(b=>b.text).join("");
     const parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
-    master=parsed.sections.map(s=>({id:uid(),name:s.name,items:s.items.map(txt=>({id:uid(),text:txt}))}));
-    if(parsed.campaignName)document.getElementById("campaignName").textContent=parsed.campaignName;
+    const c=getCampaign();
+    c.master=parsed.sections.map(s=>({id:uid(),name:s.name,items:s.items.map(txt=>({id:uid(),text:txt}))}));
+    if(parsed.campaignName&&c.name==="Untitled Campaign")c.name=parsed.campaignName;
     buildState();
-    if(activeId)renderChecklist();
-    creators.forEach(c=>updatePill(c.id));
-    status.textContent=`Done — ${master.reduce((a,s)=>a+s.items.length,0)} items across ${master.length} sections.`;
+    if(activeCreatorId)renderChecklist();
+    updateAllPills();
+    refreshCampaignSelect();
+    resetMainPanel();
+    status.textContent=`Done — ${c.master.reduce((a,s)=>a+s.items.length,0)} items across ${c.master.length} sections.`;
     status.style.color="#1D9E75";
     setTimeout(closePanel,1400);
   }catch(e){
@@ -404,11 +525,12 @@ Guideline:\n${text}`}]
 }
 
 function renderCSVPanel(){
+  if(!activeCampaignId){document.getElementById("panelBody").innerHTML=`<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>`;document.getElementById("panelFooter").innerHTML="";return;}
   document.getElementById("panelBody").innerHTML=`
     <div class="drop-zone" id="dropZone" onclick="document.getElementById('csvFile').click()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)">
       <i class="ti ti-upload" style="font-size:28px;color:#bbb;"></i>
       <p>Click to upload or drag & drop your CSV</p>
-      <small>Columns needed: apply number · ID (username) · nickname</small>
+      <small>Columns: apply number · ID (username) · nickname</small>
       <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCSV(this.files[0])"/>
     </div>
     <div class="csv-preview" id="csvPreview"></div>`;
@@ -432,21 +554,18 @@ function handleCSV(file){
     const idIdx=header.findIndex(h=>h==="id"||h.includes("username")||h.includes("handle"));
     const nickIdx=header.findIndex(h=>h.includes("nick")||h.includes("name"));
     if(applyIdx<0||idIdx<0||nickIdx<0){document.getElementById("pfWarn").textContent="Could not find columns. Need: apply number, ID, nickname.";return;}
-    parsedCreators=[];
-    const preview=[];
+    parsedCreators=[];const preview=[];
     for(let i=1;i<lines.length;i++){
       const cols=lines[i].split(",").map(c=>c.trim().replace(/^["']|["']$/g,""));
       if(!cols[idIdx])continue;
-      const c={id:uid(),applyNum:cols[applyIdx]||String(i),handle:cols[idIdx].startsWith("@")?cols[idIdx]:"@"+cols[idIdx],nick:cols[nickIdx]||cols[idIdx]};
-      parsedCreators.push(c);
-      if(preview.length<4)preview.push(c);
+      const cr={id:uid(),applyNum:cols[applyIdx]||String(i),handle:cols[idIdx].startsWith("@")?cols[idIdx]:"@"+cols[idIdx],nick:cols[nickIdx]||cols[idIdx]};
+      parsedCreators.push(cr);if(preview.length<4)preview.push(cr);
     }
     document.getElementById("csvPreview").innerHTML=
       `<div style="font-size:11px;color:#aaa;margin:10px 0 6px;">${parsedCreators.length} creators found — preview:</div>`+
       preview.map(c=>`<div class="csv-row"><strong>#${c.applyNum}</strong><span>${c.handle}</span><span>${c.nick}</span></div>`).join("")+
       (parsedCreators.length>4?`<div style="font-size:11px;color:#aaa;padding:4px 0;">+${parsedCreators.length-4} more</div>`:"");
-    const btn=document.getElementById("applyCSVBtn");
-    btn.disabled=false; btn.style.opacity="1";
+    const btn=document.getElementById("applyCSVBtn");btn.disabled=false;btn.style.opacity="1";
     document.getElementById("pfWarn").textContent="";
   };
   reader.readAsText(file);
@@ -454,20 +573,20 @@ function handleCSV(file){
 
 function applyCSV(){
   if(!parsedCreators.length)return;
-  creators=parsedCreators;
-  buildState(); initSidebar(); closePanel();
+  const c=getCampaign();if(!c)return;
+  c.creators=parsedCreators;
+  buildState();renderSidebar();resetMainPanel();closePanel();
 }
 
 function renderNotionPanel(){
   document.getElementById("panelBody").innerHTML=`
-    <div class="notion-area">
-      <p class="notion-hint">Enter your Notion integration token and the database ID where creator checklists will be saved.</p>
-      <label style="font-size:11px;color:#aaa;margin-bottom:4px;display:block;">Integration token</label>
-      <input class="notion-input" id="notionTokenInput" type="password" placeholder="secret_xxxxxxxxxxxx" value="${notionToken}"/>
-      <label style="font-size:11px;color:#aaa;margin:8px 0 4px;display:block;">Database ID</label>
-      <input class="notion-input" id="notionDbInput" type="text" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="${notionDbId}"/>
-      <p class="notion-hint" style="margin-top:6px;">Find the database ID in the URL of your Notion database page — it's the 32-character string after the last slash and before the ?v=</p>
-      <div class="notion-status" id="notionStatus"></div>
+    <div>
+      <p class="hint">Enter your Notion integration token and the ID of the Creator Campaign Tracker database.</p>
+      <label class="field-label">Integration token</label>
+      <input class="notion-input" id="nToken" type="password" placeholder="secret_xxxxxxxxxxxx" value="${notionToken}"/>
+      <label class="field-label">Database ID</label>
+      <input class="notion-input" id="nDbId" type="text" placeholder="32-character database ID" value="${notionDbId}"/>
+      <p class="hint">Find it in your Notion database URL — the string after the last / and before ?v=</p>
     </div>`;
   document.getElementById("panelFooter").innerHTML=`
     <span class="pf-warn" id="pfWarn"></span>
@@ -475,20 +594,18 @@ function renderNotionPanel(){
 }
 
 function saveNotionSettings(){
-  notionToken=document.getElementById("notionTokenInput").value.trim();
-  notionDbId=document.getElementById("notionDbInput").value.trim().replace(/-/g,"");
-  if(!notionToken||!notionDbId){document.getElementById("pfWarn").textContent="Both fields are required.";return;}
-  document.getElementById("notionStatus").textContent="Settings saved!";
-  document.getElementById("notionStatus").style.color="#1D9E75";
-  setTimeout(closePanel,1000);
+  notionToken=document.getElementById("nToken").value.trim();
+  notionDbId=document.getElementById("nDbId").value.trim().replace(/-/g,"");
+  if(!notionToken||!notionDbId){document.getElementById("pfWarn").textContent="Both fields required.";return;}
+  closePanel();
 }
 
-let masterDraft2=[];
 function renderMasterPanel(){
-  masterDraft2=JSON.parse(JSON.stringify(master));
+  const c=getCampaign();
+  if(!c){document.getElementById("panelBody").innerHTML=`<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>`;document.getElementById("panelFooter").innerHTML="";return;}
   const body=document.getElementById("panelBody");
-  body.innerHTML=masterDraft2.length?masterDraft2.map(s=>renderSecBlock(s)).join(""):
-    `<div style="font-size:12px;color:#aaa;text-align:center;padding:20px 0;">Use AI guideline to auto-generate, or add sections manually.</div>`;
+  body.innerHTML=masterDraft.length?masterDraft.map(s=>renderSecBlock(s)).join(""):
+    `<div style="font-size:12px;color:#aaa;text-align:center;padding:20px 0;">No items yet — use AI guideline or add sections manually.</div>`;
   document.getElementById("panelFooter").innerHTML=`
     <button class="smb" onclick="addSec()"><i class="ti ti-plus"></i> Section</button>
     <span class="pf-warn" id="pfWarn"></span>
@@ -509,11 +626,11 @@ function renderSecBlock(s){
     </div>`).join("")}
   </div>`;}
 
-function updSecName(sid,v){const s=masterDraft2.find(x=>x.id===sid);if(s)s.name=v;}
-function updItm(sid,iid,v){const s=masterDraft2.find(x=>x.id===sid);if(s){const it=s.items.find(x=>x.id===iid);if(it)it.text=v;}}
+function updSecName(sid,v){const s=masterDraft.find(x=>x.id===sid);if(s)s.name=v;}
+function updItm(sid,iid,v){const s=masterDraft.find(x=>x.id===sid);if(s){const it=s.items.find(x=>x.id===iid);if(it)it.text=v;}}
 
 function addItm(sid){
-  const s=masterDraft2.find(x=>x.id===sid);if(!s)return;
+  const s=masterDraft.find(x=>x.id===sid);if(!s)return;
   const it={id:uid(),text:"New item"};s.items.push(it);
   document.getElementById("sb-"+sid).insertAdjacentHTML("beforeend",
     `<div class="irow" id="ir-${it.id}">
@@ -521,34 +638,27 @@ function addItm(sid){
       <input class="itxt" value="${it.text}" oninput="updItm('${sid}','${it.id}',this.value)" style="background:#f5f5f5;"/>
       <button class="dibtn" onclick="delItm('${sid}','${it.id}')" style="opacity:1"><i class="ti ti-x"></i></button>
     </div>`);
-  const inp=document.querySelector(`#ir-${it.id} input`);
-  if(inp){inp.focus();inp.select();}
+  const inp=document.querySelector(`#ir-${it.id} input`);if(inp){inp.focus();inp.select();}
 }
 
 function delItm(sid,iid){
-  const s=masterDraft2.find(x=>x.id===sid);if(s)s.items=s.items.filter(x=>x.id!==iid);
+  const s=masterDraft.find(x=>x.id===sid);if(s)s.items=s.items.filter(x=>x.id!==iid);
   document.getElementById("ir-"+iid)?.remove();
 }
 
-function delSec(sid){
-  masterDraft2=masterDraft2.filter(x=>x.id!==sid);
-  document.getElementById("sb-"+sid)?.remove();
-}
+function delSec(sid){masterDraft=masterDraft.filter(x=>x.id!==sid);document.getElementById("sb-"+sid)?.remove();}
 
 function addSec(){
-  const s={id:uid(),name:"New section",items:[]};
-  masterDraft2.push(s);
+  const s={id:uid(),name:"New section",items:[]};masterDraft.push(s);
   document.getElementById("panelBody").insertAdjacentHTML("beforeend",renderSecBlock(s));
-  const inp=document.querySelector(`#sb-${s.id} .sec-inp`);
-  if(inp){inp.focus();inp.select();}
+  const inp=document.querySelector(`#sb-${s.id} .sec-inp`);if(inp){inp.focus();inp.select();}
 }
 
 function applyMaster(){
-  master=JSON.parse(JSON.stringify(masterDraft2));
-  buildState();
-  if(activeId)renderChecklist();
-  creators.forEach(c=>updatePill(c.id));
-  closePanel();
+  const c=getCampaign();if(!c)return;
+  c.master=JSON.parse(JSON.stringify(masterDraft));
+  buildState();if(activeCreatorId)renderChecklist();
+  updateAllPills();resetMainPanel();closePanel();
 }
 </script>
 </body>
