@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Campaign Checklist</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+.app{display:flex;flex-direction:column;height:720px;width:100%;max-width:920px;border:1px solid #e5e5e5;border-radius:12px;overflow:hidden;background:#fff;}
+.campaign-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #e5e5e5;background:#fafafa;flex-shrink:0;flex-wrap:wrap;}
+.campaign-bar-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+.campaign-select-wrap{position:relative;flex:1;max-width:240px;}
+.campaign-select-wrap select{width:100%;padding:5px 28px 5px 10px;font-size:13px;font-weight:500;color:#1a1a1a;background:#fff;border:1px solid #e0e0e0;border-radius:7px;outline:none;appearance:none;cursor:pointer;}
+.campaign-select-wrap .ti{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:13px;color:#aaa;pointer-events:none;}
+.bar-btn{font-size:11px;padding:5px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.bar-btn:hover{background:#f5f5f5;}
+.bar-btn.new{border-color:#7F77DD55;color:#534AB7;background:#f0efff;}
+.bar-btn.new:hover{background:#e4e2ff;}
+.bar-btn.danger{color:#e24b4a;border-color:#e24b4a44;}
+.bar-btn.danger:hover{background:#fff5f5;}
+.bar-spacer{flex:1;}
+.body-wrap{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:230px;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;flex-shrink:0;background:#fff;}
+.sidebar-header{padding:10px 12px;border-bottom:1px solid #e5e5e5;}
+.header-actions{display:flex;gap:5px;flex-wrap:wrap;}
+.hbtn{font-size:11px;padding:4px 8px;border-radius:7px;border:1px solid #e0e0e0;background:transparent;color:#555;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.hbtn:hover{background:#f5f5f5;}
+.search-wrap{padding:8px;border-bottom:1px solid #e5e5e5;position:relative;}
+.search-wrap .ti{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:13px;color:#aaa;pointer-events:none;}
+#searchInput{width:100%;padding:6px 8px 6px 28px;font-size:12px;border-radius:7px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;outline:none;}
+#searchInput:focus{border-color:#ccc;background:#fff;}
+.creator-list{flex:1;overflow-y:auto;padding:6px;}
+.creator-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:2px;}
+.creator-item:hover{background:#f5f5f5;}
+.creator-item.active{background:#f0f0f0;}
+.creator-item.hidden{display:none;}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;}
+.creator-info{flex:1;min-width:0;}
+.creator-handle{font-size:12px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.creator-nick{font-size:10px;color:#aaa;}
+.ppill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:20px;flex-shrink:0;background:#f0f0f0;color:#aaa;}
+.empty-msg{font-size:12px;color:#aaa;text-align:center;padding:16px 8px;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:#fff;}
+.main-header{padding:12px 18px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.main-title{font-size:14px;font-weight:600;color:#1a1a1a;}
+.main-sub{font-size:11px;color:#aaa;margin-top:2px;}
+.main-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sbadge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid;cursor:pointer;white-space:nowrap;}
+.feedback-btn{font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #378ADD44;color:#378ADD;background:#378ADD10;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.feedback-btn:hover{background:#378ADD20;}
+.checklist-area{flex:1;overflow-y:auto;padding:14px 18px;}
+.sec-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:0.07em;margin:14px 0 6px;}
+.sec-label:first-child{margin-top:0;}
+.chk-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;}
+.chk-item:last-child{border-bottom:none;}
+.chk-box{width:17px;height:17px;border-radius:5px;border:1.5px solid #ddd;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all 0.12s;background:transparent;}
+.chk-box.on{background:#1D9E75;border-color:#1D9E75;}
+.chk-ic{display:none;color:#fff;font-size:11px;}
+.chk-box.on .chk-ic{display:block;}
+.chk-lbl{font-size:12px;color:#1a1a1a;line-height:1.5;}
+.chk-lbl.done{color:#bbb;text-decoration:line-through;}
+.footer{padding:10px 18px;border-top:1px solid #e5e5e5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.pbar-wrap{flex:1;height:3px;background:#f0f0f0;border-radius:3px;min-width:60px;}
+.pbar-fill{height:100%;border-radius:3px;background:#1D9E75;transition:width 0.2s;}
+.ftext{font-size:11px;color:#aaa;white-space:nowrap;}
+.fbtn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#1a1a1a;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.fbtn:hover{background:#f5f5f5;}
+.fbtn.gh-save{border-color:#1a1a1a44;background:#1a1a1a;color:#fff;}
+.fbtn.gh-save:hover{background:#333;}
+.fbtn.gs-save{border-color:#1D9E7544;background:#1D9E75;color:#fff;}
+.fbtn.gs-save:hover{background:#189060;}
+.save-status{font-size:10px;color:#aaa;white-space:nowrap;}
+mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.25);z-index:100;align-items:flex-start;justify-content:center;padding-top:30px;}
+.overlay.open{display:flex;}
+.panel{background:#fff;border-radius:12px;border:1px solid #e5e5e5;width:520px;max-height:620px;display:flex;flex-direction:column;overflow:hidden;}
+.panel.wide{width:560px;}
+.ph{padding:14px 18px;border-bottom:1px solid #e5e5e5;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.ph-title{font-size:14px;font-weight:600;color:#1a1a1a;}
+.ph-sub{font-size:11px;color:#aaa;margin-top:2px;}
+.xbtn{background:none;border:none;cursor:pointer;color:#999;font-size:17px;padding:2px;}
+.xbtn:hover{color:#333;}
+.pb{flex:1;overflow-y:auto;padding:14px 18px;}
+.pf{padding:10px 18px;border-top:1px solid #e5e5e5;display:flex;align-items:center;gap:8px;}
+.pf-warn{flex:1;font-size:11px;color:#aaa;}
+.hint{font-size:11px;color:#aaa;line-height:1.7;margin-bottom:12px;}
+.field-label{font-size:11px;color:#aaa;margin-bottom:4px;display:block;}
+.field-input{width:100%;padding:8px 10px;font-size:12px;border-radius:8px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;outline:none;font-family:inherit;margin-bottom:10px;}
+.field-input:focus{border-color:#ccc;background:#fff;}
+.apply-btn{font-size:11px;font-weight:500;padding:6px 14px;border-radius:7px;border:1px solid #1D9E7555;background:#1D9E7510;color:#1D9E75;cursor:pointer;}
+.apply-btn:hover{background:#1D9E7520;}
+.nc-input{width:100%;padding:8px 10px;font-size:13px;border-radius:8px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;outline:none;font-family:inherit;}
+.nc-input:focus{border-color:#ccc;background:#fff;}
+.divider{height:1px;background:#f0f0f0;margin:12px 0;}
+.how-to{background:#f9f9f9;border-radius:8px;padding:12px 14px;margin-bottom:12px;}
+.how-to-title{font-size:11px;font-weight:600;color:#555;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.how-step{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;}
+.how-step:last-child{margin-bottom:0;}
+.step-num{width:18px;height:18px;border-radius:50%;background:#e8e6ff;color:#534AB7;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:11px;color:#666;line-height:1.6;}
+.step-text strong{color:#333;}
+.step-text a{color:#534AB7;}
+.sec-block{margin-bottom:14px;}
+.sec-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.sec-inp{flex:1;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;background:transparent;border:none;outline:none;padding:2px 4px;border-radius:4px;}
+.sec-inp:focus{background:#f5f5f5;}
+.smb{font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid #e0e0e0;background:transparent;color:#555;cursor:pointer;}
+.smb:hover{background:#f5f5f5;}
+.dsbtn{font-size:13px;color:#bbb;background:none;border:none;cursor:pointer;padding:2px 4px;}
+.dsbtn:hover{color:#e24b4a;}
+.irow{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #f5f5f5;}
+.irow:last-child{border-bottom:none;}
+.itxt{flex:1;font-size:12px;color:#1a1a1a;background:transparent;border:none;outline:none;padding:2px 4px;border-radius:4px;}
+.itxt:focus{background:#f5f5f5;}
+.dibtn{font-size:12px;color:#bbb;background:none;border:none;cursor:pointer;padding:2px 3px;opacity:0;}
+.irow:hover .dibtn{opacity:1;}
+.dibtn:hover{color:#e24b4a;}
+.drop-zone{border:1.5px dashed #ddd;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:background 0.1s;margin-bottom:10px;}
+.drop-zone:hover,.drop-zone.drag{background:#f5f5f5;}
+.drop-zone p{font-size:12px;color:#666;margin-top:6px;}
+.drop-zone small{font-size:11px;color:#aaa;}
+.csv-preview{margin-top:8px;}
+.csv-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:11px;color:#1a1a1a;}
+.csv-row:last-child{border-bottom:none;}
+.csv-row span{color:#aaa;}
+.feedback-area{display:flex;flex-direction:column;gap:12px;}
+.feedback-meta{display:flex;gap:8px;align-items:center;}
+.fmeta-label{font-size:11px;color:#aaa;}
+.lang-toggle{display:flex;border:1px solid #e0e0e0;border-radius:7px;overflow:hidden;}
+.lang-btn{font-size:11px;padding:4px 12px;background:#fff;border:none;color:#555;cursor:pointer;}
+.lang-btn.active{background:#1a1a1a;color:#fff;}
+.missing-list{background:#fff8f0;border:1px solid #EF9F2740;border-radius:8px;padding:10px 14px;}
+.missing-title{font-size:11px;font-weight:600;color:#EF9F27;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.missing-item{font-size:12px;color:#555;padding:3px 0;display:flex;gap:6px;align-items:flex-start;}
+.missing-num{color:#EF9F27;font-weight:600;flex-shrink:0;}
+.all-good{background:#f0faf5;border:1px solid #1D9E7530;border-radius:8px;padding:14px;text-align:center;font-size:12px;color:#1D9E75;}
+.msg-label{font-size:11px;color:#aaa;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.msg-textarea{width:100%;min-height:150px;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid #e5e5e5;background:#f9f9f9;color:#1a1a1a;resize:vertical;outline:none;font-family:inherit;line-height:1.6;}
+.msg-textarea:focus{border-color:#ccc;background:#fff;}
+.copy-btn{font-size:11px;font-weight:500;padding:4px 10px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.copy-btn:hover{background:#f5f5f5;}
+.copy-btn.copied{border-color:#1D9E7555;color:#1D9E75;background:#1D9E7510;}
+.save-option{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #e5e5e5;border-radius:8px;margin-bottom:8px;}
+.save-option-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.save-option-info{flex:1;}
+.save-option-title{font-size:12px;font-weight:500;color:#1a1a1a;}
+.save-option-sub{font-size:11px;color:#aaa;margin-top:2px;}
+.save-option-status{font-size:10px;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.connected{background:#1D9E7515;color:#1D9E75;border:1px solid #1D9E7530;}
+.not-connected{background:#f5f5f5;color:#aaa;border:1px solid #e5e5e5;}
+.setup-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;white-space:nowrap;}
+.setup-btn:hover{background:#f5f5f5;}
+.gh-load-status{font-size:12px;color:#aaa;text-align:center;padding:24px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="campaign-bar">
+    <span class="campaign-bar-label">Campaign</span>
+    <div class="campaign-select-wrap">
+      <select id="campaignSelect" onchange="switchCampaign(this.value)"><option value="">— select —</option></select>
+      <i class="ti ti-chevron-down"></i>
+    </div>
+    <button class="bar-btn new" onclick="openPanel('newcampaign')"><i class="ti ti-plus"></i> New</button>
+    <div class="bar-spacer"></div>
+    <button class="bar-btn" onclick="openPanel('howto')"><i class="ti ti-help-circle"></i> How to use</button>
+    <button class="bar-btn" onclick="openPanel('savesetup')"><i class="ti ti-settings"></i> Save settings</button>
+    <div class="bar-btn danger" onclick="deleteCampaign()" id="delCampaignBtn" style="display:none"><i class="ti ti-trash"></i></div>
+  </div>
+
+  <div class="body-wrap">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="header-actions">
+          <button class="hbtn" onclick="openPanel('csv')"><i class="ti ti-upload"></i> Import</button>
+          <button class="hbtn" onclick="openPanel('master')"><i class="ti ti-adjustments-horizontal"></i> Master</button>
+          <button class="hbtn" style="border-color:#1a1a1a33;color:#1a1a1a;" onclick="openPanel('loadgithub')"><i class="ti ti-brand-github"></i> Load</button>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input id="searchInput" type="text" placeholder="Search creator..." oninput="filterCreators(this.value)"/>
+      </div>
+      <div class="creator-list" id="creatorList">
+        <div class="empty-msg" id="noCreators">Create or select a campaign first</div>
+      </div>
+      <div class="empty-msg" id="noSearch" style="display:none;">No creators found</div>
+    </div>
+
+    <div class="main">
+      <div class="main-header">
+        <div>
+          <div class="main-title" id="mainTitle">No campaign selected</div>
+          <div class="main-sub" id="mainSub">Create a new campaign to get started</div>
+        </div>
+        <div class="main-header-right">
+          <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openPanel('feedback')"><i class="ti ti-message-2"></i> Feedback</button>
+          <div class="sbadge" id="sbadge" style="display:none" onclick="cycleStatus()"></div>
+        </div>
+      </div>
+      <div class="checklist-area" id="checklistArea">
+        <div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.4;">
+          <i class="ti ti-layout-kanban" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+          Click <strong>+ New</strong> to get started
+        </div>
+      </div>
+      <div class="footer">
+        <span class="ftext" id="ftext">-- / -- items</span>
+        <div class="pbar-wrap"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+        <span class="save-status" id="saveStatus"></span>
+        <button class="fbtn" onclick="openPanel('export')"><i class="ti ti-download"></i> Export</button>
+        <button class="fbtn gs-save" id="sheetsSaveBtn" onclick="saveToSheets()" style="display:none"><i class="ti ti-table"></i> Save</button>
+        <button class="fbtn gh-save" id="githubSaveBtn" onclick="saveToGitHub()" style="display:none"><i class="ti ti-brand-github"></i> Save</button>
+        <button class="fbtn" id="setupSaveBtn" onclick="openPanel('savesetup')" style="display:none"><i class="ti ti-settings"></i> Set up save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="bgClick(event)">
+  <div class="panel" id="panel">
+    <div class="ph">
+      <div><div class="ph-title" id="panelTitle"></div><div class="ph-sub" id="panelSub"></div></div>
+      <button class="xbtn" onclick="closePanel()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="pb" id="panelBody"></div>
+    <div class="pf" id="panelFooter"></div>
+  </div>
+</div>
+
+<script>
+const AVC=["#e8e6ff","#d1f5e8","#fde8d8","#fce4ef","#daeaf8","#e5f5ce","#fff3d6","#fde8f0"];
+const AVT=["#534AB7","#085041","#712B13","#72243E","#0C447C","#27500A","#7a5200","#7a1a3a"];
+const STATUSES=["Pending Review","In Review","Revision Requested","Approved"];
+const SCOL={"Pending Review":"#888","In Review":"#378ADD","Revision Requested":"#EF9F27","Approved":"#1D9E75"};
+
+let campaigns={},activeCampaignId=null,activeCreatorId=null;
+let ghToken="",ghRepo="cilla-nuri/campaign-checklist";
+let sheetsId="",sheetsApiKey="";
+let idc=500;
+function uid(){return"u"+(++idc);}
+function getCampaign(){return activeCampaignId?campaigns[activeCampaignId]:null;}
+
+function nowStr(){
+  const d=new Date();
+  return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());
+}
+function pad(n){return String(n).padStart(2,"0");}
+function dateStr(){const d=new Date();return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());}
+
+function updateSaveButtons(){
+  const hasGH=!!ghToken,hasSheets=!!(sheetsId&&sheetsApiKey),hasAny=hasGH||hasSheets;
+  document.getElementById("githubSaveBtn").style.display=hasGH?"flex":"none";
+  document.getElementById("sheetsSaveBtn").style.display=hasSheets?"flex":"none";
+  document.getElementById("setupSaveBtn").style.display=(!hasAny&&!!activeCreatorId)?"flex":"none";
+}
+
+function newCampaign(name){const id=uid();campaigns[id]={id,name,creators:[],master:[],state:{}};return id;}
+
+function refreshCampaignSelect(){
+  const sel=document.getElementById("campaignSelect");
+  sel.innerHTML='<option value="">-- select --</option>'+Object.keys(campaigns).map(id=>'<option value="'+id+'"'+(id===activeCampaignId?' selected':'')+'>'+campaigns[id].name+'</option>').join('');
+}
+
+function switchCampaign(id){
+  if(!id){activeCampaignId=null;resetUI();return;}
+  activeCampaignId=id;activeCreatorId=null;
+  document.getElementById("searchInput").value="";
+  document.getElementById("delCampaignBtn").style.display="flex";
+  renderSidebar();resetMainPanel();
+}
+
+function deleteCampaign(){
+  if(!activeCampaignId)return;
+  if(!confirm('Delete "'+campaigns[activeCampaignId].name+'"?'))return;
+  delete campaigns[activeCampaignId];activeCampaignId=null;activeCreatorId=null;
+  document.getElementById("delCampaignBtn").style.display="none";
+  refreshCampaignSelect();resetUI();
+}
+
+function resetUI(){
+  document.getElementById("mainTitle").textContent="No campaign selected";
+  document.getElementById("mainSub").textContent="Create a new campaign to get started";
+  document.getElementById("sbadge").style.display="none";document.getElementById("feedbackBtn").style.display="none";
+  document.getElementById("checklistArea").innerHTML='<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.4;"><i class="ti ti-layout-kanban" style="font-size:24px;display:block;margin-bottom:8px;"></i>Click <strong>+ New</strong> to get started</div>';
+  document.getElementById("ftext").textContent="-- / -- items";document.getElementById("pbarFill").style.width="0%";
+  document.getElementById("creatorList").innerHTML='<div class="empty-msg" id="noCreators">Create or select a campaign first</div>';
+  document.getElementById("noSearch").style.display="none";document.getElementById("saveStatus").textContent="";
+  updateSaveButtons();
+}
+
+function resetMainPanel(){
+  activeCreatorId=null;
+  const c=getCampaign();
+  document.getElementById("mainTitle").textContent=c?c.name:"No campaign selected";
+  document.getElementById("mainSub").textContent=c?(c.creators.length+" creators / "+c.master.reduce(function(a,s){return a+s.items.length;},0)+" checklist items"):"";
+  document.getElementById("sbadge").style.display="none";document.getElementById("feedbackBtn").style.display="none";
+  document.getElementById("checklistArea").innerHTML='<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;"><i class="ti ti-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>'+(c&&c.creators.length?"Select a creator from the sidebar":"Import creators via CSV and load checklist via Master")+'</div>';
+  document.getElementById("ftext").textContent="-- / -- items";document.getElementById("pbarFill").style.width="0%";
+  document.getElementById("saveStatus").textContent="";updateSaveButtons();
+}
+
+function buildState(){
+  const c=getCampaign();if(!c)return;
+  c.creators.forEach(function(cr){
+    if(!c.state[cr.id])c.state[cr.id]={status:"Pending Review",checks:{},savedAt:null};
+    const ex=c.state[cr.id].checks,nc={};
+    c.master.forEach(function(s){s.items.forEach(function(it){nc[it.id]=ex[it.id]||false;});});
+    c.state[cr.id].checks=nc;
+  });
+}
+
+function initials(n){return n.split(" ").map(function(w){return w[0]||"";}).join("").toUpperCase().slice(0,2);}
+
+function renderSidebar(){
+  const c=getCampaign();const list=document.getElementById("creatorList");
+  if(!c||!c.creators.length){list.innerHTML='<div class="empty-msg" id="noCreators">Import a CSV to load creators</div>';return;}
+  list.innerHTML=c.creators.map(function(cr,i){
+    return '<div class="creator-item'+(cr.id===activeCreatorId?' active':'')+'" id="ci-'+cr.id+'" onclick="selectCreator(\''+cr.id+'\')">'+
+      '<div class="avatar" style="background:'+AVC[i%AVC.length]+';color:'+AVT[i%AVT.length]+'">'+initials(cr.nick)+'</div>'+
+      '<div class="creator-info"><div class="creator-handle">'+cr.handle+'</div><div class="creator-nick">#'+cr.applyNum+' - '+cr.nick+'</div></div>'+
+      '<div class="ppill" id="pp-'+cr.id+'">'+getPct(c,cr.id)+'%</div></div>';
+  }).join('');
+  updateAllPills();
+}
+
+function getPct(c,id){
+  if(!c.state[id])return 0;
+  const ch=c.state[id].checks,total=Object.keys(ch).length,done=Object.values(ch).filter(Boolean).length;
+  return total?Math.round(done/total*100):0;
+}
+
+function filterCreators(q){
+  const c=getCampaign();if(!c)return;
+  q=q.trim().toLowerCase();let vis=0;
+  c.creators.forEach(function(cr){
+    const el=document.getElementById("ci-"+cr.id);if(!el)return;
+    const match=!q||cr.handle.toLowerCase().includes(q)||cr.nick.toLowerCase().includes(q)||cr.applyNum.includes(q);
+    el.classList.toggle("hidden",!match);
+    if(match){vis++;el.querySelector(".creator-handle").innerHTML=hl(cr.handle,q);el.querySelector(".creator-nick").innerHTML=hl("#"+cr.applyNum+" - "+cr.nick,q);}
+    else{el.querySelector(".creator-handle").textContent=cr.handle;el.querySelector(".creator-nick").textContent="#"+cr.applyNum+" - "+cr.nick;}
+  });
+  document.getElementById("noSearch").style.display=(vis===0&&c.creators.length>0)?"block":"none";
+}
+
+function hl(t,q){
+  if(!q)return t;
+  return t.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>");
+}
+
+function selectCreator(id){
+  const c=getCampaign();if(!c)return;
+  activeCreatorId=id;
+  document.querySelectorAll(".creator-item").forEach(function(e){e.classList.remove("active");});
+  const el=document.getElementById("ci-"+id);if(el)el.classList.add("active");
+  const cr=c.creators.find(function(x){return x.id===id;});
+  document.getElementById("mainTitle").textContent=cr.nick;
+  document.getElementById("mainSub").textContent=cr.handle+" / Apply #"+cr.applyNum+" / "+c.name;
+  document.getElementById("sbadge").style.display="block";document.getElementById("feedbackBtn").style.display="flex";
+  const saved=c.state[id]&&c.state[id].savedAt;
+  document.getElementById("saveStatus").textContent=saved?"Saved: "+saved:"";
+  renderBadge();renderChecklist();updateSaveButtons();
+}
+
+function renderBadge(){
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const s=c.state[activeCreatorId].status,b=document.getElementById("sbadge");
+  b.textContent=s;b.style.color=SCOL[s];b.style.borderColor=SCOL[s]+"55";b.style.background=SCOL[s]+"18";
+}
+
+function cycleStatus(){
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  c.state[activeCreatorId].status=STATUSES[(STATUSES.indexOf(c.state[activeCreatorId].status)+1)%STATUSES.length];
+  renderBadge();
+}
+
+function renderChecklist(){
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const checks=c.state[activeCreatorId].checks;let html="";
+  c.master.forEach(function(s){
+    if(!s.items.length)return;
+    html+='<div class="sec-label">'+s.name+'</div>';
+    s.items.forEach(function(it){
+      const done=checks[it.id];
+      html+='<div class="chk-item" onclick="toggle(\''+activeCreatorId+'\',\''+it.id+'\')"><div class="chk-box'+(done?" on":"")+'"><i class="ti ti-check chk-ic"></i></div><span class="chk-lbl'+(done?" done":"")+'">'+it.text+'</span></div>';
+    });
+  });
+  if(!html)html='<div style="color:#aaa;font-size:12px;margin-top:40px;text-align:center;">No checklist items -- import via Master.</div>';
+  document.getElementById("checklistArea").innerHTML=html;updateFooter();
+}
+
+function toggle(creatorId,iid){
+  const c=getCampaign();if(!c)return;
+  c.state[creatorId].checks[iid]=!c.state[creatorId].checks[iid];
+  renderChecklist();updatePill(creatorId);
+}
+
+function updateFooter(){
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const ch=c.state[activeCreatorId].checks;
+  const total=Object.keys(ch).length,done=Object.values(ch).filter(Boolean).length;
+  document.getElementById("ftext").textContent=done+" / "+total+" items";
+  document.getElementById("pbarFill").style.width=(total?Math.round(done/total*100):0)+"%";
+}
+
+function updatePill(id){
+  const c=getCampaign();if(!c)return;
+  const pct=getPct(c,id);const p=document.getElementById("pp-"+id);if(!p)return;
+  p.textContent=pct+"%";
+  if(pct===100){p.style.background="#1D9E7520";p.style.color="#1D9E75";}
+  else if(pct>0){p.style.background="#378ADD20";p.style.color="#378ADD";}
+  else{p.style.background="#f0f0f0";p.style.color="#aaa";}
+}
+function updateAllPills(){const c=getCampaign();if(!c)return;c.creators.forEach(function(cr){updatePill(cr.id);});}
+
+function getMissingItems(){
+  const c=getCampaign();if(!c||!activeCreatorId)return[];
+  const checks=c.state[activeCreatorId].checks,missing=[];
+  c.master.forEach(function(s){s.items.forEach(function(it){if(!checks[it.id])missing.push(it.text);});});
+  return missing;
+}
+
+function generateFeedback(lang,missing,nick){
+  if(!missing.length){
+    return lang==="en"
+      ?"Hi "+nick+"! \uD83D\uDE0A\n\nThank you so much for submitting your content -- everything looks great! Your video has been approved. We'll be in touch with the next steps.\n\nThank you again for your hard work! \uD83D\uDE4F"
+      :"\uC548\uB155\uD558\uC138\uC694 "+nick+"\uB2D8! \uD83D\uDE0A\n\n\uCF58\uD150\uCE20 \uC81C\uCD9C\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4 -- \uBAA8\uB4E0 \uD56D\uBAA9\uC774 \uC644\uBCBD\uD574\uC694! \uC601\uC0C1\uC774 \uC2B9\uC778\uB418\uC5C8\uC2B5\uB2C8\uB2E4. \uB2E4\uC74C \uB2E8\uACC4\uC5D0 \uB300\uD574 \uACE7 \uC5F0\uB77D\uB4DC\uB9B4\uAC8C\uC694.\n\n\uC218\uACE0\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4! \uD83D\uDE4F";
+  }
+  const list=missing.map(function(m,i){return (i+1)+". "+m;}).join("\n");
+  return lang==="en"
+    ?"Hi "+nick+"! \uD83D\uDE0A\n\nThank you so much for submitting your content! We really appreciate your effort.\n\nAfter reviewing your video, we noticed a few points that need to be updated before we can approve it:\n\n"+list+"\n\nCould you please revise and resubmit at your earliest convenience? Feel free to reach out if you have any questions -- we're happy to help!\n\nThank you so much for your understanding \uD83D\uDE4F"
+    :"\uC548\uB155\uD558\uC138\uC694 "+nick+"\uB2D8! \uD83D\uDE0A\n\n\uCF58\uD150\uCE20 \uC81C\uCD9C\uD574 \uC8FC\uC154\uC11C \uC815\uB9D0 \uAC10\uC0AC\uD569\uB2C8\uB2E4!\n\n\uC601\uC0C1\uC744 \uAC80\uD1A0\uD55C \uACB0\uACFC, \uC2B9\uC778 \uC804\uC5D0 \uC218\uC815\uC774 \uD544\uC694\uD55C \uBA87 \uAC00\uC9C0 \uC0AC\uD56D\uC744 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4:\n\n"+list+"\n\n\uAC00\uB2A5\uD558\uC2E0 \uBE60\uB978 \uC2DC\uC77C \uB0B4\uC5D0 \uC218\uC815 \uD6C4 \uC7AC\uC81C\uCD9C \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4. \uAD81\uAE08\uD55C \uC810\uC774 \uC788\uC73C\uC2DC\uBA74 \uC5B8\uC81C\uB4E0\uC9C0 \uD3B8\uD558\uAC8C \uBB38\uC758\uD574 \uC8FC\uC138\uC694!\n\n\uC774\uD574\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F";
+}
+
+var feedbackLang="en";
+
+/* ---- GitHub Save ---- */
+async function saveToGitHub(){
+  if(!ghToken){openPanel("savesetup");return;}
+  const c=getCampaign();if(!activeCreatorId||!c){alert("Select a creator first.");return;}
+  const cr=c.creators.find(function(x){return x.id===activeCreatorId;});
+  const s=c.state[activeCreatorId];
+  const now=nowStr(),date=dateStr();
+  const campSlug=c.name.replace(/[^a-zA-Z0-9]/g,"_").toLowerCase();
+  const crSlug=cr.handle.replace("@","").replace(/[^a-zA-Z0-9]/g,"_");
+  const filename="reviews/"+campSlug+"/"+date+"_"+crSlug+".txt";
+  const total=Object.keys(s.checks).length,done=Object.values(s.checks).filter(Boolean).length;
+  const pct=total?Math.round(done/total*100):0;
+  let content="Campaign: "+c.name+"\nCreator: "+cr.nick+" ("+cr.handle+")\nApply #: "+cr.applyNum+"\nStatus: "+s.status+"\nProgress: "+done+"/"+total+" ("+pct+"%)\nSaved: "+now+"\n\n";
+  c.master.forEach(function(sec){
+    content+="== "+sec.name+" ==\n";
+    sec.items.forEach(function(it){content+=(s.checks[it.id]?"[x] ":"[ ] ")+it.text+"\n";});
+    content+="\n";
+  });
+  const missing=getMissingItems();
+  if(missing.length){content+="== Missing ("+missing.length+") ==\n";missing.forEach(function(m,i){content+=(i+1)+". "+m+"\n";});}
+  const btn=document.getElementById("githubSaveBtn");
+  btn.innerHTML='<i class="ti ti-loader"></i> Saving...';btn.disabled=true;
+  try{
+    let sha=null;
+    const check=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filename,{headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json"}});
+    if(check.ok){const d=await check.json();sha=d.sha;}
+    const body={message:"Review: "+cr.nick+" - "+c.name+" ["+now+"]",content:btoa(unescape(encodeURIComponent(content)))};
+    if(sha)body.sha=sha;
+    const res=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filename,{method:"PUT",headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},body:JSON.stringify(body)});
+    if(res.ok){
+      s.savedAt=now;document.getElementById("saveStatus").textContent="Saved: "+now;
+      btn.innerHTML='<i class="ti ti-check"></i> Saved!';btn.style.background="#1D9E75";
+      setTimeout(function(){btn.innerHTML='<i class="ti ti-brand-github"></i> Save';btn.style.background="";btn.disabled=false;},2000);
+    }else{btn.innerHTML='<i class="ti ti-brand-github"></i> Save';btn.disabled=false;alert("GitHub error -- check your token.");}
+  }catch(e){btn.innerHTML='<i class="ti ti-brand-github"></i> Save';btn.disabled=false;alert("Network error.");}
+}
+
+/* ---- Google Sheets Save ---- */
+async function saveToSheets(){
+  if(!sheetsId||!sheetsApiKey){openPanel("savesetup");return;}
+  const c=getCampaign();if(!activeCreatorId||!c){alert("Select a creator first.");return;}
+  const cr=c.creators.find(function(x){return x.id===activeCreatorId;});
+  const s=c.state[activeCreatorId];
+  const now=nowStr();
+  const total=Object.keys(s.checks).length,done=Object.values(s.checks).filter(Boolean).length;
+  const pct=total?Math.round(done/total*100):0;
+  const missing=getMissingItems().join("; ");
+  const row=[now,c.name,cr.nick,cr.handle,cr.applyNum,s.status,done+"/"+total+" ("+pct+"%)",missing,now];
+  const btn=document.getElementById("sheetsSaveBtn");
+  btn.innerHTML='<i class="ti ti-loader"></i> Saving...';btn.disabled=true;
+  try{
+    const res=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/Sheet1!A1:I1:append?valueInputOption=USER_ENTERED&key="+sheetsApiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({values:[row]})});
+    if(res.ok){
+      s.savedAt=now;document.getElementById("saveStatus").textContent="Saved: "+now;
+      btn.innerHTML='<i class="ti ti-check"></i> Saved!';btn.style.background="#189060";
+      setTimeout(function(){btn.innerHTML='<i class="ti ti-table"></i> Save';btn.style.background="";btn.disabled=false;},2000);
+    }else{btn.innerHTML='<i class="ti ti-table"></i> Save';btn.disabled=false;alert("Sheets error -- check Sheet ID and API key.");}
+  }catch(e){btn.innerHTML='<i class="ti ti-table"></i> Save';btn.disabled=false;alert("Network error.");}
+}
+
+/* ---- Load from GitHub ---- */
+function renderLoadGitHubPanel(){
+  if(!ghToken){
+    document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please set up GitHub first in Save settings.</p>';
+    document.getElementById("panelFooter").innerHTML='<span class="pf-warn"></span><button class="apply-btn" onclick="openPanel(\'savesetup\')">Set up GitHub</button>';
+    return;
+  }
+  if(!activeCampaignId){
+    document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>';
+    document.getElementById("panelFooter").innerHTML="";
+    return;
+  }
+  document.getElementById("panelBody").innerHTML=
+    '<p class="hint">Scan your GitHub repo for saved reviews for this campaign and restore progress.</p>'+
+    '<div class="gh-load-status" id="ghLoadStatus"><i class="ti ti-brand-github" style="font-size:24px;display:block;margin-bottom:8px;color:#ccc;"></i>Click Load to fetch saved reviews</div>';
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn" id="pfWarn"></span><button class="apply-btn" id="loadGHBtn" onclick="loadFromGitHub()"><i class="ti ti-download"></i> Load reviews</button>';
+}
+
+async function loadFromGitHub(){
+  const c=getCampaign();if(!c)return;
+  const btn=document.getElementById("loadGHBtn");
+  const status=document.getElementById("ghLoadStatus");
+  btn.disabled=true;btn.textContent="Loading...";
+  status.innerHTML='<i class="ti ti-loader" style="font-size:20px;display:block;margin-bottom:8px;color:#aaa;"></i>Scanning repo...';
+  const campSlug=c.name.replace(/[^a-zA-Z0-9]/g,"_").toLowerCase();
+  const folderPath="reviews/"+campSlug;
+  try{
+    const res=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+folderPath,{headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json"}});
+    if(!res.ok){
+      status.innerHTML='<div style="color:#e24b4a;">No saved reviews found.<br><small>Looking for: reviews/'+campSlug+'/</small></div>';
+      btn.disabled=false;btn.innerHTML='<i class="ti ti-download"></i> Load reviews';
+      return;
+    }
+    const files=await res.json();
+    const txts=files.filter(function(f){return f.name.endsWith(".txt");});
+    if(!txts.length){
+      status.innerHTML='<div style="color:#EF9F27;">Folder found but no review files inside.</div>';
+      btn.disabled=false;btn.innerHTML='<i class="ti ti-download"></i> Load reviews';
+      return;
+    }
+    status.innerHTML='<div style="font-size:11px;color:#aaa;margin-bottom:8px;">'+txts.length+' file(s) found -- loading...</div>';
+    let restored=0,skipped=0;
+    for(var i=0;i<txts.length;i++){
+      var file=txts[i];
+      const fRes=await fetch(file.download_url);
+      const text=await fRes.text();
+      const handleMatch=text.match(/Creator:[^\(]*\((@[^\)]+)\)/);
+      const statusMatch=text.match(/Status:\s*(.+)/);
+      if(!handleMatch){skipped++;continue;}
+      const handle=handleMatch[1].toLowerCase();
+      const cr=c.creators.find(function(x){return x.handle.toLowerCase()===handle;});
+      if(!cr){skipped++;continue;}
+      if(!c.state[cr.id])c.state[cr.id]={status:"Pending Review",checks:{},savedAt:null};
+      if(statusMatch){
+        const sv=statusMatch[1].trim();
+        if(STATUSES.indexOf(sv)>=0)c.state[cr.id].status=sv;
+      }
+      c.master.forEach(function(sec){
+        sec.items.forEach(function(it){
+          const safe=it.text.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+          const pat=new RegExp("\\[x\\]\\s+"+safe);
+          if(pat.test(text))c.state[cr.id].checks[it.id]=true;
+        });
+      });
+      const dateMatch=file.name.match(/^(\d{8})/);
+      if(dateMatch){
+        const dm=dateMatch[1];
+        c.state[cr.id].savedAt=dm.slice(0,4)+"-"+dm.slice(4,6)+"-"+dm.slice(6,8);
+      }
+      restored++;
+    }
+    status.innerHTML='<div style="color:#1D9E75;font-size:12px;"><i class="ti ti-circle-check" style="font-size:18px;display:block;margin-bottom:6px;"></i>'+restored+' creator(s) restored'+(skipped>0?" / "+skipped+" not found in current list":"")+'.</div>';
+    updateAllPills();
+    if(activeCreatorId){renderChecklist();renderBadge();}
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-refresh"></i> Reload';
+  }catch(e){
+    status.innerHTML='<div style="color:#e24b4a;">Error loading. Check your token and repo name.</div>';
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-download"></i> Load reviews';
+  }
+}
+
+/* ---- Save All ---- */
+async function saveAllToGitHub(){
+  if(!ghToken){openPanel("savesetup");return;}
+  const c=getCampaign();if(!c||!c.creators.length){alert("No creators to save.");return;}
+  const pfWarn=document.getElementById("pfWarn");
+  if(pfWarn){pfWarn.textContent="Saving all to GitHub...";pfWarn.style.color="#aaa";}
+  let saved=0,failed=0;
+  for(var i=0;i<c.creators.length;i++){
+    var cr=c.creators[i];
+    const s=c.state[cr.id];if(!s)continue;
+    const now=nowStr(),date=dateStr();
+    const campSlug=c.name.replace(/[^a-zA-Z0-9]/g,"_").toLowerCase();
+    const crSlug=cr.handle.replace("@","").replace(/[^a-zA-Z0-9]/g,"_");
+    const filename="reviews/"+campSlug+"/"+date+"_"+crSlug+".txt";
+    const total=Object.keys(s.checks).length,done=Object.values(s.checks).filter(Boolean).length;
+    const pct=total?Math.round(done/total*100):0;
+    let content="Campaign: "+c.name+"\nCreator: "+cr.nick+" ("+cr.handle+")\nApply #: "+cr.applyNum+"\nStatus: "+s.status+"\nProgress: "+done+"/"+total+" ("+pct+"%)\nSaved: "+now+"\n\n";
+    c.master.forEach(function(sec){content+="== "+sec.name+" ==\n";sec.items.forEach(function(it){content+=(s.checks[it.id]?"[x] ":"[ ] ")+it.text+"\n";});content+="\n";});
+    const missing=c.master.reduce(function(a,sec){return a.concat(sec.items.filter(function(it){return !s.checks[it.id];}).map(function(it){return it.text;}));},[]); 
+    if(missing.length){content+="== Missing ("+missing.length+") ==\n";missing.forEach(function(m,j){content+=(j+1)+". "+m+"\n";});}
+    try{
+      let sha=null;
+      const check=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filename,{headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json"}});
+      if(check.ok){const d=await check.json();sha=d.sha;}
+      const body={message:"Review: "+cr.nick+" - "+c.name+" ["+now+"]",content:btoa(unescape(encodeURIComponent(content)))};
+      if(sha)body.sha=sha;
+      const res=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filename,{method:"PUT",headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},body:JSON.stringify(body)});
+      if(res.ok){s.savedAt=now;saved++;}else{failed++;}
+    }catch(e){failed++;}
+  }
+  if(pfWarn){pfWarn.textContent=saved+" saved to GitHub"+(failed>0?" / "+failed+" failed":"");pfWarn.style.color=failed>0?"#EF9F27":"#1D9E75";}
+}
+
+async function saveAllToSheets(){
+  if(!sheetsId||!sheetsApiKey){openPanel("savesetup");return;}
+  const c=getCampaign();if(!c||!c.creators.length){alert("No creators to save.");return;}
+  const pfWarn=document.getElementById("pfWarn");
+  if(pfWarn){pfWarn.textContent="Saving all to Sheets...";pfWarn.style.color="#aaa";}
+  let saved=0,failed=0;
+  for(var i=0;i<c.creators.length;i++){
+    var cr=c.creators[i];
+    const s=c.state[cr.id];if(!s)continue;
+    const now=nowStr();
+    const total=Object.keys(s.checks).length,done=Object.values(s.checks).filter(Boolean).length;
+    const pct=total?Math.round(done/total*100):0;
+    const missing=c.master.reduce(function(a,sec){return a.concat(sec.items.filter(function(it){return !s.checks[it.id];}).map(function(it){return it.text;}));},[]).join("; ");
+    const row=[now,c.name,cr.nick,cr.handle,cr.applyNum,s.status,done+"/"+total+" ("+pct+"%)",missing,now];
+    try{
+      const res=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/Sheet1!A1:I1:append?valueInputOption=USER_ENTERED&key="+sheetsApiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({values:[row]})});
+      if(res.ok){s.savedAt=now;saved++;}else{failed++;}
+    }catch(e){failed++;}
+  }
+  if(pfWarn){pfWarn.textContent=saved+" saved to Sheets"+(failed>0?" / "+failed+" failed":"");pfWarn.style.color=failed>0?"#EF9F27":"#1D9E75";}
+}
+
+/* ---- Export ---- */
+function renderExportPanel(){
+  const c=getCampaign();
+  if(!c){document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please select a campaign first.</p>';document.getElementById("panelFooter").innerHTML="";return;}
+  const hasGH=!!ghToken,hasSheets=!!(sheetsId&&sheetsApiKey);
+  let btns='<div style="display:flex;flex-direction:column;gap:8px;">';
+  btns+='<button class="fbtn" style="justify-content:flex-start;gap:10px;" onclick="exportCSV()"><i class="ti ti-file-spreadsheet" style="font-size:16px;"></i><div><div style="font-weight:500;">Export as CSV</div><div style="font-size:10px;color:#aaa;margin-top:1px;">All creators -- items, status, progress -- upload to Notion</div></div></button>';
+  btns+='<button class="fbtn" style="justify-content:flex-start;gap:10px;" onclick="exportText()"><i class="ti ti-file-text" style="font-size:16px;"></i><div><div style="font-weight:500;">Export as text</div><div style="font-size:10px;color:#aaa;margin-top:1px;">Readable summary for Notion or email</div></div></button>';
+  if(activeCreatorId)btns+='<button class="fbtn" style="justify-content:flex-start;gap:10px;" onclick="exportCurrentCreator()"><i class="ti ti-user" style="font-size:16px;"></i><div><div style="font-weight:500;">Export current creator only</div><div style="font-size:10px;color:#aaa;margin-top:1px;">Just the selected creator</div></div></button>';
+  if(hasGH)btns+='<button class="fbtn" style="justify-content:flex-start;gap:10px;background:#1a1a1a;color:#fff;border-color:#1a1a1a;" onclick="saveAllToGitHub()"><i class="ti ti-brand-github" style="font-size:16px;"></i><div><div style="font-weight:500;">Save all to GitHub</div><div style="font-size:10px;color:#aaa;margin-top:1px;">Dated file per creator in your repo</div></div></button>';
+  if(hasSheets)btns+='<button class="fbtn" style="justify-content:flex-start;gap:10px;background:#1D9E75;color:#fff;border-color:#1D9E75;" onclick="saveAllToSheets()"><i class="ti ti-table" style="font-size:16px;"></i><div><div style="font-weight:500;">Save all to Google Sheets</div><div style="font-size:10px;color:#ddd;margin-top:1px;">Appends a row per creator</div></div></button>';
+  if(!hasGH&&!hasSheets)btns+='<div style="font-size:11px;color:#aaa;padding:8px 0;">Set up GitHub or Sheets in <strong>Save settings</strong> to enable bulk save.</div>';
+  btns+='</div>';
+  document.getElementById("panelBody").innerHTML=btns;
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn" id="pfWarn">Files download automatically.</span>';
+}
+
+function downloadFile(name,content,type){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([content],{type:type||"text/plain"}));
+  a.download=name;a.click();URL.revokeObjectURL(a.href);
+}
+
+function exportCSV(){
+  const c=getCampaign();if(!c)return;
+  const rows=[["Campaign","Creator","Handle","Apply #","Status","Progress %","Section","Item","Checked","Saved At"]];
+  c.creators.forEach(function(cr){
+    const s=c.state[cr.id];if(!s)return;
+    const total=Object.keys(s.checks).length,done=Object.values(s.checks).filter(Boolean).length;
+    const pct=total?Math.round(done/total*100):0;
+    c.master.forEach(function(sec){sec.items.forEach(function(it){rows.push([c.name,cr.nick,cr.handle,cr.applyNum,s.status,pct+"%",sec.name,it.text,s.checks[it.id]?"Yes":"No",s.savedAt||""]);});});
+  });
+  downloadFile(c.name.replace(/[^a-zA-Z0-9]/g,"_")+"_"+dateStr()+".csv",rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n"),"text/csv");
+  closePanel();
+}
+
+function exportText(){
+  const c=getCampaign();if(!c)return;
+  let txt="Campaign: "+c.name+"\nExported: "+nowStr()+"\n"+"=".repeat(40)+"\n\n";
+  c.creators.forEach(function(cr){
+    const s=c.state[cr.id];if(!s)return;
+    const total=Object.keys(s.checks).length,done=Object.values(s.checks).filter(Boolean).length;
+    txt+=cr.nick+" ("+cr.handle+") / #"+cr.applyNum+"\nStatus: "+s.status+" / "+done+"/"+total+" ("+(total?Math.round(done/total*100):0)+"%)\n\n";
+    c.master.forEach(function(sec){txt+="  "+sec.name+":\n";sec.items.forEach(function(it){txt+="    "+(s.checks[it.id]?"v":"o")+" "+it.text+"\n";});txt+="\n";});
+    txt+="-".repeat(40)+"\n\n";
+  });
+  downloadFile(c.name.replace(/[^a-zA-Z0-9]/g,"_")+"_"+dateStr()+".txt",txt);closePanel();
+}
+
+function exportCurrentCreator(){
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const cr=c.creators.find(function(x){return x.id===activeCreatorId;});
+  const s=c.state[activeCreatorId];
+  const total=Object.keys(s.checks).length,done=Object.values(s.checks).filter(Boolean).length;
+  let txt="Campaign: "+c.name+"\nCreator: "+cr.nick+" ("+cr.handle+") / #"+cr.applyNum+"\nStatus: "+s.status+" / "+done+"/"+total+" ("+(total?Math.round(done/total*100):0)+"%)\nExported: "+nowStr()+"\n\n";
+  c.master.forEach(function(sec){txt+=sec.name+":\n";sec.items.forEach(function(it){txt+="  "+(s.checks[it.id]?"v":"o")+" "+it.text+"\n";});txt+="\n";});
+  downloadFile(cr.handle.replace("@","")+"_"+dateStr()+".txt",txt);closePanel();
+}
+
+/* ---- Save settings panel ---- */
+function renderSaveSetupPanel(){
+  const hasGH=!!ghToken,hasSheets=!!(sheetsId&&sheetsApiKey);
+  document.getElementById("panelBody").innerHTML=
+    '<p class="hint">Choose how to save your reviews. You can use both at the same time.</p>'+
+    '<div class="save-option">'+
+      '<div class="save-option-icon" style="background:#1a1a1a15;"><i class="ti ti-brand-github" style="font-size:18px;color:#1a1a1a;"></i></div>'+
+      '<div class="save-option-info"><div class="save-option-title">GitHub</div><div class="save-option-sub">Saves dated .txt files to your repo</div></div>'+
+      '<span class="save-option-status '+(hasGH?"connected":"not-connected")+'">'+(hasGH?"Connected":"Not set up")+'</span>'+
+      '<button class="setup-btn" onclick="showGHSetup()">'+(hasGH?"Edit":"Set up")+'</button>'+
+    '</div>'+
+    '<div class="save-option">'+
+      '<div class="save-option-icon" style="background:#1D9E7515;"><i class="ti ti-table" style="font-size:18px;color:#1D9E75;"></i></div>'+
+      '<div class="save-option-info"><div class="save-option-title">Google Sheets</div><div class="save-option-sub">Appends a row to a shared spreadsheet</div></div>'+
+      '<span class="save-option-status '+(hasSheets?"connected":"not-connected")+'">'+(hasSheets?"Connected":"Not set up")+'</span>'+
+      '<button class="setup-btn" onclick="showSheetsSetup()">'+(hasSheets?"Edit":"Set up")+'</button>'+
+    '</div>'+
+    '<div id="setupDetail"></div>';
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn" id="pfWarn"></span><button class="apply-btn" onclick="saveSaveSettings()">Save</button>';
+}
+
+function showGHSetup(){
+  document.getElementById("setupDetail").innerHTML=
+    '<div class="divider"></div>'+
+    '<div class="how-to"><div class="how-to-title"><i class="ti ti-brand-github" style="font-size:13px;"></i> GitHub setup</div>'+
+    '<div class="how-step"><div class="step-num">1</div><div class="step-text">Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a></div></div>'+
+    '<div class="how-step"><div class="step-num">2</div><div class="step-text">Name: "Campaign Checklist" - Expiration: No expiration</div></div>'+
+    '<div class="how-step"><div class="step-num">3</div><div class="step-text">Check <strong>repo</strong> scope - Generate token - copy it</div></div></div>'+
+    '<label class="field-label">Personal Access Token</label>'+
+    '<input class="field-input" id="ghTokenInput" type="password" placeholder="ghp_xxxxxxxxxxxx" value="'+ghToken+'"/>'+
+    '<label class="field-label">Repository</label>'+
+    '<input class="field-input" id="ghRepoInput" type="text" value="'+ghRepo+'" placeholder="username/repo"/>';
+}
+
+function showSheetsSetup(){
+  document.getElementById("setupDetail").innerHTML=
+    '<div class="divider"></div>'+
+    '<div class="how-to"><div class="how-to-title"><i class="ti ti-table" style="font-size:13px;"></i> Google Sheets setup</div>'+
+    '<div class="how-step"><div class="step-num">1</div><div class="step-text">Create a new <a href="https://sheets.google.com" target="_blank">Google Sheet</a> named "Campaign Reviews"</div></div>'+
+    '<div class="how-step"><div class="step-num">2</div><div class="step-text">Row 1 headers: Date, Campaign, Creator, Handle, Apply #, Status, Progress, Missing Items, Saved At</div></div>'+
+    '<div class="how-step"><div class="step-num">3</div><div class="step-text">Copy the Sheet ID from the URL: docs.google.com/spreadsheets/d/<strong>THIS_PART</strong>/edit</div></div>'+
+    '<div class="how-step"><div class="step-num">4</div><div class="step-text">Go to <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a> - enable Sheets API - create an API key</div></div></div>'+
+    '<label class="field-label">Google Sheet ID</label>'+
+    '<input class="field-input" id="sheetsIdInput" type="text" placeholder="Sheet ID from URL" value="'+sheetsId+'"/>'+
+    '<label class="field-label">API Key</label>'+
+    '<input class="field-input" id="sheetsApiKeyInput" type="password" placeholder="AIzaSy..." value="'+sheetsApiKey+'"/>';
+}
+
+function saveSaveSettings(){
+  const ghT=document.getElementById("ghTokenInput");
+  const ghR=document.getElementById("ghRepoInput");
+  const sId=document.getElementById("sheetsIdInput");
+  const sKey=document.getElementById("sheetsApiKeyInput");
+  if(ghT)ghToken=ghT.value.trim();
+  if(ghR)ghRepo=ghR.value.trim();
+  if(sId)sheetsId=sId.value.trim();
+  if(sKey)sheetsApiKey=sKey.value.trim();
+  updateSaveButtons();closePanel();
+}
+
+/* ---- Panel router ---- */
+var parsedCreators=[],masterDraft=[];
+
+function openPanel(type){
+  const c=getCampaign();
+  document.getElementById("panel").classList.remove("wide");
+  document.getElementById("overlay").classList.add("open");
+  const titles={howto:"How to use",newcampaign:"New campaign",csv:"Import creators",master:"Master checklist",savesetup:"Save settings",feedback:"Feedback message",export:"Export",loadgithub:"Load from GitHub"};
+  const subs={howto:"Quick guide",newcampaign:"Name your campaign",csv:"Upload creator CSV",master:"Import checklist or edit manually",savesetup:"GitHub and Google Sheets",feedback:"Auto-generated from unchecked items",export:"Download review data",loadgithub:"Restore saved reviews from your repo"};
+  document.getElementById("panelTitle").textContent=titles[type]||type;
+  document.getElementById("panelSub").textContent=subs[type]||"";
+  if(type==="howto")renderHowToPanel();
+  else if(type==="newcampaign")renderNewCampaignPanel();
+  else if(type==="csv")renderCSVPanel();
+  else if(type==="master"){masterDraft=JSON.parse(JSON.stringify(c?c.master:[]));renderMasterPanel();}
+  else if(type==="savesetup")renderSaveSetupPanel();
+  else if(type==="feedback")renderFeedbackPanel();
+  else if(type==="export")renderExportPanel();
+  else if(type==="loadgithub")renderLoadGitHubPanel();
+}
+function closePanel(){document.getElementById("overlay").classList.remove("open");}
+function bgClick(e){if(e.target===document.getElementById("overlay"))closePanel();}
+
+function renderHowToPanel(){
+  document.getElementById("panelBody").innerHTML=
+    '<div class="how-to"><div class="how-to-title"><i class="ti ti-rocket" style="font-size:13px;"></i> Each new campaign</div>'+
+    '<div class="how-step"><div class="step-num">1</div><div class="step-text"><strong>Send guideline to Claude</strong> - get checklist CSV</div></div>'+
+    '<div class="how-step"><div class="step-num">2</div><div class="step-text"><strong>+ New</strong> - name the campaign</div></div>'+
+    '<div class="how-step"><div class="step-num">3</div><div class="step-text"><strong>Master</strong> - import checklist CSV</div></div>'+
+    '<div class="how-step"><div class="step-num">4</div><div class="step-text"><strong>Import</strong> - upload creator CSV</div></div>'+
+    '<div class="how-step"><div class="step-num">5</div><div class="step-text">Select creator - check items - <strong>Feedback</strong> - <strong>Save</strong> or <strong>Export</strong></div></div></div>'+
+    '<div class="divider"></div>'+
+    '<div class="how-to"><div class="how-to-title"><i class="ti ti-brand-github" style="font-size:13px;"></i> Restore progress (Load)</div>'+
+    '<div class="how-step"><div class="step-num">1</div><div class="step-text">Select the campaign in the dropdown</div></div>'+
+    '<div class="how-step"><div class="step-num">2</div><div class="step-text">Click the <strong>Load</strong> button (GitHub icon) in the sidebar</div></div>'+
+    '<div class="how-step"><div class="step-num">3</div><div class="step-text">Click <strong>Load reviews</strong> - progress restores automatically</div></div></div>'+
+    '<div class="divider"></div>'+
+    '<div class="how-to"><div class="how-to-title"><i class="ti ti-device-floppy" style="font-size:13px;"></i> Save options</div>'+
+    '<div class="how-step"><div class="step-num" style="background:#1a1a1a15;color:#1a1a1a;"><i class="ti ti-brand-github" style="font-size:10px;"></i></div><div class="step-text"><strong>GitHub (black)</strong> - for you - saves dated files</div></div>'+
+    '<div class="how-step"><div class="step-num" style="background:#1D9E7515;color:#1D9E75;"><i class="ti ti-table" style="font-size:10px;"></i></div><div class="step-text"><strong>Google Sheets (green)</strong> - for coworkers</div></div>'+
+    '<div class="how-step"><div class="step-num" style="background:#e5f5ce;color:#27500A;">v</div><div class="step-text"><strong>Export</strong> - download CSV or text for Notion</div></div></div>';
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn"></span><button class="apply-btn" onclick="closePanel()">Got it</button>';
+}
+
+function renderNewCampaignPanel(){
+  document.getElementById("panelBody").innerHTML=
+    '<p class="hint">Each campaign has its own creators, checklist, and saved reviews.</p>'+
+    '<label class="field-label">Campaign name</label>'+
+    '<input class="nc-input" id="ncName" type="text" placeholder="e.g. Hanmi Procalm Q3 2025"/>';
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn" id="pfWarn"></span><button class="apply-btn" onclick="createCampaign()">Create</button>';
+  setTimeout(function(){
+    const i=document.getElementById("ncName");
+    if(i){i.focus();i.addEventListener("keydown",function(e){if(e.key==="Enter")createCampaign();});}
+  },100);
+}
+
+function createCampaign(){
+  const el=document.getElementById("ncName");
+  const name=el?el.value.trim():"";
+  if(!name){document.getElementById("pfWarn").textContent="Please enter a name.";return;}
+  const id=newCampaign(name);activeCampaignId=id;activeCreatorId=null;
+  document.getElementById("delCampaignBtn").style.display="flex";
+  refreshCampaignSelect();renderSidebar();resetMainPanel();closePanel();
+}
+
+function renderCSVPanel(){
+  if(!activeCampaignId){document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>';document.getElementById("panelFooter").innerHTML="";return;}
+  document.getElementById("panelBody").innerHTML=
+    '<p class="hint">Columns needed: <strong>apply number</strong>, <strong>ID (username)</strong>, <strong>nickname</strong>.</p>'+
+    '<div class="drop-zone" id="dropZone" onclick="document.getElementById(\'csvFile\').click()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDropCreator(event)">'+
+    '<i class="ti ti-upload" style="font-size:26px;color:#bbb;"></i><p>Click or drag & drop CSV</p><small>apply number - ID - nickname</small>'+
+    '<input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCreatorCSV(this.files[0])"/></div>'+
+    '<div class="csv-preview" id="csvPreview"></div>';
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn" id="pfWarn"></span><button class="fbtn" onclick="applyCreatorCSV()" id="applyCSVBtn" disabled style="opacity:0.4;">Import</button>';
+}
+
+function dzOver(e){e.preventDefault();const dz=document.getElementById("dropZone");if(dz)dz.classList.add("drag");}
+function dzLeave(){const dz=document.getElementById("dropZone");if(dz)dz.classList.remove("drag");}
+function dzDropCreator(e){e.preventDefault();dzLeave();if(e.dataTransfer.files[0])handleCreatorCSV(e.dataTransfer.files[0]);}
+function dzDropChecklist(e){e.preventDefault();const dz=document.getElementById("checklistDropZone");if(dz)dz.classList.remove("drag");if(e.dataTransfer.files[0])handleChecklistCSV(e.dataTransfer.files[0]);}
+
+function handleCreatorCSV(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const lines=e.target.result.split(/\r?\n/).filter(function(l){return l.trim();});
+    if(lines.length<2){document.getElementById("pfWarn").textContent="CSV seems empty.";return;}
+    const header=lines[0].split(",").map(function(h){return h.trim().toLowerCase().replace(/['"]/g,"");});
+    const applyIdx=header.findIndex(function(h){return h.includes("apply")||h==="no"||h==="#"||h.includes("number");});
+    const idIdx=header.findIndex(function(h){return h==="id"||h.includes("username")||h.includes("handle");});
+    const nickIdx=header.findIndex(function(h){return h.includes("nick")||h.includes("name");});
+    if(applyIdx<0||idIdx<0||nickIdx<0){document.getElementById("pfWarn").textContent="Could not detect columns.";return;}
+    parsedCreators=[];var preview=[];
+    for(var i=1;i<lines.length;i++){
+      const cols=lines[i].split(",").map(function(c){return c.trim().replace(/^["']|["']$/g,"");});
+      if(!cols[idIdx])continue;
+      const cr={id:uid(),applyNum:cols[applyIdx]||String(i),handle:cols[idIdx].startsWith("@")?cols[idIdx]:"@"+cols[idIdx],nick:cols[nickIdx]||cols[idIdx]};
+      parsedCreators.push(cr);if(preview.length<4)preview.push(cr);
+    }
+    const camp=getCampaign();
+    const existingHandles=new Set((camp?camp.creators:[]).map(function(cr){return cr.handle.toLowerCase();}));
+    const newOnes=parsedCreators.filter(function(cr){return !existingHandles.has(cr.handle.toLowerCase());});
+    const dupCount=parsedCreators.length-newOnes.length;
+    document.getElementById("csvPreview").innerHTML=
+      '<div style="font-size:11px;color:#aaa;margin:8px 0 4px;">'+parsedCreators.length+' in file - <span style="color:#1D9E75;font-weight:500;">'+newOnes.length+' new</span>'+(dupCount>0?' - <span style="color:#EF9F27;">'+dupCount+' already exist (progress kept)</span>':'')+' </div>'+
+      preview.map(function(cr){return '<div class="csv-row"><strong>#'+cr.applyNum+'</strong><span>'+cr.handle+'</span><span>'+cr.nick+'</span><span style="font-size:10px;color:'+(existingHandles.has(cr.handle.toLowerCase())?"#EF9F27":"#1D9E75")+'">'+(existingHandles.has(cr.handle.toLowerCase())?"existing":"new")+'</span></div>';}).join('')+
+      (parsedCreators.length>4?'<div style="font-size:11px;color:#aaa;padding:4px 0;">+'+(parsedCreators.length-4)+' more</div>':"");
+    const btn=document.getElementById("applyCSVBtn");btn.disabled=false;btn.style.opacity="1";
+    document.getElementById("pfWarn").textContent="";
+  };
+  reader.readAsText(file);
+}
+
+function applyCreatorCSV(){
+  if(!parsedCreators.length)return;const c=getCampaign();if(!c)return;
+  const existingHandles=new Set(c.creators.map(function(cr){return cr.handle.toLowerCase();}));
+  let added=0;
+  parsedCreators.forEach(function(cr){
+    if(!existingHandles.has(cr.handle.toLowerCase())){c.creators.push(cr);added++;}
+  });
+  buildState();renderSidebar();resetMainPanel();
+  const pf=document.getElementById("pfWarn");
+  if(pf){pf.textContent=added>0?(added+" new creator"+(added>1?"s":"")+" added. Existing progress kept."):"No new creators -- all already in list.";pf.style.color=added>0?"#1D9E75":"#EF9F27";}
+  setTimeout(closePanel,1800);
+}
+
+function renderMasterPanel(){
+  const c=getCampaign();
+  if(!c){document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>';document.getElementById("panelFooter").innerHTML="";return;}
+  document.getElementById("panelBody").innerHTML=
+    '<div class="drop-zone" id="checklistDropZone" onclick="document.getElementById(\'checklistFile\').click()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDropChecklist(event)">'+
+    '<i class="ti ti-file-spreadsheet" style="font-size:22px;color:#bbb;"></i><p>Import checklist CSV from Claude</p><small>Columns: section, item</small>'+
+    '<input type="file" id="checklistFile" accept=".csv" style="display:none" onchange="handleChecklistCSV(this.files[0])"/></div>'+
+    '<div id="checklistImportPreview"></div>'+
+    '<div class="divider"></div>'+
+    '<div id="masterItems">'+(masterDraft.length?masterDraft.map(renderSecBlock).join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">No items yet.</div>')+'</div>';
+  document.getElementById("panelFooter").innerHTML='<button class="smb" onclick="addSec()"><i class="ti ti-plus"></i> Section</button><span class="pf-warn" id="pfWarn"></span><button class="apply-btn" onclick="applyMaster()">Apply to all</button>';
+}
+
+function handleChecklistCSV(file){
+  if(!file)return;const reader=new FileReader();
+  reader.onload=function(e){
+    const lines=e.target.result.split(/\r?\n/).filter(function(l){return l.trim();});if(lines.length<2)return;
+    const header=lines[0].split(",").map(function(h){return h.trim().toLowerCase().replace(/['"]/g,"");});
+    const secIdx=header.findIndex(function(h){return h.includes("section")||h.includes("category")||h.includes("group");});
+    const itemIdx=header.findIndex(function(h){return h.includes("item")||h.includes("check")||h.includes("task")||h.includes("text");});
+    if(secIdx<0||itemIdx<0){document.getElementById("pfWarn").textContent="Need columns: section, item.";return;}
+    const sections={},order=[];
+    for(var i=1;i<lines.length;i++){
+      const cols=lines[i].split(",").map(function(c){return c.trim().replace(/^["']|["']$/g,"");});
+      const sec=cols[secIdx]||"General",item=cols[itemIdx];if(!item)continue;
+      if(!sections[sec]){sections[sec]=[];order.push(sec);}sections[sec].push(item);
+    }
+    masterDraft=order.map(function(sec){return {id:uid(),name:sec,items:sections[sec].map(function(txt){return {id:uid(),text:txt};})};});
+    const total=masterDraft.reduce(function(a,s){return a+s.items.length;},0);
+    document.getElementById("checklistImportPreview").innerHTML='<div style="font-size:11px;color:#1D9E75;padding:6px 0;">'+total+' items across '+masterDraft.length+' sections -- review then Apply.</div>';
+    document.getElementById("masterItems").innerHTML=masterDraft.map(renderSecBlock).join('');
+    document.getElementById("pfWarn").textContent="";
+  };
+  reader.readAsText(file);
+}
+
+function renderFeedbackPanel(){
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  const cr=c.creators.find(function(x){return x.id===activeCreatorId;});
+  const missing=getMissingItems();
+  document.getElementById("panel").classList.add("wide");
+  const missingHtml=!missing.length
+    ?'<div class="all-good"><i class="ti ti-circle-check" style="font-size:20px;display:block;margin-bottom:6px;"></i>All items checked -- ready to approve!</div>'
+    :'<div class="missing-list"><div class="missing-title"><i class="ti ti-alert-triangle" style="font-size:13px;"></i> '+missing.length+' item'+(missing.length>1?"s":"")+'</div>'+missing.map(function(m,i){return '<div class="missing-item"><span class="missing-num">'+(i+1)+'.</span><span>'+m+'</span></div>';}).join('')+'</div>';
+  const msg=generateFeedback(feedbackLang,missing,cr.nick);
+  document.getElementById("panelBody").innerHTML=
+    '<div class="feedback-area">'+
+    '<div class="feedback-meta"><span class="fmeta-label">Language:</span>'+
+    '<div class="lang-toggle">'+
+    '<button class="lang-btn'+(feedbackLang==="en"?" active":"")+'" onclick="switchFeedbackLang(\'en\')">English</button>'+
+    '<button class="lang-btn'+(feedbackLang==="kr"?" active":"")+'" onclick="switchFeedbackLang(\'kr\')">Korean</button>'+
+    '</div></div>'+
+    missingHtml+
+    '<div><div class="msg-label"><span>Message to creator</span><button class="copy-btn" id="copyBtn" onclick="copyMsg()"><i class="ti ti-copy"></i> Copy</button></div>'+
+    '<textarea class="msg-textarea" id="msgTextarea">'+msg+'</textarea></div></div>';
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn">Edit if needed before copying.</span>';
+}
+function switchFeedbackLang(lang){feedbackLang=lang;renderFeedbackPanel();}
+function copyMsg(){
+  const ta=document.getElementById("msgTextarea");if(!ta)return;
+  navigator.clipboard.writeText(ta.value).then(function(){
+    const btn=document.getElementById("copyBtn");
+    btn.innerHTML='<i class="ti ti-check"></i> Copied!';btn.classList.add("copied");
+    setTimeout(function(){btn.innerHTML='<i class="ti ti-copy"></i> Copy';btn.classList.remove("copied");},2000);
+  });
+}
+
+function renderSecBlock(s){
+  return '<div class="sec-block" id="sb-'+s.id+'">'+
+    '<div class="sec-row"><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
+    '<button class="smb" onclick="addItm(\''+s.id+'\')"><i class="ti ti-plus"></i> Item</button>'+
+    '<button class="dsbtn" onclick="delSec(\''+s.id+'\')"><i class="ti ti-trash"></i></button></div>'+
+    s.items.map(function(it){return '<div class="irow" id="ir-'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+s.id+'\',\''+it.id+'\',this.value)"/><button class="dibtn" onclick="delItm(\''+s.id+'\',\''+it.id+'\')"><i class="ti ti-x"></i></button></div>';}).join('')+
+    '</div>';
+}
+
+function updSecName(sid,v){const s=masterDraft.find(function(x){return x.id===sid;});if(s)s.name=v;}
+function updItm(sid,iid,v){const s=masterDraft.find(function(x){return x.id===sid;});if(s){const it=s.items.find(function(x){return x.id===iid;});if(it)it.text=v;}}
+function addItm(sid){
+  const s=masterDraft.find(function(x){return x.id===sid;});if(!s)return;
+  const it={id:uid(),text:"New item"};s.items.push(it);
+  document.getElementById("sb-"+sid).insertAdjacentHTML("beforeend",'<div class="irow" id="ir-'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+sid+'\',\''+it.id+'\',this.value)" style="background:#f5f5f5;"/><button class="dibtn" onclick="delItm(\''+sid+'\',\''+it.id+'\')" style="opacity:1"><i class="ti ti-x"></i></button></div>');
+  const inp=document.querySelector("#ir-"+it.id+" input");if(inp){inp.focus();inp.select();}
+}
+function delItm(sid,iid){const s=masterDraft.find(function(x){return x.id===sid;});if(s)s.items=s.items.filter(function(x){return x.id!==iid;});const el=document.getElementById("ir-"+iid);if(el)el.remove();}
+function delSec(sid){masterDraft=masterDraft.filter(function(x){return x.id!==sid;});const el=document.getElementById("sb-"+sid);if(el)el.remove();}
+function addSec(){
+  const s={id:uid(),name:"New section",items:[]};masterDraft.push(s);
+  document.getElementById("masterItems").insertAdjacentHTML("beforeend",renderSecBlock(s));
+  const inp=document.querySelector("#sb-"+s.id+" .sec-inp");if(inp){inp.focus();inp.select();}
+}
+function applyMaster(){
+  const c=getCampaign();if(!c)return;
+  c.master=JSON.parse(JSON.stringify(masterDraft));
+  buildState();if(activeCreatorId)renderChecklist();
+  updateAllPills();resetMainPanel();closePanel();
+}
+</script>
+</body>
+</html>
