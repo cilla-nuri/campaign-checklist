@@ -988,21 +988,32 @@ function bgClick(e){if(e.target===document.getElementById("overlay"))closePanel(
 function renderHowToPanel(){
   document.getElementById("panelBody").innerHTML=
     '<div class="how-to"><div class="how-to-title"><i class="ti ti-rocket" style="font-size:13px;"></i> Each new campaign</div>'+
-    '<div class="how-step"><div class="step-num">1</div><div class="step-text"><strong>Send guideline to Claude</strong> - get checklist CSV</div></div>'+
+    '<div class="how-step"><div class="step-num">1</div><div class="step-text"><strong>Send guideline to Claude</strong> (same project) - get checklist CSV back</div></div>'+
     '<div class="how-step"><div class="step-num">2</div><div class="step-text"><strong>+ New</strong> - name the campaign</div></div>'+
-    '<div class="how-step"><div class="step-num">3</div><div class="step-text"><strong>Master</strong> - import checklist CSV</div></div>'+
-    '<div class="how-step"><div class="step-num">4</div><div class="step-text"><strong>Import</strong> - upload creator CSV</div></div>'+
-    '<div class="how-step"><div class="step-num">5</div><div class="step-text">Select creator - check items - <strong>Feedback</strong> - <strong>Save</strong> or <strong>Export</strong></div></div></div>'+
+    '<div class="how-step"><div class="step-num">3</div><div class="step-text"><strong>Master</strong> - import checklist CSV from Claude</div></div>'+
+    '<div class="how-step"><div class="step-num">4</div><div class="step-text"><strong>Import</strong> - upload creator CSV (apply number, ID, nickname)</div></div>'+
+    '<div class="how-step"><div class="step-num">5</div><div class="step-text">Select creator - check off items - click <strong>Feedback</strong> to copy message</div></div>'+
+    '<div class="how-step"><div class="step-num">6</div><div class="step-text">Click <strong>Save</strong> (GitHub) to save everything to repo</div></div>'+
+    '</div>'+
     '<div class="divider"></div>'+
-    '<div class="how-to"><div class="how-to-title"><i class="ti ti-brand-github" style="font-size:13px;"></i> Restore progress (Load)</div>'+
-    '<div class="how-step"><div class="step-num">1</div><div class="step-text">Select the campaign in the dropdown</div></div>'+
-    '<div class="how-step"><div class="step-num">2</div><div class="step-text">Click the <strong>Load</strong> button (GitHub icon) in the sidebar</div></div>'+
-    '<div class="how-step"><div class="step-num">3</div><div class="step-text">Click <strong>Load reviews</strong> - progress restores automatically</div></div></div>'+
+    '<div class="how-to"><div class="how-to-title"><i class="ti ti-brand-github" style="font-size:13px;"></i> Open on a new browser / device</div>'+
+    '<div class="how-step"><div class="step-num">1</div><div class="step-text">Click <strong>Backup</strong> (top bar) - <strong>Scan repo for campaigns</strong></div></div>'+
+    '<div class="how-step"><div class="step-num">2</div><div class="step-text">All campaigns appear in dropdown with their real names</div></div>'+
+    '<div class="how-step"><div class="step-num">3</div><div class="step-text">Select campaign - click <strong>Load</strong> (sidebar) - everything restores: creators, checklist, progress</div></div>'+
+    '</div>'+
+    '<div class="divider"></div>'+
+    '<div class="how-to"><div class="how-to-title"><i class="ti ti-message-2" style="font-size:13px;"></i> Feedback message (all items checked)</div>'+
+    '<div class="how-step"><div class="step-num">→</div><div class="step-text">Choose <strong>Payment type</strong>: Payment / Jelly only</div></div>'+
+    '<div class="how-step"><div class="step-num">→</div><div class="step-text">Choose <strong>Tone</strong>: All good / Warning / Strong</div></div>'+
+    '<div class="how-step"><div class="step-num">→</div><div class="step-text">Switch EN / Korean - edit if needed - <strong>Copy</strong></div></div>'+
+    '</div>'+
     '<div class="divider"></div>'+
     '<div class="how-to"><div class="how-to-title"><i class="ti ti-device-floppy" style="font-size:13px;"></i> Save options</div>'+
-    '<div class="how-step"><div class="step-num" style="background:#1a1a1a15;color:#1a1a1a;"><i class="ti ti-brand-github" style="font-size:10px;"></i></div><div class="step-text"><strong>GitHub (black)</strong> - for you - saves dated files</div></div>'+
-    '<div class="how-step"><div class="step-num" style="background:#1D9E7515;color:#1D9E75;"><i class="ti ti-table" style="font-size:10px;"></i></div><div class="step-text"><strong>Google Sheets (green)</strong> - for coworkers</div></div>'+
-    '<div class="how-step"><div class="step-num" style="background:#e5f5ce;color:#27500A;">v</div><div class="step-text"><strong>Export</strong> - download CSV or text for Notion</div></div></div>';
+    '<div class="how-step"><div class="step-num" style="background:#1a1a1a15;color:#1a1a1a;"><i class="ti ti-brand-github" style="font-size:10px;"></i></div><div class="step-text"><strong>Save (black)</strong> - saves review + creators + checklist to GitHub repo</div></div>'+
+    '<div class="how-step"><div class="step-num" style="background:#1D9E7515;color:#1D9E75;"><i class="ti ti-table" style="font-size:10px;"></i></div><div class="step-text"><strong>Save (green)</strong> - appends row to Google Sheets (for team)</div></div>'+
+    '<div class="how-step"><div class="step-num" style="background:#e8e6ff;color:#534AB7;">S</div><div class="step-text"><strong>Save locally</strong> - saves to browser localStorage (instant)</div></div>'+
+    '<div class="how-step"><div class="step-num" style="background:#e5f5ce;color:#27500A;">↓</div><div class="step-text"><strong>Export</strong> - download CSV or text for Notion upload</div></div>'+
+    '</div>';
   document.getElementById("panelFooter").innerHTML='<span class="pf-warn"></span><button class="apply-btn" onclick="closePanel()">Got it</button>';
 }
 
