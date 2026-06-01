@@ -3,7 +3,7 @@ Creator: lisa_sant_ (@lisa_sant_)
 Apply #: 745001
 Status: Pending Review
 Progress: 0/17 (0%)
-Saved: 2026-06-01 16:33
+Saved: 2026-06-01 19:25
 
 == Format & Tech Requirements ==
 [ ] Video length is min 40 seconds – maximum 1 minute
