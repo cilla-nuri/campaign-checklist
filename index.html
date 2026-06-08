@@ -548,12 +548,43 @@ var feedbackTone="good";
 /* ---- GitHub Save ---- */
 /* ---- Helper: save a single file to GitHub ---- */
 async function ghPut(filepath, content, message){
+  const encoded=btoa(unescape(encodeURIComponent(content)));
+  // Always fetch fresh SHA before writing
   let sha=null;
-  const check=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filepath,{headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json"}});
-  if(check.ok){const d=await check.json();sha=d.sha;}
-  const body={message:message,content:btoa(unescape(encodeURIComponent(content)))};
+  try{
+    const check=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filepath,{
+      headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json"},
+      cache:"no-store"
+    });
+    if(check.ok){const d=await check.json();sha=d.sha;}
+  }catch(e){}
+  const body={message:message,content:encoded};
   if(sha)body.sha=sha;
-  const res=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filepath,{method:"PUT",headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},body:JSON.stringify(body)});
+  const res=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filepath,{
+    method:"PUT",
+    headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  // If 409 conflict, fetch SHA again and retry once
+  if(res.status===409){
+    try{
+      const check2=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filepath,{
+        headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json"},
+        cache:"no-store"
+      });
+      if(check2.ok){
+        const d2=await check2.json();
+        const body2={message:message,content:encoded,sha:d2.sha};
+        const res2=await fetch("https://api.github.com/repos/"+ghRepo+"/contents/"+filepath,{
+          method:"PUT",
+          headers:{"Authorization":"token "+ghToken,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},
+          body:JSON.stringify(body2)
+        });
+        return res2.ok;
+      }
+    }catch(e){}
+    return false;
+  }
   return res.ok;
 }
 
