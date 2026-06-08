@@ -626,11 +626,9 @@ async function saveToGitHub(){
   const btn=document.getElementById("githubSaveBtn");
   btn.innerHTML='<i class="ti ti-loader"></i> Saving...';btn.disabled=true;
   try{
-    // Save review file + campaign meta in parallel
-    const [ok]=await Promise.all([
-      ghPut(filename,content,"Review: "+cr.nick+" - "+c.name+" ["+now+"]"),
-      saveCampaignMeta(c)
-    ]);
+    // Save campaign meta FIRST, then review file (sequential to avoid 409 conflicts)
+    await saveCampaignMeta(c);
+    const ok=await ghPut(filename,content,"Review: "+cr.nick+" - "+c.name+" ["+now+"]");
     if(ok){
       s.savedAt=now;document.getElementById("saveStatus").textContent="Saved: "+now;
       btn.innerHTML='<i class="ti ti-check"></i> Saved!';btn.style.background="#1D9E75";
