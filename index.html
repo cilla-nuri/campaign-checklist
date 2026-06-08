@@ -534,7 +534,7 @@ function generateFeedback(lang,missing,nick,payType,tone){
   if(missing.length){
     const list=missing.map(function(m,i){return (i+1)+". "+m;}).join("\n");
     return lang==="en"
-      ?"Hi "+nick+"! \uD83D\uDE0A\n\nThank you so much for submitting your content! We really appreciate your effort.\n\nAfter reviewing your video, we noticed a few points that need to be updated before we can approve it:\n\n"+list+"\n\nCould you please revise and resubmit at your earliest convenience?\n\nThank you so much for your understanding \uD83D\uDE4F"
+      ?"Hi "+nick+"! \uD83D\uDE0A\n\nThank you so much for submitting your content! We really appreciate your effort.\n\nAfter reviewing your video, we noticed a few points that need to be updated before we can approve it:\n\n"+list+"\n\nCould you please revise and resubmit at your earliest convenience? Feel free to reach out if you have any questions -- we're happy to help!\n\nThank you so much for your understanding \uD83D\uDE4F"
       :"\uC548\uB155\uD558\uC138\uC694 "+nick+"\uB2D8! \uD83D\uDE0A\n\n\uCF58\uD150\uCE20 \uC81C\uCD9C\uD574 \uC8FC\uC154\uC11C \uC815\uB9D0 \uAC10\uC0AC\uD569\uB2C8\uB2E4!\n\n\uC601\uC0C1\uC744 \uAC80\uD1A0\uD55C \uACB0\uACFC, \uC2B9\uC778 \uC804\uC5D0 \uC218\uC815\uC774 \uD544\uC694\uD55C \uBA87 \uAC00\uC9C0 \uC0AC\uD56D\uC744 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4:\n\n"+list+"\n\n\uAC00\uB2A5\uD558\uC2E0 \uBE60\uB978 \uC2DC\uC77C \uB0B4\uC5D0 \uC218\uC815 \uD6C4 \uC7AC\uC81C\uCD9C \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4. \uAD81\uAE08\uD55C \uC810\uC774 \uC788\uC73C\uC2DC\uBA74 \uC5B8\uC81C\uB4E0\uC9C0 \uD3B8\uD558\uAC8C \uBB38\uC758\uD574 \uC8FC\uC138\uC694!\n\n\uC774\uD574\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F";
   }
   var pt=payType||"payment",t=tone||"good";
@@ -913,7 +913,8 @@ function showGHSetup(){
     '<label class="field-label">Personal Access Token</label>'+
     '<input class="field-input" id="ghTokenInput" type="password" placeholder="ghp_xxxxxxxxxxxx" value="'+ghToken+'"/>'+
     '<label class="field-label">Repository</label>'+
-    '<input class="field-input" id="ghRepoInput" type="text" value="'+ghRepo+'" placeholder="username/repo"/>';
+    '<input class="field-input" id="ghRepoInput" type="text" value="'+ghRepo+'" placeholder="username/repo"/>'+
+    '<button id="testGHBtn" onclick="testGitHubToken()" style="font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;color:#555;">Test connection</button>';
 }
 
 function showSheetsSetup(){
@@ -952,12 +953,52 @@ function saveSaveSettings(){
   const sUrl=document.getElementById("appsScriptUrlInput");
   const sId=document.getElementById("sheetsIdInput");
   const sKey=document.getElementById("sheetsApiKeyInput");
-  if(ghT)ghToken=ghT.value.trim();
-  if(ghR)ghRepo=ghR.value.trim();
+  if(ghT&&ghT.value.trim())ghToken=ghT.value.trim();
+  if(ghR&&ghR.value.trim())ghRepo=ghR.value.trim();
   if(sUrl)appsScriptUrl=sUrl.value.trim();
   if(sId)sheetsId=sId.value.trim();
   if(sKey)sheetsApiKey=sKey.value.trim();
-  saveToLocalStorage();updateSaveButtons();closePanel();
+  // Force update localStorage directly to ensure token is saved
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    const existing=raw?JSON.parse(raw):{};
+    existing.ghToken=ghToken;
+    existing.ghRepo=ghRepo;
+    existing.appsScriptUrl=appsScriptUrl;
+    existing.sheetsId=sheetsId;
+    existing.sheetsApiKey=sheetsApiKey;
+    existing.savedAt=new Date().toISOString();
+    localStorage.setItem(LS_KEY,JSON.stringify(existing));
+  }catch(e){}
+  updateSaveButtons();
+  const pf=document.getElementById("pfWarn");
+  if(pf){pf.textContent="Settings saved!";pf.style.color="#1D9E75";}
+  setTimeout(closePanel,800);
+}
+
+async function testGitHubToken(){
+  const tokenInput=document.getElementById("ghTokenInput");
+  const repoInput=document.getElementById("ghRepoInput");
+  const token=tokenInput?tokenInput.value.trim():ghToken;
+  const repo=repoInput?repoInput.value.trim():ghRepo;
+  const btn=document.getElementById("testGHBtn");
+  const pf=document.getElementById("pfWarn");
+  if(!token){if(pf){pf.textContent="Please enter a token first.";pf.style.color="#e24b4a";}return;}
+  if(btn){btn.disabled=true;btn.textContent="Testing...";}
+  try{
+    const res=await fetch("https://api.github.com/repos/"+repo+"/contents",{
+      headers:{"Authorization":"token "+token,"Accept":"application/vnd.github.v3+json"}
+    });
+    if(res.ok){
+      if(pf){pf.textContent="✓ Token works! Click Save.";pf.style.color="#1D9E75";}
+    }else{
+      const d=await res.json();
+      if(pf){pf.textContent="Error: "+(d.message||"Invalid token");pf.style.color="#e24b4a";}
+    }
+  }catch(e){
+    if(pf){pf.textContent="Network error";pf.style.color="#e24b4a";}
+  }
+  if(btn){btn.disabled=false;btn.textContent="Test connection";}
 }
 
 
