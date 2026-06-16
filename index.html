@@ -362,6 +362,9 @@ window.addEventListener("DOMContentLoaded",function(){
     if(activeCampaignId&&campaigns[activeCampaignId]){
       document.getElementById("delCampaignBtn").style.display="flex";
       renderSidebar();resetMainPanel();
+      document.getElementById("mainTabs").style.display="flex";
+      var _c=getCampaign();
+      if(_c&&_c.creators.length){loadCreatorGrades(_c.creators.map(function(cr){return cr.handle;})).then(function(){renderSidebar();});}
     }else{
       activeCampaignId=null;resetUI();
     }
