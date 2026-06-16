@@ -225,7 +225,11 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
     <div class="main">
       <div class="main-header">
         <div>
-          <div class="main-title" id="mainTitle">No campaign selected</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="main-title" id="mainTitle">No campaign selected</div>
+            <div id="mainGrades" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+            <button id="gradeEditBtn" onclick="editCurrentGrade()" style="display:none;background:none;border:1px solid #e0e0e0;border-radius:6px;padding:2px 8px;font-size:11px;color:#888;cursor:pointer;"><i class="ti ti-pencil"></i> Edit grade</button>
+          </div>
           <div class="main-sub" id="mainSub">Create a new campaign to get started</div>
         </div>
         <div class="main-header-right">
@@ -507,6 +511,8 @@ function selectCreator(id){
   document.getElementById("mainTitle").textContent=cr.nick;
   document.getElementById("mainSub").textContent=cr.handle+" / Apply #"+cr.applyNum+" / "+c.name;
   document.getElementById("sbadge").style.display="block";document.getElementById("feedbackBtn").style.display="flex";
+  // Show grade pills in header
+  renderMainGrades(cr.handle);
   const saved=c.state[id]&&c.state[id].savedAt;
   document.getElementById("saveStatus").textContent=saved?"Saved: "+saved:"";
   renderBadge();renderChecklist();updateSaveButtons();
@@ -1913,6 +1919,53 @@ function openPanel(type){
     return;
   }
   _origOpenPanel(type);
+}
+
+
+/* ============ MAIN HEADER GRADES ============ */
+var _currentGradeHandle = null;
+
+function renderMainGrades(handle) {
+  _currentGradeHandle = handle;
+  var gradesEl = document.getElementById("mainGrades");
+  var editBtn = document.getElementById("gradeEditBtn");
+  if (!gradesEl) return;
+  
+  var g = getCreatorGrade(handle);
+  var pills = "";
+  
+  if (g && !g.cant_evaluate) {
+    if (g.video_quality) pills += '<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#f0efff;color:#534AB7;">' + g.video_quality + '</span>';
+    if (g.manager_evaluation) pills += '<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#e8f5e9;color:#2e7d32;">' + g.manager_evaluation + '</span>';
+    if (g.skintone) pills += '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f5f5f5;color:#555;">' + g.skintone + '</span>';
+    if (g.english_proficiency) pills += '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#fff8e1;color:#7a5200;">' + g.english_proficiency + '</span>';
+  }
+  if (g && g.blacklist) pills += '<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:#fde8d8;color:#712B13;">BLACKLIST</span>';
+  if (g && g.cant_evaluate) pills += '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f0f0f0;color:#aaa;">N/A</span>';
+  if (!g) pills += '<span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f5f5f5;color:#bbb;border:1px dashed #ddd;">No grade yet</span>';
+  
+  gradesEl.innerHTML = pills;
+  if (editBtn) editBtn.style.display = "flex";
+  
+  // If no grade cached yet, try loading from Supabase
+  if (!g) {
+    loadCreatorGrades([handle]).then(function() {
+      renderMainGrades(handle);
+    });
+  }
+}
+
+function editCurrentGrade() {
+  if (_currentGradeHandle) openGradeEdit(_currentGradeHandle);
+}
+
+/* Patch saveGradeEdit to also refresh main header */
+var _origSaveGradeEdit = saveGradeEdit;
+async function saveGradeEdit(handle) {
+  await _origSaveGradeEdit(handle);
+  if (_currentGradeHandle && _currentGradeHandle === handle) {
+    renderMainGrades(handle);
+  }
 }
 
 </script>
