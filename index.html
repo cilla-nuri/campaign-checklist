@@ -221,6 +221,43 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:10px;}
 ::-webkit-scrollbar-thumb:hover{background:#ccc;}
+
+/* ===== CREATORS FULL PAGE ===== */
+.creators-page{display:none;flex-direction:column;flex:1;overflow:hidden;background:#fff;}
+.creators-page.active{display:flex;}
+.cp-header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid #efefef;flex-shrink:0;}
+.cp-back{font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px;border:none;background:#f0f0f0;color:#555;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.cp-back:hover{background:#e5e5e5;}
+.cp-title{font-size:15px;font-weight:600;color:#111;}
+.cp-count{font-size:12px;color:#bbb;font-weight:500;}
+.cp-filters{display:flex;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid #f5f5f5;flex-shrink:0;flex-wrap:wrap;background:#fafafa;}
+.cp-filter{font-size:11px;padding:5px 10px;border-radius:7px;border:1.5px solid #e8e8e8;background:#fff;color:#555;cursor:pointer;outline:none;font-weight:500;}
+.cp-filter:focus{border-color:#534AB7;}
+.cp-search{font-size:12px;padding:5px 12px;border-radius:7px;border:1.5px solid #e8e8e8;background:#fff;color:#111;outline:none;width:200px;}
+.cp-search:focus{border-color:#534AB7;}
+.cp-add-btn{font-size:11px;padding:5px 12px;border-radius:8px;border:none;background:#534AB7;color:#fff;cursor:pointer;font-weight:500;margin-left:auto;display:flex;align-items:center;gap:5px;}
+.cp-add-btn:hover{background:#4740a0;}
+.cp-table-wrap{flex:1;overflow:auto;}
+.cp-table{width:100%;border-collapse:collapse;font-size:13px;}
+.cp-table th{position:sticky;top:0;background:#fafafa;padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #efefef;white-space:nowrap;cursor:pointer;user-select:none;z-index:1;}
+.cp-table th:hover{color:#534AB7;}
+.cp-table th.sort-asc::after{content:' ↑';}
+.cp-table th.sort-desc::after{content:' ↓';}
+.cp-table td{padding:9px 14px;border-bottom:1px solid #f8f8f8;color:#333;vertical-align:middle;}
+.cp-table tr:hover td{background:#f8f7ff;}
+.cp-table tr.cp-editing td{background:#f8f7ff;}
+.cp-link{color:#534AB7;text-decoration:none;font-size:11px;display:inline-flex;align-items:center;gap:3px;}
+.cp-link:hover{text-decoration:underline;}
+.cp-edit-btn{font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid #e8e8e8;background:#fff;color:#534AB7;cursor:pointer;font-weight:500;white-space:nowrap;}
+.cp-edit-btn:hover{background:#f0efff;}
+.cp-save-btn{font-size:10px;padding:3px 10px;border-radius:6px;border:none;background:#534AB7;color:#fff;cursor:pointer;font-weight:500;}
+.cp-save-btn:hover{background:#4740a0;}
+.cp-inline-input{font-size:12px;padding:3px 7px;border-radius:6px;border:1.5px solid #534AB7;background:#fff;color:#111;outline:none;width:90px;}
+.cp-inline-select{font-size:12px;padding:3px 7px;border-radius:6px;border:1.5px solid #534AB7;background:#fff;color:#111;outline:none;}
+.cp-inline-url{font-size:12px;padding:3px 7px;border-radius:6px;border:1.5px solid #534AB7;background:#fff;color:#111;outline:none;width:160px;}
+.cp-empty{text-align:center;color:#ccc;padding:60px;font-size:13px;}
+.cp-add-row{background:#f8f7ff;}
+.cp-add-row td{padding:8px 14px;}
 </style>
 </head>
 <body>
@@ -259,7 +296,10 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
       <div class="empty-msg" id="noSearch" style="display:none;">No creators found</div>
     </div>
 
-    <div class="main">
+    <div class="creators-page" id="creatorsPage">
+      <!-- Full page creators DB - rendered by JS -->
+    </div>
+    <div class="main" id="mainArea">
       <div class="main-header">
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -2003,6 +2043,231 @@ async function saveGradeEdit(handle) {
   if (_currentGradeHandle && _currentGradeHandle === handle) {
     renderMainGrades(handle);
   }
+}
+
+
+/* ============================================================
+   CREATORS FULL PAGE
+   ============================================================ */
+var cpAllCreators = [];
+var cpFiltered = [];
+var cpSortCol = 'username';
+var cpSortDir = 1;
+var cpFilterV = '', cpFilterE = '', cpFilterSkin = '', cpFilterEng = '', cpFilterBL = '';
+var cpSearch = '';
+var cpEditingHandle = null;
+
+function openCreatorsPage() {
+  document.getElementById('creatorsPage').classList.add('active');
+  document.getElementById('mainArea').style.display = 'none';
+  document.getElementById('mainTabs').style.display = 'none';
+  document.getElementById('sunjeongArea').style.display = 'none';
+  renderCreatorsPage();
+}
+
+function closeCreatorsPage() {
+  document.getElementById('creatorsPage').classList.remove('active');
+  document.getElementById('mainArea').style.display = '';
+  if (activeCampaignId) document.getElementById('mainTabs').style.display = 'flex';
+  if (activeMainTab === 'sunjeong' && activeCampaignId) document.getElementById('sunjeongArea').style.display = 'flex';
+}
+
+async function renderCreatorsPage() {
+  var el = document.getElementById('creatorsPage');
+  el.innerHTML = '<div style="padding:40px;text-align:center;color:#bbb;font-size:13px;">Loading creators...</div>';
+
+  // Collect all unique creators from campaigns
+  var allMap = {};
+  Object.values(campaigns).forEach(function(c) {
+    (c.creators || []).forEach(function(cr) {
+      var key = cr.handle.toLowerCase();
+      if (!allMap[key]) allMap[key] = {handle: cr.handle, nick: cr.nick, campaigns: []};
+      allMap[key].campaigns.push(c.name);
+    });
+  });
+  cpAllCreators = Object.values(allMap).sort(function(a, b) { return a.handle.localeCompare(b.handle); });
+
+  // Load grades from Supabase
+  await loadCreatorGrades(cpAllCreators.map(function(c) { return c.handle; }));
+
+  buildCreatorsPage(el);
+}
+
+function buildCreatorsPage(el) {
+  cpFiltered = getCpFiltered();
+
+  var filters =
+    '<div class="cp-filters">' +
+    '<input class="cp-search" type="text" placeholder="Search username or nickname..." value="' + cpSearch + '" oninput="cpSearch=this.value;refreshCpTable()"/>' +
+    '<select class="cp-filter" onchange="cpFilterV=this.value;refreshCpTable()">' +
+    '<option value="">All V</option>' +
+    ['V1','V2','V3','V4','V5'].map(function(v){return '<option value="'+v+'"'+(cpFilterV===v?' selected':'')+'>'+v+'</option>';}).join('') +
+    '</select>' +
+    '<select class="cp-filter" onchange="cpFilterE=this.value;refreshCpTable()">' +
+    '<option value="">All E</option>' +
+    ['E1','E2','E3','E4','E5'].map(function(v){return '<option value="'+v+'"'+(cpFilterE===v?' selected':'')+'>'+v+'</option>';}).join('') +
+    '</select>' +
+    '<select class="cp-filter" onchange="cpFilterSkin=this.value;refreshCpTable()">' +
+    '<option value="">All Skintone</option>' +
+    ['Light','Fair','Medium','Tan','Deep'].map(function(v){return '<option value="'+v+'"'+(cpFilterSkin===v?' selected':'')+'>'+v+'</option>';}).join('') +
+    '</select>' +
+    '<select class="cp-filter" onchange="cpFilterEng=this.value;refreshCpTable()">' +
+    '<option value="">All English</option>' +
+    ['Fluent','Good','Not Bad','Bad'].map(function(v){return '<option value="'+v+'"'+(cpFilterEng===v?' selected':'')+'>'+v+'</option>';}).join('') +
+    '</select>' +
+    '<select class="cp-filter" onchange="cpFilterBL=this.value;refreshCpTable()">' +
+    '<option value="">All Status</option>' +
+    '<option value="bl"'+(cpFilterBL==='bl'?' selected':'')+'>Blacklist</option>' +
+    '<option value="ok"'+(cpFilterBL==='ok'?' selected':'')+'>Active</option>' +
+    '</select>' +
+    '<span class="cp-count" id="cpCount">' + cpFiltered.length + ' / ' + cpAllCreators.length + ' creators</span>' +
+    '</div>';
+
+  var thStyle = '';
+  var cols = [
+    {key:'username', label:'Username'},
+    {key:'_vr', label:'V'},
+    {key:'_er', label:'E'},
+    {key:'_sk', label:'Skintone'},
+    {key:'_en', label:'English'},
+    {key:'_ig', label:'Instagram'},
+    {key:'_tt', label:'TikTok'},
+    {key:'_camps', label:'Campaigns'},
+    {key:'_actions', label:''}
+  ];
+  var thead = '<tr>' + cols.map(function(c) {
+    if (c.key === '_actions') return '<th style="width:80px;"></th>';
+    var sc = cpSortCol === c.key ? (cpSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    return '<th class="' + sc + '" onclick="cpSort(\'' + c.key + '\')">' + c.label + '</th>';
+  }).join('') + '</tr>';
+
+  var tbody = cpFiltered.map(function(cr) { return buildCpRow(cr); }).join('');
+
+  el.innerHTML =
+    '<div class="cp-header">' +
+    '<button class="cp-back" onclick="closeCreatorsPage()"><i class="ti ti-arrow-left"></i> Back</button>' +
+    '<span class="cp-title">Creator Database</span>' +
+    '</div>' +
+    filters +
+    '<div class="cp-table-wrap" id="cpTableWrap">' +
+    '<table class="cp-table"><thead>' + thead + '</thead><tbody id="cpBody">' + tbody + '</tbody></table>' +
+    '</div>';
+}
+
+function buildCpRow(cr) {
+  var g = getCreatorGrade(cr.handle) || {};
+  var isEditing = cpEditingHandle === cr.handle;
+  var bl = g.blacklist;
+  var nameStyle = bl ? 'color:#e24b4a;font-weight:600;' : 'font-weight:500;';
+  var blBadge = bl ? ' <span style="font-size:9px;background:#fde8d8;color:#712B13;padding:1px 5px;border-radius:5px;font-weight:700;">BL</span>' : '';
+
+  if (isEditing) {
+    function mkSel(id, val, opts) {
+      return '<select class="cp-inline-select" id="cpe_'+id+'"><option value="">-</option>' +
+        opts.map(function(o){return '<option value="'+o+'"'+(val===o?' selected':'')+'>'+o+'</option>';}).join('') +
+        '</select>';
+    }
+    return '<tr class="cp-editing">' +
+      '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+'</td>' +
+      '<td>'+mkSel('vq',g.video_quality||'',['V1','V2','V3','V4','V5'])+'</td>' +
+      '<td>'+mkSel('me',g.manager_evaluation||'',['E1','E2','E3','E4','E5'])+'</td>' +
+      '<td>'+mkSel('sk',g.skintone||'',['Light','Fair','Medium','Tan','Deep'])+'</td>' +
+      '<td>'+mkSel('en',g.english_proficiency||'',['Fluent','Good','Not Bad','Bad'])+'</td>' +
+      '<td><input class="cp-inline-url" id="cpe_ig" value="'+(g.instagram_url||'')+'" placeholder="https://instagram.com/..."/></td>' +
+      '<td><input class="cp-inline-url" id="cpe_tt" value="'+(g.tiktok_url||'')+'" placeholder="https://tiktok.com/@..."/></td>' +
+      '<td style="font-size:11px;color:#bbb;">'+(cr.campaigns||[]).join(', ')+'</td>' +
+      '<td style="display:flex;gap:5px;padding-top:11px;">' +
+      '<button class="cp-save-btn" onclick="cpSaveRow(\''+cr.handle+'\')">Save</button>' +
+      '<button class="cp-edit-btn" onclick="cpEditingHandle=null;refreshCpTable()">Cancel</button>' +
+      '</td>' +
+      '</tr>';
+  }
+
+  var vPill = g.video_quality ? '<span class="vgrade-pill">'+g.video_quality+'</span>' : '<span style="color:#ddd">—</span>';
+  var ePill = g.manager_evaluation ? '<span class="egrade-pill">'+g.manager_evaluation+'</span>' : '<span style="color:#ddd">—</span>';
+  var sk = g.skintone || '<span style="color:#ddd">—</span>';
+  var en = g.english_proficiency || '<span style="color:#ddd">—</span>';
+  var igLink = g.instagram_url ? '<a class="cp-link" href="'+g.instagram_url+'" target="_blank"><i class="ti ti-brand-instagram"></i> IG</a>' : '<span style="color:#ddd;font-size:11px;">—</span>';
+  var ttLink = g.tiktok_url ? '<a class="cp-link" href="'+g.tiktok_url+'" target="_blank"><i class="ti ti-brand-tiktok"></i> TT</a>' : '<span style="color:#ddd;font-size:11px;">—</span>';
+  var camps = '<span style="font-size:11px;color:#bbb;max-width:160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(cr.campaigns||[]).join(', ')+'">'+(cr.campaigns||[]).join(', ')+'</span>';
+
+  return '<tr>' +
+    '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+'<div style="font-size:11px;color:#bbb;">'+cr.nick+'</div></td>' +
+    '<td>'+vPill+'</td>' +
+    '<td>'+ePill+'</td>' +
+    '<td>'+sk+'</td>' +
+    '<td>'+en+'</td>' +
+    '<td>'+igLink+'</td>' +
+    '<td>'+ttLink+'</td>' +
+    '<td>'+camps+'</td>' +
+    '<td><button class="cp-edit-btn" onclick="cpEditingHandle=\''+cr.handle+'\';refreshCpTable()">Edit</button></td>' +
+    '</tr>';
+}
+
+function getCpFiltered() {
+  return cpAllCreators.filter(function(cr) {
+    var g = getCreatorGrade(cr.handle) || {};
+    if (cpFilterV && g.video_quality !== cpFilterV) return false;
+    if (cpFilterE && g.manager_evaluation !== cpFilterE) return false;
+    if (cpFilterSkin && g.skintone !== cpFilterSkin) return false;
+    if (cpFilterEng && g.english_proficiency !== cpFilterEng) return false;
+    if (cpFilterBL === 'bl' && !g.blacklist) return false;
+    if (cpFilterBL === 'ok' && g.blacklist) return false;
+    if (cpSearch) {
+      var s = cpSearch.toLowerCase();
+      if (!cr.handle.toLowerCase().includes(s) && !(cr.nick||'').toLowerCase().includes(s)) return false;
+    }
+    return true;
+  });
+}
+
+function refreshCpTable() {
+  cpFiltered = getCpFiltered();
+  var body = document.getElementById('cpBody');
+  if (body) body.innerHTML = cpFiltered.map(function(cr) { return buildCpRow(cr); }).join('');
+  var cnt = document.getElementById('cpCount');
+  if (cnt) cnt.textContent = cpFiltered.length + ' / ' + cpAllCreators.length + ' creators';
+}
+
+function cpSort(col) {
+  if (cpSortCol === col) cpSortDir *= -1;
+  else { cpSortCol = col; cpSortDir = 1; }
+  var colMap = {_vr:'video_quality',_er:'manager_evaluation',_sk:'skintone',_en:'english_proficiency'};
+  cpAllCreators.sort(function(a, b) {
+    var ga = getCreatorGrade(a.handle)||{}, gb = getCreatorGrade(b.handle)||{};
+    var va = colMap[col] ? ga[colMap[col]]||'' : col === '_camps' ? (a.campaigns||[]).length : a[col]||'';
+    var vb = colMap[col] ? gb[colMap[col]]||'' : col === '_camps' ? (b.campaigns||[]).length : b[col]||'';
+    if (!isNaN(parseFloat(va)) && !isNaN(parseFloat(vb))) return (parseFloat(va)-parseFloat(vb))*cpSortDir;
+    return String(va).localeCompare(String(vb))*cpSortDir;
+  });
+  refreshCpTable();
+}
+
+async function cpSaveRow(handle) {
+  var fields = {
+    video_quality: document.getElementById('cpe_vq').value || null,
+    manager_evaluation: document.getElementById('cpe_me').value || null,
+    skintone: document.getElementById('cpe_sk').value || null,
+    english_proficiency: document.getElementById('cpe_en').value || null,
+    instagram_url: document.getElementById('cpe_ig').value || null,
+    tiktok_url: document.getElementById('cpe_tt').value || null
+  };
+  var btn = document.querySelector('.cp-save-btn');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+  var ok = await upsertCreatorGrade(handle, fields);
+  cpEditingHandle = null;
+  if (ok) {
+    refreshCpTable();
+    if (_currentGradeHandle === handle) renderMainGrades(handle);
+    renderSidebar();
+  }
+}
+
+/* Patch Creators button to open full page instead of panel */
+var _origOpenPanel2 = openPanel;
+function openPanel(type) {
+  if (type === 'creators') { openCreatorsPage(); return; }
+  _origOpenPanel2(type);
 }
 
 </script>
