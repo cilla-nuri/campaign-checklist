@@ -153,6 +153,47 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
 .setup-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;white-space:nowrap;}
 .setup-btn:hover{background:#f5f5f5;}
 .gh-load-status{font-size:12px;color:#aaa;text-align:center;padding:24px 0;}
+
+/* ---- Tab switcher (선정 / Check) ---- */
+.main-tabs{display:flex;gap:0;border-bottom:1px solid #e5e5e5;background:#fafafa;flex-shrink:0;}
+.main-tab{padding:9px 18px;font-size:12px;font-weight:500;color:#999;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:color 0.15s;}
+.main-tab:hover{color:#534AB7;}
+.main-tab.active{color:#534AB7;border-bottom-color:#534AB7;}
+.sunjeong-area{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.sunjeong-toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;flex-shrink:0;}
+.sj-filter{font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;outline:none;}
+.sj-filter:focus{border-color:#534AB7;}
+.sj-search{font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#1a1a1a;outline:none;width:160px;}
+.sj-search:focus{border-color:#534AB7;}
+.sj-count{font-size:11px;color:#aaa;margin-left:auto;}
+.sj-upload-btn{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid #534AB755;color:#534AB7;background:#f0efff;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.sj-upload-btn:hover{background:#e4e2ff;}
+.sj-dl-btn{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid #1D9E7555;color:#1D9E75;background:#f0faf6;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.sj-dl-btn:hover{background:#e0f5ec;}
+.sj-table-wrap{flex:1;overflow:auto;}
+.sj-table{width:100%;border-collapse:collapse;font-size:12px;}
+.sj-table th{position:sticky;top:0;background:#fafafa;padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #e5e5e5;white-space:nowrap;cursor:pointer;user-select:none;}
+.sj-table th:hover{color:#534AB7;}
+.sj-table th.sort-asc::after{content:' ↑';}
+.sj-table th.sort-desc::after{content:' ↓';}
+.sj-table td{padding:7px 10px;border-bottom:1px solid #f5f5f5;color:#333;vertical-align:middle;white-space:nowrap;}
+.sj-table tr:hover td{background:#f9f9ff;}
+.sj-table tr.sj-selected td{background:#f0efff;}
+.sj-chk{width:15px;height:15px;accent-color:#534AB7;cursor:pointer;}
+.sj-empty{text-align:center;color:#aaa;font-size:12px;padding:60px 16px;}
+.grade-pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:0.03em;}
+.grade-a{background:#d1f5e8;color:#085041;}
+.grade-b{background:#daeaf8;color:#0C447C;}
+.grade-c{background:#f0f0f0;color:#666;}
+.vgrade-pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:8px;background:#f0efff;color:#534AB7;}
+.egrade-pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:8px;background:#e8f5e9;color:#2e7d32;}
+.caution-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#EF9F27;}
+.creator-grades{display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;}
+.cg-pill{font-size:9px;font-weight:600;padding:1px 5px;border-radius:6px;}
+.grade-edit-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;}
+.grade-edit-label{font-size:11px;color:#888;width:130px;flex-shrink:0;}
+.grade-edit-select{font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#1a1a1a;outline:none;}
+.grade-edit-select:focus{border-color:#534AB7;}
 </style>
 </head>
 <body>
@@ -191,7 +232,7 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
     </div>
 
     <div class="main">
-      <div class="main-header">
+      <div class="main-header" id="mainHeader">
         <div>
           <div class="main-title" id="mainTitle">No campaign selected</div>
           <div class="main-sub" id="mainSub">Create a new campaign to get started</div>
@@ -200,6 +241,13 @@ mark{background:#fde68a;color:inherit;border-radius:2px;padding:0 1px;}
           <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openPanel('feedback')"><i class="ti ti-message-2"></i> Feedback</button>
           <div class="sbadge" id="sbadge" style="display:none" onclick="cycleStatus()"></div>
         </div>
+      </div>
+      <div class="main-tabs" id="mainTabs" style="display:none">
+        <button class="main-tab" data-tab="sunjeong" onclick="switchMainTab('sunjeong')"><i class="ti ti-users-group" style="font-size:11px;margin-right:3px;"></i>선정</button>
+        <button class="main-tab active" data-tab="check" onclick="switchMainTab('check')"><i class="ti ti-checklist" style="font-size:11px;margin-right:3px;"></i>Check</button>
+      </div>
+      <div class="sunjeong-area" id="sunjeongArea" style="display:none">
+        <div class="sj-empty"><i class="ti ti-layout-kanban" style="font-size:24px;display:block;margin-bottom:8px;"></i>Select a campaign to start</div>
       </div>
       <div class="checklist-area" id="checklistArea">
         <div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.4;">
@@ -412,9 +460,10 @@ function renderSidebar(){
   const c=getCampaign();const list=document.getElementById("creatorList");
   if(!c||!c.creators.length){list.innerHTML='<div class="empty-msg" id="noCreators">Import a CSV to load creators</div>';return;}
   list.innerHTML=c.creators.map(function(cr,i){
-    return '<div class="creator-item'+(cr.id===activeCreatorId?' active':'')+'" id="ci-'+cr.id+'" onclick="selectCreator(\''+cr.id+'\')">'+
+    const g=getCreatorGrade(cr.handle);const gBadges=g?((!g.cant_evaluate&&g.video_quality?'<span class="cg-pill" style="background:#f0efff;color:#534AB7;">'+g.video_quality+'</span>':'')+(!g.cant_evaluate&&g.manager_evaluation?'<span class="cg-pill" style="background:#e8f5e9;color:#2e7d32;">'+g.manager_evaluation+'</span>':'')+(g.blacklist?'<span class="cg-pill" style="background:#fde8d8;color:#712B13;">BL</span>':'')):'';
+    return '<div class="creator-item'+(cr.id===activeCreatorId?' active':'')+'" id="ci-'+cr.id+'" data-id="'+cr.id+'" onclick="selectCreator(\''+cr.id+'\')">'+
       '<div class="avatar" style="background:'+AVC[i%AVC.length]+';color:'+AVT[i%AVT.length]+'">'+initials(cr.nick)+'</div>'+
-      '<div class="creator-info"><div class="creator-handle">'+cr.handle+'</div><div class="creator-nick">#'+cr.applyNum+' - '+cr.nick+'</div></div>'+
+      '<div class="creator-info"><div class="creator-handle">'+cr.handle+'</div><div class="creator-nick">#'+cr.applyNum+' - '+cr.nick+'</div>'+(gBadges?'<div class="creator-grades">'+gBadges+'</div>':'')+'</div>'+
       '<div class="ppill" id="pp-'+cr.id+'">'+getPct(c,cr.id)+'%</div></div>';
   }).join('');
   updateAllPills();
@@ -1467,6 +1516,408 @@ function applyMaster(){
   buildState();if(activeCreatorId)renderChecklist();
   updateAllPills();resetMainPanel();markChanged();saveToLocalStorage();closePanel();
 }
+
+/* ======================================================
+   SUPABASE CONFIG
+   ====================================================== */
+const SB_URL="https://odmtkkevzuavgtbnhgja.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24";
+
+async function sbFetch(path,options={}){
+  const res=await fetch(SB_URL+"/rest/v1/"+path,{
+    method:options.method||"GET",
+    headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":options.prefer||"return=representation",...(options.headers||{})},
+    body:options.body||undefined
+  });
+  const text=await res.text();
+  if(!res.ok)throw new Error(text);
+  return text?JSON.parse(text):null;
+}
+
+let creatorGradeCache={};
+
+async function loadCreatorGrades(handles){
+  if(!handles||!handles.length)return;
+  const usernames=[...new Set(handles.map(h=>h.replace(/^@/,"").toLowerCase()))];
+  try{
+    const chunks=[];
+    for(let i=0;i<usernames.length;i+=50)chunks.push(usernames.slice(i,i+50));
+    for(const chunk of chunks){
+      const data=await sbFetch("creators?username=in.("+chunk.map(u=>'"'+u+'"').join(",")+")")
+        .catch(()=>null);
+      if(data)data.forEach(d=>{creatorGradeCache[d.username.toLowerCase()]=d;});
+    }
+  }catch(e){console.warn("Supabase load failed:",e);}
+}
+
+function getCreatorGrade(handle){
+  const key=(handle||"").replace(/^@/,"").toLowerCase();
+  return creatorGradeCache[key]||null;
+}
+
+async function upsertCreatorGrade(username,fields){
+  const key=username.replace(/^@/,"").toLowerCase();
+  try{
+    const res=await sbFetch("creators?username=eq."+encodeURIComponent(key),{
+      method:"PATCH",prefer:"resolution=merge-duplicates,return=representation",
+      body:JSON.stringify(fields)
+    });
+    if(!res||!res.length){
+      await sbFetch("creators",{method:"POST",prefer:"resolution=merge-duplicates,return=representation",
+        body:JSON.stringify({username:key,...fields})});
+    }
+    creatorGradeCache[key]={...(creatorGradeCache[key]||{}),username:key,...fields};
+    return true;
+  }catch(e){console.error("Upsert failed:",e);return false;}
+}
+
+/* ======================================================
+   TAB STATE
+   ====================================================== */
+let activeMainTab="check";
+
+function switchMainTab(tab){
+  activeMainTab=tab;
+  document.querySelectorAll(".main-tab").forEach(el=>el.classList.toggle("active",el.dataset.tab===tab));
+  const sjArea=document.getElementById("sunjeongArea");
+  const chkArea=document.getElementById("checklistArea");
+  const footer=document.querySelector(".footer");
+  const feedbackBtn=document.getElementById("feedbackBtn");
+  const sbadge=document.getElementById("sbadge");
+  if(tab==="sunjeong"){
+    sjArea.style.display="flex";
+    chkArea.style.display="none";
+    footer.style.display="none";
+    feedbackBtn.style.display="none";
+    sbadge.style.display="none";
+    renderSunjeongArea();
+  }else{
+    sjArea.style.display="none";
+    chkArea.style.display="";
+    footer.style.display="";
+    if(activeCreatorId){renderChecklist();updateFooter();}
+  }
+}
+
+/* Patch switchCampaign & resetMainPanel to show tabs */
+const _origSwitchCampaign=switchCampaign;
+function switchCampaign(id){
+  _origSwitchCampaign(id);
+  const tabs=document.getElementById("mainTabs");
+  if(tabs)tabs.style.display=id?"flex":"none";
+  const sjArea=document.getElementById("sunjeongArea");
+  if(sjArea&&activeMainTab==="sunjeong")renderSunjeongArea();
+  // Load grades for campaign creators
+  const c=getCampaign();
+  if(c&&c.creators.length){
+    loadCreatorGrades(c.creators.map(cr=>cr.handle)).then(()=>renderSidebar());
+  }
+}
+
+const _origResetMainPanel=resetMainPanel;
+function resetMainPanel(){
+  _origResetMainPanel();
+  const tabs=document.getElementById("mainTabs");
+  if(tabs)tabs.style.display=activeCampaignId?"flex":"none";
+}
+
+/* ======================================================
+   SUNJEONG (선정) TAB
+   ====================================================== */
+let sjApplicants=[];
+let sjSelected=new Set();
+let sjSortCol=null;
+let sjSortDir=1;
+let sjFilterGrade="";
+let sjFilterSearch="";
+let sjFilterV="";
+let sjFilterE="";
+
+function renderSunjeongArea(){
+  const c=getCampaign();
+  const el=document.getElementById("sunjeongArea");
+  if(!el)return;
+  const hasData=sjApplicants.length>0;
+  const filtered=getSjFiltered();
+  const selCount=[...sjSelected].filter(id=>filtered.some(r=>r._applyNum===id)).length;
+  el.innerHTML=`
+    <div class="sunjeong-toolbar">
+      <button class="sj-upload-btn" onclick="openSjUpload()"><i class="ti ti-upload"></i> Upload CSV</button>
+      ${hasData?`
+      <select class="sj-filter" onchange="sjFilterGrade=this.value;renderSjTable()">
+        <option value="">All Grades</option>
+        <option value="A" ${sjFilterGrade==="A"?"selected":""}>Grade A</option>
+        <option value="B" ${sjFilterGrade==="B"?"selected":""}>Grade B</option>
+        <option value="C" ${sjFilterGrade==="C"?"selected":""}>Grade C</option>
+      </select>
+      <select class="sj-filter" id="sjVFilter" onchange="sjFilterV=this.value;renderSjTable()">
+        <option value="">All V</option>
+        <option value="V1" ${sjFilterV==="V1"?"selected":""}>V1</option>
+        <option value="V2" ${sjFilterV==="V2"?"selected":""}>V2</option>
+        <option value="V3" ${sjFilterV==="V3"?"selected":""}>V3</option>
+        <option value="V4" ${sjFilterV==="V4"?"selected":""}>V4</option>
+        <option value="V5" ${sjFilterV==="V5"?"selected":""}>V5</option>
+      </select>
+      <select class="sj-filter" id="sjEFilter" onchange="sjFilterE=this.value;renderSjTable()">
+        <option value="">All E</option>
+        <option value="E1" ${sjFilterE==="E1"?"selected":""}>E1</option>
+        <option value="E2" ${sjFilterE==="E2"?"selected":""}>E2</option>
+        <option value="E3" ${sjFilterE==="E3"?"selected":""}>E3</option>
+        <option value="E4" ${sjFilterE==="E4"?"selected":""}>E4</option>
+        <option value="E5" ${sjFilterE==="E5"?"selected":""}>E5</option>
+      </select>
+      <input class="sj-search" type="text" placeholder="Search..." value="${sjFilterSearch}" oninput="sjFilterSearch=this.value;renderSjTable()"/>
+      <span class="sj-count">${selCount} selected / ${filtered.length} shown / ${sjApplicants.length} total</span>
+      <button class="sj-dl-btn" onclick="downloadSjSelected()"><i class="ti ti-download"></i> Download selected</button>
+      `:""}
+    </div>
+    <div class="sj-table-wrap" id="sjTableWrap">
+      ${hasData?buildSjTable(filtered):`<div class="sj-empty"><i class="ti ti-file-upload" style="font-size:28px;display:block;margin-bottom:10px;"></i>Upload applicant CSV to start 선정<br><small style="margin-top:6px;display:block;">Columns: apply number, ID(username), nickname, Grade, tiktok/instagram followers & avg views, nationality, Caution</small></div>`}
+    </div>
+    <input type="file" id="sjFileInput" accept=".csv" style="display:none" onchange="handleSjCSV(this.files[0])"/>
+  `;
+}
+
+function getSjFiltered(){
+  return sjApplicants.filter(r=>{
+    if(sjFilterGrade&&(r.grade||"").toUpperCase()!==sjFilterGrade)return false;
+    const g=getCreatorGrade(r.username);
+    if(sjFilterV&&(!g||g.video_quality!==sjFilterV))return false;
+    if(sjFilterE&&(!g||g.manager_evaluation!==sjFilterE))return false;
+    if(sjFilterSearch){
+      const s=sjFilterSearch.toLowerCase();
+      if(!r.username.toLowerCase().includes(s)&&!(r.nickname||"").toLowerCase().includes(s))return false;
+    }
+    return true;
+  });
+}
+
+function buildSjTable(rows){
+  const thead=`<tr>
+    <th style="width:32px;"><input type="checkbox" class="sj-chk" title="Select all" onchange="sjToggleAll(this.checked)"/></th>
+    ${["Apply #","Username","Nickname","Grade","V","E","Skintone","English","Nationality","TT Followers","TT Avg Views","IG Followers","IG Avg Views","Caution","Notes"].map((l,i)=>{
+      const keys=["_applyNum","username","nickname","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","caution","_notes"];
+      const k=keys[i];
+      const sc=sjSortCol===k?(sjSortDir===1?"sort-asc":"sort-desc"):"";
+      return "<th class='"+sc+"' onclick="sjSort('"+k+"')">"+l+"</th>";
+    }).join("")}
+  </tr>`;
+  const tbody=rows.map(r=>{
+    const g=getCreatorGrade(r.username)||{};
+    const sel=sjSelected.has(r._applyNum);
+    const gradeClass=r.grade==="A"?"grade-a":r.grade==="B"?"grade-b":"grade-c";
+    const isBL=g.blacklist;
+    return `<tr class="${sel?"sj-selected":""}" onclick="sjRowClick(event,'${r._applyNum}')">
+      <td><input type="checkbox" class="sj-chk" ${sel?"checked":""} onclick="event.stopPropagation();sjToggleRow('${r._applyNum}')"/></td>
+      <td>${r._applyNum}</td>
+      <td style="font-weight:500;${isBL?"color:#e24b4a;":""}">${r.username}${isBL?" 🚫":""}</td>
+      <td>${r.nickname||""}</td>
+      <td>${r.grade?`<span class="grade-pill ${gradeClass}">${r.grade}</span>`:"-"}</td>
+      <td>${g.video_quality?`<span class="vgrade-pill">${g.video_quality}</span>`:"-"}</td>
+      <td>${g.manager_evaluation?`<span class="egrade-pill">${g.manager_evaluation}</span>`:"-"}</td>
+      <td>${g.skintone||"-"}</td>
+      <td>${g.english_proficiency||"-"}</td>
+      <td>${r.nationality||"-"}</td>
+      <td>${fmtNum(r.tiktok_followers)}</td>
+      <td>${fmtNum(r.tiktok_avg_views)}</td>
+      <td>${fmtNum(r.instagram_followers)}</td>
+      <td>${fmtNum(r.instagram_avg_views)}</td>
+      <td>${r.caution&&r.caution.toUpperCase()!=="N"?`<span class="caution-dot"></span> ${r.caution}`:"-"}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${g.notes_manager||""}">${g.notes_manager||""}</td>
+    </tr>`;
+  }).join("");
+  return `<table class="sj-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+}
+
+function fmtNum(v){
+  if(!v||isNaN(v))return"-";
+  const n=parseFloat(v);
+  if(n>=1000000)return(n/1000000).toFixed(1)+"M";
+  if(n>=1000)return(n/1000).toFixed(1)+"K";
+  return Math.round(n).toLocaleString();
+}
+
+function sjRowClick(e,applyNum){
+  if(e.target.tagName==="INPUT")return;
+  sjToggleRow(applyNum);
+}
+
+function sjToggleRow(applyNum){
+  if(sjSelected.has(applyNum))sjSelected.delete(applyNum);
+  else sjSelected.add(applyNum);
+  renderSjTable();
+}
+
+function sjToggleAll(checked){
+  getSjFiltered().forEach(r=>checked?sjSelected.add(r._applyNum):sjSelected.delete(r._applyNum));
+  renderSjTable();
+}
+
+function renderSjTable(){
+  const filtered=getSjFiltered();
+  const wrap=document.getElementById("sjTableWrap");
+  if(wrap)wrap.innerHTML=buildSjTable(filtered);
+  const selCount=[...sjSelected].filter(id=>filtered.some(r=>r._applyNum===id)).length;
+  const countEl=document.querySelector(".sj-count");
+  if(countEl)countEl.textContent=selCount+" selected / "+filtered.length+" shown / "+sjApplicants.length+" total";
+}
+
+function sjSort(col){
+  if(sjSortCol===col)sjSortDir*=-1;
+  else{sjSortCol=col;sjSortDir=1;}
+  const numCols=["tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_applyNum"];
+  sjApplicants.sort((a,b)=>{
+    const ga=getCreatorGrade(a.username)||{},gb=getCreatorGrade(b.username)||{};
+    let va=col==="_vr"?ga.video_quality||"":col==="_er"?ga.manager_evaluation||"":col==="_sk"?ga.skintone||"":col==="_en"?ga.english_proficiency||"":col==="_notes"?ga.notes_manager||"":a[col]||"";
+    let vb=col==="_vr"?gb.video_quality||"":col==="_er"?gb.manager_evaluation||"":col==="_sk"?gb.skintone||"":col==="_en"?gb.english_proficiency||"":col==="_notes"?gb.notes_manager||"":b[col]||"";
+    if(numCols.includes(col)||(!isNaN(parseFloat(va))&&!isNaN(parseFloat(vb)))){
+      return(parseFloat(va)||0-(parseFloat(vb)||0))*sjSortDir;
+    }
+    return String(va).localeCompare(String(vb))*sjSortDir;
+  });
+  renderSjTable();
+}
+
+function openSjUpload(){document.getElementById("sjFileInput").click();}
+
+function handleSjCSV(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    const lines=e.target.result.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2)return;
+    const header=lines[0].split(",").map(h=>h.trim().replace(/^["']+|["']+$/g,"").toLowerCase());
+    const col=(...names)=>header.findIndex(h=>names.some(n=>h.replace(/[^a-z0-9]/g,"").includes(n.replace(/[^a-z0-9]/g,""))));
+    const applyIdx=col("applynumber","applynum","apply");
+    const idIdx=col("idusername","username","id","handle");
+    const nickIdx=col("nickname","nick");
+    const gradeIdx=col("grade");
+    const ttFIdx=col("tiktokfollowers");
+    const ttAIdx=col("tiktokavgviews");
+    const igFIdx=col("instagramfollowers");
+    const igAIdx=col("instagramavgviews");
+    const natIdx=col("nationality");
+    const cauIdx=col("caution");
+    sjApplicants=[];
+    for(let i=1;i<lines.length;i++){
+      const cols=splitCSVLine(lines[i]);
+      const username=(cols[idIdx]||"").replace(/^@/,"");
+      if(!username)continue;
+      sjApplicants.push({
+        _applyNum:cols[applyIdx]||String(i),
+        username:"@"+username,
+        nickname:cols[nickIdx]||"",
+        grade:(cols[gradeIdx]||"").toUpperCase(),
+        tiktok_followers:cols[ttFIdx]||"",
+        tiktok_avg_views:cols[ttAIdx]||"",
+        instagram_followers:cols[igFIdx]||"",
+        instagram_avg_views:cols[igAIdx]||"",
+        nationality:cols[natIdx]||"",
+        caution:cols[cauIdx]||"",
+      });
+    }
+    await loadCreatorGrades(sjApplicants.map(r=>r.username));
+    sjSelected=new Set();
+    renderSunjeongArea();
+  };
+  reader.readAsText(file);
+}
+
+function splitCSVLine(line){
+  const result=[];let cur="";let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){inQ=!inQ;}
+    else if(ch===","&&!inQ){result.push(cur.trim());cur="";}
+    else cur+=ch;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function downloadSjSelected(){
+  const sel=sjApplicants.filter(r=>sjSelected.has(r._applyNum));
+  if(!sel.length){alert("No creators selected!");return;}
+  const hdrs=["Apply Number","Username","Nickname","Grade","V Rating","E Rating","Skintone","English","Nationality","TikTok Followers","TikTok Avg Views","IG Followers","IG Avg Views","Caution","Notes"];
+  const rows=sel.map(r=>{
+    const g=getCreatorGrade(r.username)||{};
+    return[r._applyNum,r.username,r.nickname,r.grade,g.video_quality||"",g.manager_evaluation||"",g.skintone||"",g.english_proficiency||"",r.nationality,r.tiktok_followers,r.tiktok_avg_views,r.instagram_followers,r.instagram_avg_views,r.caution,g.notes_manager||""];
+  });
+  const csv=[hdrs,...rows].map(row=>row.map(v=>(String(v).includes(",")?"""+v+""":v)).join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="sunjeong_selected_"+new Date().toISOString().slice(0,10)+".csv";
+  a.click();
+}
+
+/* ======================================================
+   GRADE EDIT PANEL
+   ====================================================== */
+function openGradeEdit(handle){
+  const username=handle.replace(/^@/,"");
+  const g=getCreatorGrade(handle)||{};
+  document.getElementById("panel").classList.remove("wide");
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("panelTitle").textContent="Edit Grade · @"+username;
+  document.getElementById("panelSub").textContent="Synced to Supabase — visible across all campaigns";
+  const mkSel=(id,val,opts)=>`<select class="grade-edit-select" id="${id}"><option value="">-</option>${opts.map(o=>`<option value="${o}" ${val===o?"selected":""}>${o}</option>`).join("")}</select>`;
+  document.getElementById("panelBody").innerHTML=`
+    <div class="grade-edit-row"><span class="grade-edit-label">Video Quality</span>${mkSel("ge_vq",g.video_quality||"",["V1","V2","V3","V4","V5"])}</div>
+    <div class="grade-edit-row"><span class="grade-edit-label">Manager Eval</span>${mkSel("ge_me",g.manager_evaluation||"",["E1","E2","E3","E4","E5"])}</div>
+    <div class="grade-edit-row"><span class="grade-edit-label">Skintone</span>${mkSel("ge_sk",g.skintone||"",["Light","Fair","Medium","Tan","Deep"])}</div>
+    <div class="grade-edit-row"><span class="grade-edit-label">English</span>${mkSel("ge_en",g.english_proficiency||"",["Fluent","Good","Not Bad","Bad"])}</div>
+    <div class="grade-edit-row"><span class="grade-edit-label">Blacklist</span><select class="grade-edit-select" id="ge_bl"><option value="false" ${!g.blacklist?"selected":""}>No</option><option value="true" ${g.blacklist?"selected":""}>Yes (Blacklist)</option></select></div>
+    <div class="grade-edit-row" style="border:none"><span class="grade-edit-label">Notes</span><input type="text" class="grade-edit-select" id="ge_notes" value="${(g.notes_manager||"").replace(/"/g,"&quot;")}" style="width:200px;" placeholder="Internal notes..."/></div>
+    <div id="ge_status" style="font-size:11px;color:#aaa;margin-top:8px;min-height:18px;"></div>
+  `;
+  document.getElementById("panelFooter").innerHTML=`<button class="pf-btn primary" onclick="saveGradeEdit('${handle}')">Save to Supabase</button><button class="pf-btn" onclick="closePanel()">Cancel</button>`;
+}
+
+async function saveGradeEdit(handle){
+  const s=document.getElementById("ge_status");
+  s.textContent="Saving...";s.style.color="#aaa";
+  const fields={video_quality:document.getElementById("ge_vq").value||null,manager_evaluation:document.getElementById("ge_me").value||null,skintone:document.getElementById("ge_sk").value||null,english_proficiency:document.getElementById("ge_en").value||null,blacklist:document.getElementById("ge_bl").value==="true",notes_manager:document.getElementById("ge_notes").value||null};
+  const ok=await upsertCreatorGrade(handle,fields);
+  if(ok){s.textContent="✓ Saved!";s.style.color="#1D9E75";renderSidebar();if(activeMainTab==="sunjeong")renderSjTable();setTimeout(closePanel,1000);}
+  else{s.textContent="✗ Save failed";s.style.color="#e24b4a";}
+}
+
+/* Patch renderSidebar to add pencil edit button */
+const _origRenderSidebar=renderSidebar;
+function renderSidebar(){
+  _origRenderSidebar();
+  const c=getCampaign();if(!c)return;
+  c.creators.forEach(cr=>{
+    const item=document.getElementById("ci-"+cr.id);
+    if(!item)return;
+    if(!item.querySelector(".cg-edit-btn")){
+      const btn=document.createElement("button");
+      btn.className="cg-edit-btn";
+      btn.title="Edit grade";
+      btn.innerHTML='<i class="ti ti-pencil"></i>';
+      btn.style.cssText="background:none;border:none;cursor:pointer;color:#ccc;font-size:11px;padding:2px 0 2px 4px;flex-shrink:0;line-height:1;";
+      btn.onclick=e=>{e.stopPropagation();openGradeEdit(cr.handle);};
+      item.appendChild(btn);
+    }
+  });
+}
+
+/* Patch DOMContentLoaded to show tabs if campaign already loaded */
+const _origLoad=window.onload;
+window.addEventListener("DOMContentLoaded",function(){
+  // ensure tabs shown after load if campaign active
+  setTimeout(()=>{
+    const tabs=document.getElementById("mainTabs");
+    if(tabs&&activeCampaignId)tabs.style.display="flex";
+    if(activeCampaignId){
+      const c=getCampaign();
+      if(c&&c.creators.length){
+        loadCreatorGrades(c.creators.map(cr=>cr.handle)).then(()=>renderSidebar());
+      }
+    }
+  },200);
+},false);
+
 </script>
 </body>
 </html>
