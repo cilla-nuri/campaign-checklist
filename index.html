@@ -1679,42 +1679,40 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  const thead=`<tr>
-    <th style="width:32px;"><input type="checkbox" class="sj-chk" title="Select all" onchange="sjToggleAll(this.checked)"/></th>
-    ${["Apply #","Username","Nickname","Grade","V","E","Skintone","English","Nationality","TT Followers","TT Avg Views","IG Followers","IG Avg Views","Caution","Notes"].map((l,i)=>{
-      const keys=["_applyNum","username","nickname","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","caution","_notes"];
-      const k=keys[i];
-      const sc=sjSortCol===k?(sjSortDir===1?"sort-asc":"sort-desc"):"";
-      return "<th class='"+sc+"' onclick="sjSort('"+k+"')">"+l+"</th>";
-    }).join("")}
-  </tr>`;
-  const tbody=rows.map(r=>{
+  const labels=["Apply #","Username","Nickname","Grade","V","E","Skintone","English","Nationality","TT Followers","TT Avg Views","IG Followers","IG Avg Views","Caution","Notes"];
+  const keys=["_applyNum","username","nickname","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","caution","_notes"];
+  let thHtml='<th style="width:32px;"><input type="checkbox" class="sj-chk" title="Select all" onchange="sjToggleAll(this.checked)"/></th>';
+  labels.forEach(function(l,i){
+    const k=keys[i];
+    const sc=sjSortCol===k?(sjSortDir===1?"sort-asc":"sort-desc"):"";
+    thHtml+='<th class="'+sc+'" onclick="sjSort(\''+k+'\')">'+l+'</th>';
+  });
+  const thead='<tr>'+thHtml+'</tr>';
+  const tbody=rows.map(function(r){
     const g=getCreatorGrade(r.username)||{};
     const sel=sjSelected.has(r._applyNum);
     const gradeClass=r.grade==="A"?"grade-a":r.grade==="B"?"grade-b":"grade-c";
     const isBL=g.blacklist;
-    return `<tr class="${sel?"sj-selected":""}" onclick="sjRowClick(event,'${r._applyNum}')">
-      <td><input type="checkbox" class="sj-chk" ${sel?"checked":""} onclick="event.stopPropagation();sjToggleRow('${r._applyNum}')"/></td>
-      <td>${r._applyNum}</td>
-      <td style="font-weight:500;${isBL?"color:#e24b4a;":""}">${r.username}${isBL?" 🚫":""}</td>
-      <td>${r.nickname||""}</td>
-      <td>${r.grade?`<span class="grade-pill ${gradeClass}">${r.grade}</span>`:"-"}</td>
-      <td>${g.video_quality?`<span class="vgrade-pill">${g.video_quality}</span>`:"-"}</td>
-      <td>${g.manager_evaluation?`<span class="egrade-pill">${g.manager_evaluation}</span>`:"-"}</td>
-      <td>${g.skintone||"-"}</td>
-      <td>${g.english_proficiency||"-"}</td>
-      <td>${r.nationality||"-"}</td>
-      <td>${fmtNum(r.tiktok_followers)}</td>
-      <td>${fmtNum(r.tiktok_avg_views)}</td>
-      <td>${fmtNum(r.instagram_followers)}</td>
-      <td>${fmtNum(r.instagram_avg_views)}</td>
-      <td>${r.caution&&r.caution.toUpperCase()!=="N"?`<span class="caution-dot"></span> ${r.caution}`:"-"}</td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${g.notes_manager||""}">${g.notes_manager||""}</td>
-    </tr>`;
-  }).join("");
-  return `<table class="sj-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+    let td='<td><input type="checkbox" class="sj-chk" '+(sel?'checked':'')+' onclick="event.stopPropagation();sjToggleRow(\''+r._applyNum+'\')"/></td>';
+    td+='<td>'+r._applyNum+'</td>';
+    td+='<td style="font-weight:500;'+(isBL?'color:#e24b4a;':'')+'">'+r.username+(isBL?' 🚫':'')+'</td>';
+    td+='<td>'+(r.nickname||'')+'</td>';
+    td+='<td>'+(r.grade?'<span class="grade-pill '+gradeClass+'">'+r.grade+'</span>':'-')+'</td>';
+    td+='<td>'+(g.video_quality?'<span class="vgrade-pill">'+g.video_quality+'</span>':'-')+'</td>';
+    td+='<td>'+(g.manager_evaluation?'<span class="egrade-pill">'+g.manager_evaluation+'</span>':'-')+'</td>';
+    td+='<td>'+(g.skintone||'-')+'</td>';
+    td+='<td>'+(g.english_proficiency||'-')+'</td>';
+    td+='<td>'+(r.nationality||'-')+'</td>';
+    td+='<td>'+fmtNum(r.tiktok_followers)+'</td>';
+    td+='<td>'+fmtNum(r.tiktok_avg_views)+'</td>';
+    td+='<td>'+fmtNum(r.instagram_followers)+'</td>';
+    td+='<td>'+fmtNum(r.instagram_avg_views)+'</td>';
+    td+='<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>';
+    td+='<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||'')+'">'+(g.notes_manager||'')+'</td>';
+    return '<tr class="'+(sel?'sj-selected':'')+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'+td+'</tr>';
+  }).join('');
+  return '<table class="sj-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>';
 }
-
 function fmtNum(v){
   if(!v||isNaN(v))return"-";
   const n=parseFloat(v);
@@ -1829,7 +1827,7 @@ function downloadSjSelected(){
     const g=getCreatorGrade(r.username)||{};
     return[r._applyNum,r.username,r.nickname,r.grade,g.video_quality||"",g.manager_evaluation||"",g.skintone||"",g.english_proficiency||"",r.nationality,r.tiktok_followers,r.tiktok_avg_views,r.instagram_followers,r.instagram_avg_views,r.caution,g.notes_manager||""];
   });
-  const csv=[hdrs,...rows].map(row=>row.map(v=>(String(v).includes(",")?"""+v+""":v)).join(",")).join("\n");
+  const csv=[hdrs,...rows].map(function(row){return row.map(function(v){var s=String(v);return s.indexOf(",")>=0?'"'+s+'"':s;}).join(",");}).join("\n")
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   a.download="sunjeong_selected_"+new Date().toISOString().slice(0,10)+".csv";
