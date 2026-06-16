@@ -412,6 +412,10 @@ function switchCampaign(id){
   document.getElementById("searchInput").value="";
   document.getElementById("delCampaignBtn").style.display="flex";
   renderSidebar();resetMainPanel();
+  const tabs=document.getElementById("mainTabs");
+  if(tabs)tabs.style.display="flex";
+  const c=getCampaign();
+  if(c&&c.creators.length){loadCreatorGrades(c.creators.map(function(cr){return cr.handle;})).then(function(){renderSidebar();});}
 }
 
 function deleteCampaign(){
@@ -426,6 +430,7 @@ function resetUI(){
   document.getElementById("mainTitle").textContent="No campaign selected";
   document.getElementById("mainSub").textContent="Create a new campaign to get started";
   document.getElementById("sbadge").style.display="none";document.getElementById("feedbackBtn").style.display="none";
+  const _tabs=document.getElementById("mainTabs");if(_tabs&&activeCampaignId)_tabs.style.display="flex";
   document.getElementById("checklistArea").innerHTML='<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.4;"><i class="ti ti-layout-kanban" style="font-size:24px;display:block;margin-bottom:8px;"></i>Click <strong>+ New</strong> to get started</div>';
   document.getElementById("ftext").textContent="-- / -- items";document.getElementById("pbarFill").style.width="0%";
   document.getElementById("creatorList").innerHTML='<div class="empty-msg" id="noCreators">Create or select a campaign first</div>';
@@ -1600,26 +1605,7 @@ function switchMainTab(tab){
 }
 
 /* Patch switchCampaign & resetMainPanel to show tabs */
-const _origSwitchCampaign=switchCampaign;
-function switchCampaign(id){
-  _origSwitchCampaign(id);
-  const tabs=document.getElementById("mainTabs");
-  if(tabs)tabs.style.display=id?"flex":"none";
-  const sjArea=document.getElementById("sunjeongArea");
-  if(sjArea&&activeMainTab==="sunjeong")renderSunjeongArea();
-  // Load grades for campaign creators
-  const c=getCampaign();
-  if(c&&c.creators.length){
-    loadCreatorGrades(c.creators.map(cr=>cr.handle)).then(()=>renderSidebar());
-  }
-}
-
-const _origResetMainPanel=resetMainPanel;
-function resetMainPanel(){
-  _origResetMainPanel();
-  const tabs=document.getElementById("mainTabs");
-  if(tabs)tabs.style.display=activeCampaignId?"flex":"none";
-}
+/* switchCampaign & resetMainPanel patched inline above */
 
 /* ======================================================
    SUNJEONG (선정) TAB
