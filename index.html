@@ -290,6 +290,11 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .ms-option:hover{background:#f8f7ff;}
 .ms-option input[type=checkbox]{accent-color:#534AB7;width:13px;height:13px;cursor:pointer;}
 .ms-option.all{border-bottom:1px solid #f0f0f0;font-weight:600;color:#888;}
+
+.autosave-indicator{position:fixed;bottom:16px;right:16px;font-size:11px;font-weight:500;padding:6px 12px;border-radius:20px;background:#fff;border:1px solid #efefef;box-shadow:0 2px 8px rgba(0,0,0,0.08);color:#bbb;display:flex;align-items:center;gap:5px;transition:all 0.3s;z-index:500;opacity:0;}
+.autosave-indicator.saving{opacity:1;color:#534AB7;border-color:#534AB755;}
+.autosave-indicator.saved{opacity:1;color:#1D9E75;border-color:#1D9E7555;}
+.autosave-indicator.error{opacity:1;color:#e24b4a;border-color:#e24b4a55;}
 </style>
 </head>
 <body>
@@ -371,6 +376,8 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
   </div>
 </div>
 
+<div id="autosaveIndicator" class="autosave-indicator"></div>
+
 <div class="overlay" id="overlay" onclick="bgClick(event)">
   <div class="panel" id="panel">
     <div class="ph">
@@ -438,6 +445,8 @@ function loadFromLocalStorage(){
 
 function markChanged(){
   hasUnsavedChanges=true;
+  _pendingSave=true;
+  scheduleAutoSave();
 }
 
 function showLocalSaveToast(){
@@ -2581,6 +2590,100 @@ function buildSettingsRow() {
   html += '</div>';
   return html;
 }
+
+
+/* ============================================================
+   AUTO-SAVE SYSTEM
+   ============================================================ */
+var _autoSaveTimer = null;
+var _pendingSave = false;
+var _lastSaveTime = 0;
+var _autoSaveIndicatorTimer = null;
+
+function showSaveIndicator(state, text) {
+  var el = document.getElementById('autosaveIndicator');
+  if (!el) return;
+  clearTimeout(_autoSaveIndicatorTimer);
+  el.className = 'autosave-indicator ' + state;
+  el.innerHTML = (state === 'saving' ? '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i> ' : 
+                  state === 'saved' ? '<i class="ti ti-check"></i> ' : 
+                  '<i class="ti ti-x"></i> ') + text;
+  if (state !== 'saving') {
+    _autoSaveIndicatorTimer = setTimeout(function() {
+      el.style.opacity = '0';
+    }, 2500);
+  }
+}
+
+/* Patch markChanged to schedule auto-save */
+var _origMarkChanged = markChanged;
+
+
+function scheduleAutoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(doAutoSave, 4000); // 4 seconds debounce
+}
+
+async function doAutoSave() {
+  if (!_pendingSave) return;
+  _pendingSave = false;
+  showSaveIndicator('saving', 'Saving...');
+  try {
+    // 1. Save checklist to localStorage (always)
+    saveToLocalStorage();
+    // 2. Save to GitHub if configured
+    var data = JSON.parse(localStorage.getItem('campaignChecklist_v1') || '{}');
+    if (data.ghToken && data.ghRepo && activeCampaignId) {
+      await saveReviewToGitHub();
+      showSaveIndicator('saved', 'Auto-saved');
+    } else {
+      showSaveIndicator('saved', 'Saved locally');
+    }
+    _lastSaveTime = Date.now();
+  } catch(e) {
+    _pendingSave = true; // retry next time
+    showSaveIndicator('error', 'Save failed');
+  }
+}
+
+/* Also auto-save 선정 selections periodically */
+var _pendingSelectionSave = false;
+var _selectionSaveTimer = null;
+
+
+
+/* Periodic full selection sync every 10 seconds when on 선정 tab */
+setInterval(function() {
+  if (activeMainTab === 'sunjeong' && sjApplicants.length > 0) {
+    var c = getCampaign();
+    if (!c) return;
+    // Batch save all current selections state
+    var toSave = [];
+    sjApplicants.forEach(function(r) {
+      toSave.push({
+        apply_number: r._applyNum,
+        selected: sjSelected.has(r._applyNum),
+        rank: r._rank || ''
+      });
+    });
+    if (!toSave.length) return;
+    // Update in chunks
+    for (var i = 0; i < toSave.length; i += 100) {
+      (function(chunk) {
+        sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c.name), {
+          method: 'PATCH', prefer: 'return=minimal',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({}) // noop batch - individual saves handle this
+        }).catch(function(){});
+      })(toSave.slice(i, i+100));
+    }
+  }
+}, 10000);
+
+/* Add spin animation */
+var style = document.createElement('style');
+style.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
 
 </script>
 </body>
