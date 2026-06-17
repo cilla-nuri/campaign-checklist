@@ -1961,10 +1961,22 @@ function splitCSVLine(line){
 function downloadSjSelected(){
   var sel=sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
   if(!sel.length){alert("No creators selected!");return;}
-  var hdrs=["apply number","user_id","ID(username)","nickname","Grade","V Rating","E Rating","Skintone","English","Nationality","TikTok Followers","TikTok Avg Views","IG Followers","IG Avg Views","Caution","Notes"];
-  var rows=sel.map(function(r){var g=getCreatorGrade(r.username)||{};return[r._applyNum,r._userId||"",r.username,r.nickname,r.grade,g.video_quality||"",g.manager_evaluation||"",g.skintone||"",g.english_proficiency||"",r.nationality,r.tiktok_followers,r.tiktok_avg_views,r.instagram_followers,r.instagram_avg_views,r.caution,g.notes_manager||""];});
-  var csv=[hdrs].concat(rows).map(function(row){return row.map(function(v){var s=String(v);return s.indexOf(",")>=0?'"'+s+'"':s;}).join(",");}).join("\n");
-  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="sunjeong_"+new Date().toISOString().slice(0,10)+".csv";a.click();
+  var c=getCampaign();
+  var campName=c?c.name.replace(/[^a-zA-Z0-9_\-]/g,"_"):"selection";
+  var hdrs=["apply number","ID(username)","nickname","Campaign Status","tiktok_URL","tiktok_followers","instagram_URL","instagram_followers"];
+  var rows=sel.map(function(r){
+    var g=getCreatorGrade(r.username)||{};
+    var ttUrl=r._tt_url||g.tiktok_url||"";
+    var igUrl=r._ig_url||g.instagram_url||"";
+    return[r._applyNum,r.username,r.nickname,"accepted",ttUrl,r.tiktok_followers,igUrl,r.instagram_followers];
+  });
+  var csv=[hdrs].concat(rows).map(function(row){
+    return row.map(function(v){var s=String(v);return s.indexOf(",")>=0?'"'+s+'"':s;}).join(",");
+  }).join("\n");
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download=campName+"_selection.csv";
+  a.click();
 }
 
 /* ============ GRADE EDIT ============ */
