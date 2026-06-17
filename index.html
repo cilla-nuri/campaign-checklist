@@ -1188,6 +1188,7 @@ function openPanel(type){
   else if(type==="export")renderExportPanel();
   else if(type==="loadgithub")renderLoadGitHubPanel();
   else if(type==="backup")renderBackupPanel();
+  else if(type==="creators"){openCreatorsPage();return;}
 }
 function closePanel(){document.getElementById("overlay").classList.remove("open");}
 function bgClick(e){if(e.target===document.getElementById("overlay"))closePanel();}
@@ -1892,7 +1893,7 @@ async function saveGradeEdit(handle){
   var s=document.getElementById("ge_status");s.textContent="Saving...";s.style.color="#aaa";
   var fields={video_quality:document.getElementById("ge_vq").value||null,manager_evaluation:document.getElementById("ge_me").value||null,skintone:document.getElementById("ge_sk").value||null,english_proficiency:document.getElementById("ge_en").value||null,blacklist:document.getElementById("ge_bl").value==="true",notes_manager:document.getElementById("ge_notes").value||null};
   var ok=await upsertCreatorGrade(handle,fields);
-  if(ok){s.textContent="\u2713 Saved!";s.style.color="#1D9E75";renderSidebar();if(activeMainTab==="sunjeong")renderSjTable();setTimeout(closePanel,1000);}
+  if(ok){s.textContent="\u2713 Saved!";s.style.color="#1D9E75";renderSidebar();if(activeMainTab==="sunjeong")renderSjTable();if(_currentGradeHandle&&_currentGradeHandle===handle)renderMainGrades(handle);setTimeout(closePanel,1000);}
   else{s.textContent="\u2717 Save failed";s.style.color="#e24b4a";}
 }
 
@@ -1984,19 +1985,7 @@ function addCreatorManually(){
   setTimeout(renderCreatorsPanel,400);
 }
 
-/* ============ PATCH openPanel for creators ============ */
-var _origOpenPanel=openPanel;
-function openPanel(type){
-  if(type==="creators"){
-    document.getElementById("panel").classList.remove("wide");
-    document.getElementById("overlay").classList.add("open");
-    document.getElementById("panelTitle").textContent="Creator List";
-    document.getElementById("panelSub").textContent="View & manage all creators";
-    renderCreatorsPanel();
-    return;
-  }
-  _origOpenPanel(type);
-}
+
 
 
 /* ============ MAIN HEADER GRADES ============ */
@@ -2036,14 +2025,7 @@ function editCurrentGrade() {
   if (_currentGradeHandle) openGradeEdit(_currentGradeHandle);
 }
 
-/* Patch saveGradeEdit to also refresh main header */
-var _origSaveGradeEdit = saveGradeEdit;
-async function saveGradeEdit(handle) {
-  await _origSaveGradeEdit(handle);
-  if (_currentGradeHandle && _currentGradeHandle === handle) {
-    renderMainGrades(handle);
-  }
-}
+
 
 
 /* ============================================================
@@ -2263,12 +2245,7 @@ async function cpSaveRow(handle) {
   }
 }
 
-/* Patch Creators button to open full page instead of panel */
-var _origOpenPanel2 = openPanel;
-function openPanel(type) {
-  if (type === 'creators') { openCreatorsPage(); return; }
-  _origOpenPanel2(type);
-}
+
 
 </script>
 </body>
