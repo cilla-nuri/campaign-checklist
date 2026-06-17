@@ -278,6 +278,18 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .sj-sns-btn.active{background:#534AB7;border-color:#534AB7;color:#fff;}
 .eligible-row td{background:#f0fff8 !important;}
 .sj-table tr.eligible-row:hover td{background:#e0faf0 !important;}
+
+/* ===== MULTI-SELECT FILTER ===== */
+.ms-wrap{position:relative;display:inline-block;}
+.ms-btn{font-size:11px;padding:5px 10px;border-radius:7px;border:1.5px solid #e8e8e8;background:#fff;color:#555;cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:500;white-space:nowrap;min-width:70px;justify-content:space-between;}
+.ms-btn:hover{border-color:#534AB7;color:#534AB7;}
+.ms-btn.active{border-color:#534AB7;background:#f0efff;color:#534AB7;}
+.ms-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border-radius:10px;border:1px solid #efefef;box-shadow:0 4px 20px rgba(0,0,0,0.1);z-index:100;min-width:120px;overflow:hidden;display:none;}
+.ms-dropdown.open{display:block;}
+.ms-option{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:12px;color:#333;transition:background 0.1s;}
+.ms-option:hover{background:#f8f7ff;}
+.ms-option input[type=checkbox]{accent-color:#534AB7;width:13px;height:13px;cursor:pointer;}
+.ms-option.all{border-bottom:1px solid #f0f0f0;font-weight:600;color:#888;}
 </style>
 </head>
 <body>
@@ -1737,7 +1749,7 @@ window.addEventListener("DOMContentLoaded",function(){
 var sjApplicants=[];
 var sjSelected=new Set();
 var sjSortCol=null,sjSortDir=1;
-var sjFilterGrade="",sjFilterSearch="",sjFilterV="",sjFilterE="";
+var sjFilterGrade=new Set(),sjFilterSearch="",sjFilterV=new Set(),sjFilterE=new Set(),sjFilterSkin=new Set(),sjFilterEng=new Set();
 
 function renderSunjeongArea(){
   sjLoadSettings();
@@ -1750,31 +1762,15 @@ function renderSunjeongArea(){
   var toolbar='<div class="sunjeong-toolbar">'
     +'<button class="sj-upload-btn" onclick="openSjUpload()"><i class="ti ti-upload"></i> Upload CSV</button>';
   if(hasData){
-    toolbar+='<select class="sj-filter" onchange="sjFilterGrade=this.value;renderSjTable()">'
-      +'<option value="">All Grades</option>'
-      +'<option value="A"'+(sjFilterGrade==="A"?" selected":"")+'>Grade A</option>'
-      +'<option value="B"'+(sjFilterGrade==="B"?" selected":"")+'>Grade B</option>'
-      +'<option value="C"'+(sjFilterGrade==="C"?" selected":"")+'>Grade C</option>'
-      +'</select>'
-      +'<select class="sj-filter" id="sjVFilter" onchange="sjFilterV=this.value;renderSjTable()">'
-      +'<option value="">All V</option>'
-      +'<option value="V1"'+(sjFilterV==="V1"?" selected":"")+'>V1</option>'
-      +'<option value="V2"'+(sjFilterV==="V2"?" selected":"")+'>V2</option>'
-      +'<option value="V3"'+(sjFilterV==="V3"?" selected":"")+'>V3</option>'
-      +'<option value="V4"'+(sjFilterV==="V4"?" selected":"")+'>V4</option>'
-      +'<option value="V5"'+(sjFilterV==="V5"?" selected":"")+'>V5</option>'
-      +'</select>'
-      +'<select class="sj-filter" id="sjEFilter" onchange="sjFilterE=this.value;renderSjTable()">'
-      +'<option value="">All E</option>'
-      +'<option value="E1"'+(sjFilterE==="E1"?" selected":"")+'>E1</option>'
-      +'<option value="E2"'+(sjFilterE==="E2"?" selected":"")+'>E2</option>'
-      +'<option value="E3"'+(sjFilterE==="E3"?" selected":"")+'>E3</option>'
-      +'<option value="E4"'+(sjFilterE==="E4"?" selected":"")+'>E4</option>'
-      +'<option value="E5"'+(sjFilterE==="E5"?" selected":"")+'>E5</option>'
-      +'</select>'
-      +'<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>'
-      +'<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>'
-      +'<button class="sj-dl-btn" onclick="downloadSjSelected()"><i class="ti ti-download"></i> Download selected</button>';
+    var selCount=0;sjSelected.forEach(function(id){if(filtered.some(function(r){return r._applyNum===id;}))selCount++;});
+    toolbar+=sjMsBtn('Grade','sjFilterGrade',['A','B','C']);
+    toolbar+=sjMsBtn('V','sjFilterV',['V1','V2','V3','V4','V5']);
+    toolbar+=sjMsBtn('E','sjFilterE',['E1','E2','E3','E4','E5']);
+    toolbar+=sjMsBtn('Skin','sjFilterSkin',['Light','Fair','Medium','Tan','Deep']);
+    toolbar+=sjMsBtn('English','sjFilterEng',['Fluent','Good','Not Bad','Bad']);
+    toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
+    toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
+    toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected()"><i class="ti ti-download"></i> Download selected</button>';
   }
   toolbar+='</div>';
   var tableHtml=hasData?buildSjTable(filtered)
@@ -1785,10 +1781,12 @@ function renderSunjeongArea(){
 
 function getSjFiltered(){
   var results=sjApplicants.filter(function(r){
-    if(sjFilterGrade&&(r.grade||"").toUpperCase()!==sjFilterGrade)return false;
+    if(sjFilterGrade.size>0&&!sjFilterGrade.has((r.grade||"").toUpperCase()))return false;
     var g=getCreatorGrade(r.username);
-    if(sjFilterV&&(!g||g.video_quality!==sjFilterV))return false;
-    if(sjFilterE&&(!g||g.manager_evaluation!==sjFilterE))return false;
+    if(sjFilterV.size>0&&(!g||!sjFilterV.has(g.video_quality||'')))return false;
+    if(sjFilterE.size>0&&(!g||!sjFilterE.has(g.manager_evaluation||'')))return false;
+    if(sjFilterSkin.size>0&&(!g||!sjFilterSkin.has(g.skintone||'')))return false;
+    if(sjFilterEng.size>0&&(!g||!sjFilterEng.has(g.english_proficiency||'')))return false;
     if(sjFilterSearch){
       var s=sjFilterSearch.toLowerCase();
       if(!r.username.toLowerCase().includes(s)&&!(r.nickname||"").toLowerCase().includes(s))return false;
