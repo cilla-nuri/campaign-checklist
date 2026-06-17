@@ -1811,7 +1811,7 @@ function getSjFiltered(){
 function buildSjTable(rows){
   var labels=["Apply","UID","Username","Nickname","SNS","Grade","V","E","Skin","English","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠","Notes"];
   var keys=["_applyNum","_userId","username","nickname","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution","_notes"];
-  var th='<th style="width:32px;"><input type="checkbox" class="sj-chk" onchange="sjToggleAll(this.checked)"/></th>';
+  var th='<th style="width:32px;"><input type="checkbox" class="sj-chk sj-select-all" data-selectall="1"/></th>';
   labels.forEach(function(l,i){
     var k=keys[i];
     var sc=sjSortCol===k?(sjSortDir===1?"sort-asc":"sort-desc"):"";
@@ -2449,9 +2449,9 @@ function sjSaveSelection(applyNum, selected) {
   clearTimeout(_sjSelectionDebounce[applyNum]);
   _sjSelectionDebounce[applyNum] = setTimeout(function() {
     sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(c.name) + "&apply_number=eq." + encodeURIComponent(applyNum), {
-      method: "PATCH", prefer: "return=minimal",
+      method: "PATCH", prefer: "resolution=merge-duplicates,return=minimal",
       body: JSON.stringify({selected: selected})
-    }).catch(function(e) { console.warn("Selection save failed:", e); });
+    }).catch(function() {}); // silent fail - data might not be in DB yet
   }, 300);
 }
 
@@ -2565,6 +2565,10 @@ function sjMsToggleOpen(id) {
 
 // Event delegation for all MS checkboxes and buttons
 document.addEventListener('click', function(e) {
+  // Handle select-all checkbox
+  if (e.target.classList && e.target.classList.contains('sj-select-all')) {
+    sjToggleAll(e.target.checked); return;
+  }
   // Handle SNS setting buttons
   var snsBtn = e.target.closest('[data-setsns]');
   if (snsBtn) { sjUpdateSetting('snsType', snsBtn.getAttribute('data-setsns')); return; }
