@@ -1775,7 +1775,7 @@ function renderSunjeongArea(){
   toolbar+='</div>';
   var tableHtml=hasData?buildSjTable(filtered)
     :'<div class="sj-empty"><i class="ti ti-file-upload" style="font-size:28px;display:block;margin-bottom:10px;"></i>Upload applicant CSV to start \uc120\uc815<br><small style="margin-top:6px;display:block;">Columns: apply number, ID(username), nickname, Grade, tiktok/instagram followers & avg views, nationality, Caution</small></div>';
-  var settingsHtml='<div class="sj-settings-row">'+'<span class="sj-settings-label">Min Followers</span>'+'<input class="sj-setting-input" type="number" placeholder="e.g. 10000" value="'+(sjSettings.minFollowers||'')+'" oninput="sjSettings.minFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();"/>'+'<span class="sj-settings-label" style="margin-left:8px;">SNS</span>'+'<button class="sj-sns-btn '+(sjSettings.snsType==="ig"?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'ig\')"><i class="ti ti-brand-instagram"></i> IG</button>'+'<button class="sj-sns-btn '+(sjSettings.snsType==="tt"?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'tt\')"><i class="ti ti-brand-tiktok"></i> TT</button>'+'<button class="sj-sns-btn '+(sjSettings.snsType==="both"?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'both\')">Both</button>'+(sjSettings.minFollowers>0?'<button class="sj-sns-btn '+(sjSettings._showEligibleOnly?'active':'')+'" onclick="sjFilterEligible()">Eligible only</button>':'')+'</div>';
+  var settingsHtml = buildSettingsRow();
   el.innerHTML=toolbar+settingsHtml+'<div class="sj-table-wrap" id="sjTableWrap">'+tableHtml+'</div><input type="file" id="sjFileInput" accept=".csv" style="display:none" onchange="handleSjCSV(this.files[0])"/>';
 }
 
@@ -2530,6 +2530,11 @@ function sjMsToggleOpen(id) {
 
 // Event delegation for all MS checkboxes and buttons
 document.addEventListener('click', function(e) {
+  // Handle SNS setting buttons
+  var snsBtn = e.target.closest('[data-setsns]');
+  if (snsBtn) { sjUpdateSetting('snsType', snsBtn.getAttribute('data-setsns')); return; }
+  var eligBtn = e.target.closest('[data-toggleeligible]');
+  if (eligBtn) { sjFilterEligible(); return; }
   // Handle MS button clicks
   var msBtn = e.target.closest('[data-msbtn]');
   if (msBtn) { sjMsToggleOpen(msBtn.getAttribute('data-msbtn')); return; }
@@ -2552,6 +2557,24 @@ document.addEventListener('click', function(e) {
     _msOpen = null;
   }
 });
+
+
+/* ============ SETTINGS ROW BUILDER ============ */
+function buildSettingsRow() {
+  var s = sjSettings;
+  var html = '<div class="sj-settings-row">';
+  html += '<span class="sj-settings-label">Min Followers</span>';
+  html += '<input class="sj-setting-input" type="number" placeholder="e.g. 10000" value="' + (s.minFollowers||'') + '" oninput="sjSettings.minFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();"/>';
+  html += '<span class="sj-settings-label" style="margin-left:8px;">SNS</span>';
+  html += '<button class="sj-sns-btn' + (s.snsType==='ig'?' active':'') + '" data-setsns="ig"><i class="ti ti-brand-instagram"></i> IG</button>';
+  html += '<button class="sj-sns-btn' + (s.snsType==='tt'?' active':'') + '" data-setsns="tt"><i class="ti ti-brand-tiktok"></i> TT</button>';
+  html += '<button class="sj-sns-btn' + (s.snsType==='both'?' active':'') + '" data-setsns="both">Both</button>';
+  if (s.minFollowers > 0) {
+    html += '<button class="sj-sns-btn' + (s._showEligibleOnly?' active':'') + '" data-toggleeligible="1" style="margin-left:8px;">Eligible only</button>';
+  }
+  html += '</div>';
+  return html;
+}
 
 </script>
 </body>
