@@ -205,11 +205,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .sj-dl-btn:hover{background:#d4edda;}
 .sj-table-wrap{flex:1;overflow:auto;}
 .sj-table{width:100%;border-collapse:collapse;font-size:12px;}
-.sj-table th{position:sticky;top:0;background:#fafafa;padding:5px 7px;text-align:left;font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f0f0f0;white-space:nowrap;cursor:pointer;user-select:none;}
+.sj-table th{position:sticky;top:0;background:#fafafa;padding:5px 7px;text-align:left;font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f0f0f0;white-space:nowrap;cursor:pointer;}
 .sj-table th:hover{color:#534AB7;}
 .sj-table th.sort-asc::after{content:' ↑';}
 .sj-table th.sort-desc::after{content:' ↓';}
-.sj-table td{padding:5px 7px;border-bottom:1px solid #f8f8f8;color:#333;vertical-align:middle;white-space:nowrap;font-size:12px;}
+.sj-table td{padding:5px 7px;border-bottom:1px solid #f8f8f8;color:#333;vertical-align:middle;white-space:nowrap;font-size:12px;user-select:text;}
 .sj-table tr:hover td{background:#f8f7ff;}
 .sj-table tr.sj-selected td{background:#f0efff;}
 .sj-chk{width:15px;height:15px;accent-color:#534AB7;cursor:pointer;}
@@ -1847,8 +1847,8 @@ function buildSjTable(rows){
       +' onclick="event.stopPropagation();sjToggleRow(\''+r._applyNum+'\')"/></td>'
       +'<td>'+r._applyNum+'</td>'
       +'<td style="font-size:11px;color:#bbb;">'+(r._userId||'-')+'</td>'
-      +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+
-      (bl?"[BL] ":"")+r.username+'</td>'
+      +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+';cursor:text;">'+
+      (bl?"[BL] ":"")+r.username+'<button onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.username+'\')" title="Copy" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ti ti-copy"></i></button></td>'
       +'<td>'+(r.nickname||"")+'</td>'
       +'<td style="white-space:nowrap;">'+sjSnsLinks(r)+'</td>'
       +'<td>'+(r.grade?'<span class="grade-pill '+gc+'">'+r.grade+'</span>':'-')+'</td>'
@@ -1870,7 +1870,7 @@ function buildSjTable(rows){
 }
 
 function fmtNum(v){if(!v||isNaN(v))return"-";var n=parseFloat(v);if(n>=1000000)return(n/1000000).toFixed(1)+"M";if(n>=1000)return(n/1000).toFixed(1)+"K";return Math.round(n).toLocaleString();}
-function sjRowClick(e,id){if(e.target.tagName==="INPUT")return;sjToggleRow(id);}
+function sjRowClick(e,id){if(e.target.tagName==="INPUT"||e.target.tagName==="BUTTON")return;var sel=window.getSelection();if(sel&&sel.toString().length>0)return;sjToggleRow(id);}
 function sjToggleRow(id){if(sjSelected.has(id))sjSelected.delete(id);else sjSelected.add(id);renderSjTable();sjSaveSelection(id,sjSelected.has(id));}
 function sjToggleAll(checked){var _f=getSjFiltered();_f.forEach(function(r){checked?sjSelected.add(r._applyNum):sjSelected.delete(r._applyNum);});renderSjTable();_f.forEach(function(r){sjSaveSelection(r._applyNum,checked);});}
 
