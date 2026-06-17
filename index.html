@@ -1294,8 +1294,10 @@ function createCampaign(){
 
 function renderCSVPanel(){
   if(!activeCampaignId){document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>';document.getElementById("panelFooter").innerHTML="";return;}
+  var _sjCount=sjSelected?sjSelected.size:0;
+  var _sjBanner=_sjCount>0?'<div style="background:#f0efff;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">'+'<span style="font-size:13px;color:#534AB7;"><strong>'+_sjCount+'</strong> creators selected in 선정</span>'+'<button onclick="importFromSunjeong()" class="apply-btn">+ Import selected</button></div>':'';
   document.getElementById("panelBody").innerHTML=
-    '<p class="hint">Columns needed: <strong>apply number</strong>, <strong>ID (username)</strong>, <strong>nickname</strong>.</p>'+
+    _sjBanner+'<p class="hint">Columns needed: <strong>apply number</strong>, <strong>ID (username)</strong>, <strong>nickname</strong>.</p>'+
     '<div class="drop-zone" id="dropZone" onclick="document.getElementById(\'csvFile\').click()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDropCreator(event)">'+
     '<i class="ti ti-upload" style="font-size:26px;color:#bbb;"></i><p>Click or drag & drop CSV</p><small>apply number - ID - nickname</small>'+
     '<input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCreatorCSV(this.files[0])"/></div>'+
@@ -2773,6 +2775,41 @@ function downloadSjAsXlsx(hdrs, rows, campName) {
     console.error('XLSX export failed:', e);
     alert('Excel export failed: ' + e.message);
   }
+}
+
+
+/* ============ IMPORT FROM 선정 ============ */
+function importFromSunjeong() {
+  var c = getCampaign();
+  if (!c) return;
+  var selected = sjApplicants.filter(function(r) { return sjSelected.has(String(r._applyNum)); });
+  if (!selected.length) { alert('No creators selected in 선정!'); return; }
+
+  var added = 0, skipped = 0;
+  selected.forEach(function(r) {
+    var handle = r.username || '';
+    if (!handle) return;
+    // Check if already in campaign
+    var exists = c.creators.some(function(cr) { return cr.handle.toLowerCase() === handle.toLowerCase(); });
+    if (exists) { skipped++; return; }
+    var newCr = {id: uid(), applyNum: r._applyNum || String(c.creators.length+1), handle: handle, nick: r.nickname || handle};
+    c.creators.push(newCr);
+    c.state[newCr.id] = {checks: {}, status: 'Pending Review'};
+    c.master.forEach(function(s) { s.items.forEach(function(item) { c.state[newCr.id].checks[item.id] = false; }); });
+    added++;
+  });
+
+  saveToLocalStorage();
+  markChanged();
+  if (activeCampaignId) renderSidebar();
+  closePanel();
+
+  var msg = added + ' creator' + (added!==1?'s':'') + ' imported to Check tab!';
+  if (skipped) msg += ' (' + skipped + ' already existed)';
+  setTimeout(function() {
+    var toast = document.getElementById('lsToast');
+    if (toast) { toast.textContent = msg; toast.classList.add('show'); setTimeout(function(){toast.classList.remove('show');}, 3000); }
+  }, 200);
 }
 
 </script>
