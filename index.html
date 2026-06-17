@@ -1872,8 +1872,7 @@ function buildSjTable(rows){
 function fmtNum(v){if(!v||isNaN(v))return"-";var n=parseFloat(v);if(n>=1000000)return(n/1000000).toFixed(1)+"M";if(n>=1000)return(n/1000).toFixed(1)+"K";return Math.round(n).toLocaleString();}
 function sjRowClick(e,id){if(e.target.tagName==="INPUT"||e.target.tagName==="BUTTON")return;var sel=window.getSelection();if(sel&&sel.toString().length>0)return;sjToggleRow(id);}
 function sjToggleRow(id){if(sjSelected.has(id))sjSelected.delete(id);else sjSelected.add(id);renderSjTable();sjSaveSelection(id,sjSelected.has(id));}
-function sjToggleAll(checked){var _f=getSjFiltered();_f.forEach(function(r){checked?sjSelected.add(r._applyNum):sjSelected.delete(r._applyNum);});renderSjTable();_f.forEach(function(r){sjSaveSelection(r._applyNum,checked);});}
-
+function sjToggleAll(checked){var _f=getSjFiltered();if(!checked){sjSelected.clear();}else{_f.forEach(function(r){sjSelected.add(String(r._applyNum));});}renderSjTable();_f.forEach(function(r){sjSaveSelection(r._applyNum,checked);});}
 function renderSjTable(){
   var filtered=getSjFiltered();
   var wrap=document.getElementById("sjTableWrap");
