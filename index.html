@@ -1834,9 +1834,14 @@ function handleSjCSV(file){
     if(lines.length<2)return;
     var header=lines[0].split(",").map(function(h){return h.trim().replace(/^["']+|["']+$/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");});
     function col(){var names=Array.from(arguments);return header.findIndex(function(h){return names.some(function(n){return h.includes(n);});});}
-    var ai=col("applynumber","applynum","apply"),ii=col("idusername","username","id"),ni=col("nickname","nick");
-    var gi=col("grade"),tfi=col("tiktokfollowers"),tai=col("tiktokavgviews"),ifi=col("instagramfollowers"),iai=col("instagramavgviews"),nti=col("nationality"),ci=col("caution");
-    var uidIdx=col("userid","user_id"),ttUrlIdx=col("tiktokurl","tiktok_url"),igUrlIdx=col("instagramurl","instagram_url");
+    function colExact(){var names=Array.from(arguments);
+      var exact=header.findIndex(function(h){return names.includes(h);});
+      if(exact>=0)return exact;
+      return header.findIndex(function(h){return names.some(function(n){return h===n||h.startsWith(n);});});
+    }
+    var ai=colExact("applynumber","applynum","apply"),ii=colExact("idusername","username"),ni=colExact("nickname","nick");
+    var gi=colExact("grade"),tfi=colExact("tiktokfollowers"),tai=colExact("tiktokavgviews"),ifi=colExact("instagramfollowers"),iai=colExact("instagramavgviews"),nti=colExact("nationality"),ci=colExact("caution");
+    var uidIdx=colExact("userid","user_id"),ttUrlIdx=colExact("tiktokurl","tiktokurl2","tiktok_url"),igUrlIdx=colExact("instagramurl","instagram_url");
     sjApplicants=[];
     for(var i=1;i<lines.length;i++){
       var cols=splitCSVLine(lines[i]);
@@ -1845,16 +1850,17 @@ function handleSjCSV(file){
       sjApplicants.push({_applyNum:cols[ai]||String(i),_userId:cols[uidIdx]||"",username:"@"+uname,nickname:cols[ni]||"",grade:(cols[gi]||"").toUpperCase(),tiktok_followers:cols[tfi]||"",tiktok_avg_views:cols[tai]||"",instagram_followers:cols[ifi]||"",instagram_avg_views:cols[iai]||"",nationality:cols[nti]||"",caution:cols[ci]||"",_ig_url:cols[igUrlIdx]||"",_tt_url:cols[ttUrlIdx]||""});
     }
     await loadCreatorGrades(sjApplicants.map(function(r){return r.username;}));
-    // Auto-save IG/TT URLs to Supabase if present in CSV
-    var urlUpdates=sjApplicants.filter(function(r){return r._ig_url||r._tt_url;});
-    if(urlUpdates.length){
-      urlUpdates.forEach(function(r){
-        var fields={};
-        if(r._ig_url)fields.instagram_url=r._ig_url;
-        if(r._tt_url)fields.tiktok_url=r._tt_url;
+    // Auto-add new creators + save IG/TT URLs to Supabase
+    sjApplicants.forEach(function(r){
+      var g=getCreatorGrade(r.username);
+      var fields={};
+      if(r._ig_url)fields.instagram_url=r._ig_url;
+      if(r._tt_url)fields.tiktok_url=r._tt_url;
+      // If creator not in DB at all, create entry
+      if(!g||Object.keys(fields).length>0){
         upsertCreatorGrade(r.username,fields);
-      });
-    }
+      }
+    });
     sjSelected=new Set();
     renderSunjeongArea();
   };
