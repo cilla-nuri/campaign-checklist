@@ -1359,14 +1359,7 @@ function renderMasterPanel(){
   const c=getCampaign();
   if(!c){document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>';document.getElementById("panelFooter").innerHTML="";return;}
   document.getElementById("panelBody").innerHTML=
-    '<div style="margin-bottom:12px;">'+
-    '<div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">✨ Auto-extract from guidelines</div>'+
-    '<textarea id="guidelineInput" placeholder="Paste campaign guidelines here..." style="width:100%;height:100px;padding:8px 12px;font-size:12px;border-radius:10px;border:1.5px solid #e8e8e8;outline:none;resize:vertical;line-height:1.6;color:#333;font-family:inherit;"></textarea>'+
-    '<button id="extractBtn" onclick="extractChecklist()" style="margin-top:6px;width:100%;padding:8px;border-radius:8px;border:none;background:#534AB7;color:#fff;font-size:12px;font-weight:500;cursor:pointer;"><i class="ti ti-sparkles"></i> Extract with AI</button>'+
-    '<div id="extractStatus" style="font-size:11px;color:#aaa;margin-top:4px;min-height:16px;"></div>'+
-    '</div>'+
-    '<div class="divider" style="margin:8px 0 12px;"></div>'+
-    '<div class="drop-zone" id="checklistDropZone" onclick="document.getElementById(\'checklistFile\').click()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDropChecklist(event)">'+
+        '<div class="drop-zone" id="checklistDropZone" onclick="document.getElementById(\'checklistFile\').click()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDropChecklist(event)">'+
     '<i class="ti ti-file-spreadsheet" style="font-size:22px;color:#bbb;"></i><p>Import checklist CSV from Claude</p><small>Columns: section, item</small>'+
     '<input type="file" id="checklistFile" accept=".csv" style="display:none" onchange="handleChecklistCSV(this.files[0])"/></div>'+
     '<div id="checklistImportPreview"></div>'+
@@ -2820,78 +2813,7 @@ function importFromSunjeong() {
 }
 
 
-/* ============================================================
-   AI EXTRACT CHECKLIST FROM GUIDELINES
-   ============================================================ */
-async function extractChecklist() {
-  var text = document.getElementById('guidelineInput') ? document.getElementById('guidelineInput').value.trim() : '';
-  if (!text) { 
-    var st = document.getElementById('extractStatus');
-    if (st) { st.textContent = 'Please paste some guidelines first.'; st.style.color = '#e24b4a'; }
-    return;
-  }
-  var btn = document.getElementById('extractBtn');
-  var status = document.getElementById('extractStatus');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;display:inline-block;"></i> Extracting...'; }
-  if (status) { status.textContent = 'Calling AI...'; status.style.color = '#534AB7'; }
 
-  var systemPrompt = 'You are a campaign checklist extractor. Given campaign guidelines, extract all checklist items into a structured JSON array.\n\nReturn ONLY valid JSON with this exact format (no markdown, no explanation):\n[\n  {"section": "Format Requirements", "item": "Video must be 30-60 seconds"},\n  {"section": "Required Scenes", "item": "Need to show product application on face"}\n]\n\nSection names to use (in this order):\n1. Format Requirements - platform, length, subtitle/VO requirements\n2. Required Scenes - specific product or visual moments\n3. Key Benefits / Claims - key talking points and claims\n4. Video Flow - hook, main content, CTA flow\n5. Caption & Tags - hashtags, account tags, captions\n6. Prohibited - things NOT to do or mention\n\nRephrase items to be copy-friendly, starting with action words like "Need to", "Must", "Should", etc.\nReturn only the JSON array, nothing else.';
-
-  try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: text }]
-      })
-    });
-    var data = await res.json();
-    var raw = data.content && data.content[0] ? data.content[0].text : '';
-    
-    // Parse JSON response
-    var clean = raw.replace(/```json|```/g, '').trim();
-    var items = JSON.parse(clean);
-    
-    if (!Array.isArray(items) || !items.length) throw new Error('No items extracted');
-
-    // Group into sections
-    var sections = {};
-    var sectionOrder = [];
-    items.forEach(function(item) {
-      var sec = item.section || 'General';
-      if (!sections[sec]) { sections[sec] = []; sectionOrder.push(sec); }
-      sections[sec].push(item.item);
-    });
-
-    // Build masterDraft
-    masterDraft = sectionOrder.map(function(sec) {
-      return {
-        id: uid(),
-        name: sec,
-        items: sections[sec].map(function(text) { return { id: uid(), text: text }; })
-      };
-    });
-
-    // Re-render master items
-    var mi = document.getElementById('masterItems');
-    if (mi) mi.innerHTML = masterDraft.map(renderSecBlock).join('');
-    
-    if (status) { status.textContent = '✓ Extracted ' + items.length + ' items across ' + sectionOrder.length + ' sections!'; status.style.color = '#1D9E75'; }
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Extract with AI'; }
-    
-    // Clear textarea
-    var ta = document.getElementById('guidelineInput');
-    if (ta) ta.value = '';
-    
-  } catch(e) {
-    console.error('Extract failed:', e);
-    if (status) { status.textContent = 'Failed: ' + (e.message || 'Unknown error'); status.style.color = '#e24b4a'; }
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Extract with AI'; }
-  }
-}
 
 </script>
 </body>
