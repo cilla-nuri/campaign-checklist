@@ -485,6 +485,7 @@ function switchCampaign(id){
   document.getElementById("searchInput").value="";
   document.getElementById("delCampaignBtn").style.display="flex";
   document.getElementById("mainTabs").style.display="flex";
+  sjApplicants=[];sjSelected=new Set(); // reset 선정 data on campaign switch
   renderSidebar();resetMainPanel();
   var c=getCampaign();
   if(c&&c.creators.length){loadCreatorGrades(c.creators.map(function(cr){return cr.handle;})).then(function(){renderSidebar();});}
@@ -1675,6 +1676,21 @@ function switchMainTab(tab){
     footer.style.display="none";
     document.getElementById("feedbackBtn").style.display="none";
     document.getElementById("sbadge").style.display="none";
+    // Auto-load from Supabase if empty
+    if(!sjApplicants.length){
+      var _c=getCampaign();
+      if(_c){
+        renderSunjeongArea(); // show loading state
+        loadSjFromSupabase(_c.name).then(async function(rows){
+          if(rows.length){
+            sjApplicants=rows;
+            await loadCreatorGrades(sjApplicants.map(function(r){return r.username;}));
+            renderSunjeongArea();
+          }
+        });
+        return;
+      }
+    }
     renderSunjeongArea();
   }else{
     sjArea.style.display="none";
@@ -1862,6 +1878,9 @@ function handleSjCSV(file){
       }
     });
     sjSelected=new Set();
+    // Save to Supabase for persistence
+    var c=getCampaign();
+    if(c)saveSjToSupabase(c.name,sjApplicants);
     renderSunjeongArea();
   };
   reader.readAsText(file);
@@ -2267,6 +2286,72 @@ async function cpSaveRow(handle) {
 }
 
 
+
+
+/* ============================================================
+   SUNJEONG PERSISTENCE (Supabase campaign_applicants)
+   ============================================================ */
+
+async function saveSjToSupabase(campaignName, applicants) {
+  if (!campaignName || !applicants.length) return;
+  try {
+    // Delete existing applicants for this campaign
+    await sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName), {
+      method: "DELETE", prefer: "return=minimal"
+    });
+    // Insert new batch in chunks of 100
+    for (var i = 0; i < applicants.length; i += 100) {
+      var chunk = applicants.slice(i, i + 100).map(function(r) {
+        return {
+          campaign_name: campaignName,
+          apply_number: r._applyNum || "",
+          user_id: r._userId || "",
+          username: r.username || "",
+          nickname: r.nickname || "",
+          grade: r.grade || "",
+          tiktok_followers: r.tiktok_followers || "",
+          tiktok_avg_views: r.tiktok_avg_views || "",
+          instagram_followers: r.instagram_followers || "",
+          instagram_avg_views: r.instagram_avg_views || "",
+          nationality: r.nationality || "",
+          caution: r.caution || "",
+          ig_url: r._ig_url || "",
+          tt_url: r._tt_url || ""
+        };
+      });
+      await sbFetch("campaign_applicants", {
+        method: "POST", prefer: "resolution=ignore-duplicates,return=minimal",
+        body: JSON.stringify(chunk)
+      });
+    }
+    console.log("Saved", applicants.length, "applicants for", campaignName);
+  } catch(e) { console.warn("Save applicants failed:", e); }
+}
+
+async function loadSjFromSupabase(campaignName) {
+  if (!campaignName) return [];
+  try {
+    var data = await sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName) + "&order=apply_number.desc&limit=2000");
+    if (!data || !data.length) return [];
+    return data.map(function(r) {
+      return {
+        _applyNum: r.apply_number || "",
+        _userId: r.user_id || "",
+        username: r.username || "",
+        nickname: r.nickname || "",
+        grade: r.grade || "",
+        tiktok_followers: r.tiktok_followers || "",
+        tiktok_avg_views: r.tiktok_avg_views || "",
+        instagram_followers: r.instagram_followers || "",
+        instagram_avg_views: r.instagram_avg_views || "",
+        nationality: r.nationality || "",
+        caution: r.caution || "",
+        _ig_url: r.ig_url || "",
+        _tt_url: r.tt_url || ""
+      };
+    });
+  } catch(e) { console.warn("Load applicants failed:", e); return []; }
+}
 
 </script>
 </body>
