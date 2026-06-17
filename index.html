@@ -258,6 +258,26 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .cp-empty{text-align:center;color:#ccc;padding:60px;font-size:13px;}
 .cp-add-row{background:#f8f7ff;}
 .cp-add-row td{padding:8px 14px;}
+
+/* ===== SKINTONE PILLS ===== */
+.skin-light{background:#fde8d8;color:#7a3b1e;}
+.skin-fair{background:#f5d5b8;color:#6b3012;}
+.skin-medium{background:#d4956a;color:#fff;}
+.skin-tan{background:#a0623a;color:#fff;}
+.skin-deep{background:#5c3317;color:#fff;}
+.skin-pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;}
+
+/* ===== ELIGIBILITY ===== */
+.eligible-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:#d1f5e8;color:#085041;}
+.ineligible-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:#f0f0f0;color:#bbb;}
+.sj-settings-row{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#f8f7ff;border-bottom:1px solid #efefef;flex-shrink:0;flex-wrap:wrap;}
+.sj-settings-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;}
+.sj-setting-input{font-size:12px;padding:4px 8px;border-radius:7px;border:1.5px solid #e8e8e8;background:#fff;color:#111;outline:none;width:110px;}
+.sj-setting-input:focus{border-color:#534AB7;}
+.sj-sns-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:1.5px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;font-weight:500;transition:all 0.12s;}
+.sj-sns-btn.active{background:#534AB7;border-color:#534AB7;color:#fff;}
+.eligible-row td{background:#f0fff8 !important;}
+.sj-table tr.eligible-row:hover td{background:#e0faf0 !important;}
 </style>
 </head>
 <body>
@@ -1776,8 +1796,8 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  var labels=["Apply #","User ID","Username","Nickname","Grade","V","E","Skintone","English","Nationality","TT Followers","TT Avg Views","IG Followers","IG Avg Views","SNS","Rank","Caution","Notes"];
-  var keys=["_applyNum","_userId","username","nickname","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_sns","_rank","caution","_notes"];
+  var labels=["Apply #","User ID","Username","Nickname","SNS","Grade","V","E","Skintone","English","Nationality","TT Followers","TT Avg Views","IG Followers","IG Avg Views","Rank","Caution","Notes"];
+  var keys=["_applyNum","_userId","username","nickname","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution","_notes"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk" onchange="sjToggleAll(this.checked)"/></th>';
   labels.forEach(function(l,i){
     var k=keys[i];
@@ -1809,7 +1829,29 @@ function buildSjTable(rows){
       +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:48px;font-size:12px;padding:2px 5px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
       +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||"")+'</td>';
-    return '<tr class="'+(sel?"sj-selected":"")+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'+td+'</tr>';
+    return '<tr class="'+(sel?"sj-selected eligible-row":"")+(isEligible(r)?' eligible-row':'')+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'
+      +'<td><input type="checkbox" class="sj-chk" '+(sel?"checked":"")
+      +' onclick="event.stopPropagation();sjToggleRow(\''+r._applyNum+'\')"/></td>'
+      +'<td>'+r._applyNum+'</td>'
+      +'<td style="font-size:11px;color:#bbb;">'+(r._userId||'-')+'</td>'
+      +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+
+      (bl?"[BL] ":"")+r.username+'</td>'
+      +'<td>'+(r.nickname||"")+'</td>'
+      +'<td style="white-space:nowrap;">'+sjSnsLinks(r)+'</td>'
+      +'<td>'+(r.grade?'<span class="grade-pill '+gc+'">'+r.grade+'</span>':'-')+'</td>'
+      +'<td>'+(g.video_quality?'<span class="vgrade-pill">'+g.video_quality+'</span>':'-')+'</td>'
+      +'<td>'+(g.manager_evaluation?'<span class="egrade-pill">'+g.manager_evaluation+'</span>':'-')+'</td>'
+      +'<td>'+sjSkinPill(g.skintone)+'</td>'
+      +'<td>'+(g.english_proficiency||'-')+'</td>'
+      +'<td>'+(r.nationality||'-')+'</td>'
+      +'<td>'+fmtNum(r.tiktok_followers)+'</td>'
+      +'<td>'+fmtNum(r.tiktok_avg_views)+'</td>'
+      +'<td>'+fmtNum(r.instagram_followers)+'</td>'
+      +'<td>'+fmtNum(r.instagram_avg_views)+'</td>'
+      +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:48px;font-size:12px;padding:2px 5px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
+      +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
+      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||'')+'</td>'
+      +'</tr>';
   }).join("");
   return '<table class="sj-table"><thead><tr>'+th+'</tr></thead><tbody>'+tbody+'</tbody></table>';
 }
@@ -2379,6 +2421,100 @@ function sjSaveSelection(applyNum, selected) {
       body: JSON.stringify({selected: selected})
     }).catch(function(e) { console.warn("Selection save failed:", e); });
   }, 300);
+}
+
+
+/* ============================================================
+   SUNJEONG HELPERS: SKIN PILL, SNS LINKS, ELIGIBILITY
+   ============================================================ */
+function sjSkinPill(skin) {
+  if (!skin) return '-';
+  var cls = {Light:'skin-light',Fair:'skin-fair',Medium:'skin-medium',Tan:'skin-tan',Deep:'skin-deep'}[skin] || '';
+  return '<span class="skin-pill ' + cls + '">' + skin + '</span>';
+}
+
+function sjSnsLinks(r) {
+  var g = getCreatorGrade(r.username) || {};
+  var igUrl = r._ig_url || g.instagram_url || '';
+  var ttUrl = r._tt_url || g.tiktok_url || '';
+  var html = '';
+  if (igUrl) html += '<a href="' + igUrl + '" target="_blank" style="color:#E1306C;font-size:14px;text-decoration:none;margin-right:5px;" title="Instagram"><i class="ti ti-brand-instagram"></i></a>';
+  if (ttUrl) html += '<a href="' + ttUrl + '" target="_blank" style="color:#111;font-size:14px;text-decoration:none;" title="TikTok"><i class="ti ti-brand-tiktok"></i></a>';
+  return html || '<span style="color:#ddd;">-</span>';
+}
+
+/* ============================================================
+   CAMPAIGN 선정 SETTINGS (min followers + SNS type)
+   ============================================================ */
+var sjSettings = { minFollowers: 0, snsType: 'both' }; // 'ig' | 'tt' | 'both'
+
+function sjLoadSettings() {
+  var c = getCampaign();
+  if (!c) return;
+  sjSettings = (c.sjSettings) || { minFollowers: 0, snsType: 'both' };
+}
+
+function sjSaveSettings() {
+  var c = getCampaign();
+  if (!c) return;
+  c.sjSettings = Object.assign({}, sjSettings);
+  saveToLocalStorage();
+}
+
+function sjUpdateSetting(key, value) {
+  sjSettings[key] = value;
+  sjSaveSettings();
+  renderSunjeongArea();
+}
+
+function isEligible(r) {
+  if (!sjSettings.minFollowers || sjSettings.minFollowers <= 0) return false;
+  var min = parseFloat(sjSettings.minFollowers) || 0;
+  var ttF = parseFloat(r.tiktok_followers) || 0;
+  var igF = parseFloat(r.instagram_followers) || 0;
+  if (sjSettings.snsType === 'ig') return igF >= min;
+  if (sjSettings.snsType === 'tt') return ttF >= min;
+  // 'both' = either one qualifies
+  return igF >= min || ttF >= min;
+}
+
+function sjFilterEligible() {
+  sjSettings._showEligibleOnly = !sjSettings._showEligibleOnly;
+  sjSaveSettings();
+  renderSjTable();
+}
+
+/* Override getSjFiltered to include eligible-only toggle */
+var _origGetSjFiltered = getSjFiltered;
+function getSjFiltered() {
+  var results = _origGetSjFiltered();
+  if (sjSettings._showEligibleOnly && sjSettings.minFollowers > 0) {
+    results = results.filter(isEligible);
+  }
+  return results;
+}
+
+/* Patch renderSunjeongArea to load settings + show settings row */
+var _origRenderSunjeongArea = renderSunjeongArea;
+function renderSunjeongArea() {
+  sjLoadSettings();
+  _origRenderSunjeongArea();
+  // Inject settings row after toolbar
+  var toolbar = document.querySelector('.sunjeong-toolbar');
+  if (!toolbar) return;
+  var settingsRow = document.createElement('div');
+  settingsRow.className = 'sj-settings-row';
+  var eligibleCount = sjApplicants.filter(isEligible).length;
+  settingsRow.innerHTML =
+    '<span class="sj-settings-label">Min Followers</span>'
+    + '<input class="sj-setting-input" type="number" placeholder="e.g. 10000" value="' + (sjSettings.minFollowers||'') + '" oninput="sjSettings.minFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();" style="width:100px;"/>'
+    + '<span class="sj-settings-label" style="margin-left:8px;">SNS</span>'
+    + '<button class="sj-sns-btn '+(sjSettings.snsType==='ig'?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'ig\')"><i class="ti ti-brand-instagram"></i> IG</button>'
+    + '<button class="sj-sns-btn '+(sjSettings.snsType==='tt'?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'tt\')"><i class="ti ti-brand-tiktok"></i> TT</button>'
+    + '<button class="sj-sns-btn '+(sjSettings.snsType==='both'?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'both\')">Both</button>'
+    + (sjSettings.minFollowers > 0 ? '<button class="sj-sns-btn '+(sjSettings._showEligibleOnly?'active':'')+'" onclick="sjFilterEligible()" style="margin-left:8px;">Eligible only ('+ eligibleCount +')</button>' : '')
+    + (sjSettings.minFollowers > 0 ? '<span style="font-size:11px;color:#bbb;margin-left:4px;">Eligible = green rows</span>' : '');
+  toolbar.insertAdjacentElement('afterend', settingsRow);
 }
 
 </script>
