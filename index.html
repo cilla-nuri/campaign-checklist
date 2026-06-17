@@ -2031,7 +2031,16 @@ async function saveGradeEdit(handle){
   var s=document.getElementById("ge_status");s.textContent="Saving...";s.style.color="#aaa";
   var fields={video_quality:document.getElementById("ge_vq").value||null,manager_evaluation:document.getElementById("ge_me").value||null,skintone:document.getElementById("ge_sk").value||null,english_proficiency:document.getElementById("ge_en").value||null,blacklist:document.getElementById("ge_bl").value==="true",notes_manager:document.getElementById("ge_notes").value||null};
   var ok=await upsertCreatorGrade(handle,fields);
-  if(ok){s.textContent="\u2713 Saved!";s.style.color="#1D9E75";renderSidebar();if(activeMainTab==="sunjeong")renderSjTable();if(_currentGradeHandle&&_currentGradeHandle===handle)renderMainGrades(handle);setTimeout(closePanel,1000);}
+  if(ok){
+    s.textContent="\u2713 Saved!";s.style.color="#1D9E75";
+    // Preserve search query before re-render
+    var _sq=document.getElementById('searchInput')?document.getElementById('searchInput').value:'';
+    renderSidebar();
+    if(_sq){var si=document.getElementById('searchInput');if(si){si.value=_sq;filterCreators(_sq);}}
+    if(activeMainTab==="sunjeong")renderSjTable();
+    if(_currentGradeHandle&&_currentGradeHandle===handle)renderMainGrades(handle);
+    setTimeout(closePanel,1000);
+  }
   else{s.textContent="\u2717 Save failed";s.style.color="#e24b4a";}
 }
 
