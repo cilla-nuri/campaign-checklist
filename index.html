@@ -2490,6 +2490,69 @@ function sjFilterEligible() {
 
 
 
+
+/* ============================================================
+   MULTI-SELECT FILTER COMPONENT
+   ============================================================ */
+var _msOpen = null;
+
+function sjMsBtn(label, filterVar, options) {
+  var sel = window[filterVar];
+  var count = sel ? sel.size : 0;
+  var btnLabel = count > 0 ? label + ' (' + count + ')' : label;
+  var id = 'ms_' + filterVar;
+  var opts = '';
+  for (var i = 0; i < options.length; i++) {
+    var o = options[i];
+    var chk = (sel && sel.has(o)) ? ' checked' : '';
+    opts += '<label class="ms-option"><input type="checkbox"' + chk
+      + ' data-fv="' + filterVar + '" data-val="' + o + '" class="ms-chk"/> ' + o + '</label>';
+  }
+  var allChk = count === 0 ? ' checked' : '';
+  return '<div class="ms-wrap" id="' + id + '_wrap">'
+    + '<button class="ms-btn ' + (count > 0 ? 'active' : '') + '" data-msbtn="' + id + '">'
+    + btnLabel + ' <i class="ti ti-chevron-down" style="font-size:9px;margin-left:2px;"></i></button>'
+    + '<div class="ms-dropdown" id="' + id + '">'
+    + '<label class="ms-option all"><input type="checkbox"' + allChk + ' data-fv="' + filterVar + '" data-val="_all" class="ms-chk"/> All</label>'
+    + opts + '</div></div>';
+}
+
+function sjMsToggleOpen(id) {
+  if (_msOpen && _msOpen !== id) {
+    var prev = document.getElementById(_msOpen);
+    if (prev) prev.classList.remove('open');
+  }
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('open');
+  _msOpen = el.classList.contains('open') ? id : null;
+}
+
+// Event delegation for all MS checkboxes and buttons
+document.addEventListener('click', function(e) {
+  // Handle MS button clicks
+  var msBtn = e.target.closest('[data-msbtn]');
+  if (msBtn) { sjMsToggleOpen(msBtn.getAttribute('data-msbtn')); return; }
+  // Handle checkbox clicks
+  var chk = e.target.closest('.ms-chk');
+  if (chk) {
+    var fv = chk.getAttribute('data-fv');
+    var val = chk.getAttribute('data-val');
+    var sel = window[fv];
+    if (!sel) return;
+    if (val === '_all') { sel.clear(); }
+    else { if (chk.checked) sel.add(val); else sel.delete(val); }
+    renderSjTable();
+    return;
+  }
+  // Close dropdown on outside click
+  if (!e.target.closest('.ms-wrap') && _msOpen) {
+    var el = document.getElementById(_msOpen);
+    if (el) el.classList.remove('open');
+    _msOpen = null;
+  }
+});
+
 </script>
 </body>
 </html>
