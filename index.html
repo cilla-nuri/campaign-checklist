@@ -1816,8 +1816,8 @@ function buildSjTable(rows){
 
 function fmtNum(v){if(!v||isNaN(v))return"-";var n=parseFloat(v);if(n>=1000000)return(n/1000000).toFixed(1)+"M";if(n>=1000)return(n/1000).toFixed(1)+"K";return Math.round(n).toLocaleString();}
 function sjRowClick(e,id){if(e.target.tagName==="INPUT")return;sjToggleRow(id);}
-function sjToggleRow(id){if(sjSelected.has(id))sjSelected.delete(id);else sjSelected.add(id);renderSjTable();}
-function sjToggleAll(checked){getSjFiltered().forEach(function(r){checked?sjSelected.add(r._applyNum):sjSelected.delete(r._applyNum);});renderSjTable();}
+function sjToggleRow(id){if(sjSelected.has(id))sjSelected.delete(id);else sjSelected.add(id);renderSjTable();sjSaveSelection(id,sjSelected.has(id));}
+function sjToggleAll(checked){var _f=getSjFiltered();_f.forEach(function(r){checked?sjSelected.add(r._applyNum):sjSelected.delete(r._applyNum);});renderSjTable();_f.forEach(function(r){sjSaveSelection(r._applyNum,checked);});}
 
 function renderSjTable(){
   var filtered=getSjFiltered();
@@ -2324,7 +2324,8 @@ async function saveSjToSupabase(campaignName, applicants) {
           caution: r.caution || "",
           ig_url: r._ig_url || "",
           tt_url: r._tt_url || "",
-          rank: r._rank || ""
+          rank: r._rank || "",
+          selected: sjSelected.has(r._applyNum)||false
         };
       });
       await sbFetch("campaign_applicants", {
@@ -2359,7 +2360,25 @@ async function loadSjFromSupabase(campaignName) {
         _rank: r.rank || ""
       };
     });
+    // Restore selections
+    sjSelected=new Set(data.filter(function(r){return r.selected;}).map(function(r){return r.apply_number;}));
   } catch(e) { console.warn("Load applicants failed:", e); return []; }
+}
+
+
+/* ============ PERSIST SELECTION ============ */
+var _sjSelectionDebounce = {};
+function sjSaveSelection(applyNum, selected) {
+  var c = getCampaign();
+  if (!c) return;
+  // Debounce per applyNum to avoid too many requests
+  clearTimeout(_sjSelectionDebounce[applyNum]);
+  _sjSelectionDebounce[applyNum] = setTimeout(function() {
+    sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(c.name) + "&apply_number=eq." + encodeURIComponent(applyNum), {
+      method: "PATCH", prefer: "return=minimal",
+      body: JSON.stringify({selected: selected})
+    }).catch(function(e) { console.warn("Selection save failed:", e); });
+  }, 300);
 }
 
 </script>
