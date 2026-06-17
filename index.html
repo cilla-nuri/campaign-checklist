@@ -2041,6 +2041,8 @@ var cpSearch = '';
 var cpEditingHandle = null;
 
 function openCreatorsPage() {
+  // Close any open panel/overlay first
+  document.getElementById('overlay').classList.remove('open');
   document.getElementById('creatorsPage').classList.add('active');
   document.getElementById('mainArea').style.display = 'none';
   document.getElementById('mainTabs').style.display = 'none';
