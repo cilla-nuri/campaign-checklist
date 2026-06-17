@@ -2386,7 +2386,7 @@ async function loadSjFromSupabase(campaignName) {
   try {
     var data = await sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName) + "&order=apply_number.desc&limit=2000");
     if (!data || !data.length) return [];
-    return data.map(function(r) {
+    var rows = data.map(function(r) {
       return {
         _applyNum: r.apply_number || "",
         _userId: r.user_id || "",
@@ -2404,8 +2404,9 @@ async function loadSjFromSupabase(campaignName) {
         _rank: r.rank || ""
       };
     });
-    // Restore selections
-    sjSelected=new Set(data.filter(function(r){return r.selected;}).map(function(r){return r.apply_number;}));
+    // Restore selections (must be BEFORE return)
+    sjSelected = new Set(data.filter(function(r){return r.selected;}).map(function(r){return r.apply_number;}));
+    return rows;
   } catch(e) { console.warn("Load applicants failed:", e); return []; }
 }
 
