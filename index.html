@@ -4,7 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Campaign Checklist</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <style>
 /* ===== RESET & BASE ===== */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -1779,7 +1780,8 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('English','sjFilterEng',['Fluent','Good','Not Bad','Bad']);
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
-    toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected()"><i class="ti ti-download"></i> Download selected</button>';
+    toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'csv\')"><i class="ti ti-file-text"></i> CSV</button>';
+    toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'xlsx\')"><i class="ti ti-file-spreadsheet"></i> Excel</button>';
   }
   toolbar+='</div>';
   var tableHtml=hasData?buildSjTable(filtered)
@@ -1958,7 +1960,8 @@ function splitCSVLine(line){
   return result;
 }
 
-function downloadSjSelected(){
+function downloadSjSelected(fmt){
+  fmt=fmt||'csv';
   var sel=sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
   if(!sel.length){alert("No creators selected!");return;}
   var c=getCampaign();
@@ -1975,8 +1978,14 @@ function downloadSjSelected(){
   }).join("\n");
   var a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download=campName+"_selection.csv";
-  a.click();
+    if(fmt==='xlsx'){
+    downloadSjAsXlsx(hdrs,rows,campName);
+  } else {
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    a.download=campName+"_selection.csv";
+    a.click();
+  }
 }
 
 /* ============ GRADE EDIT ============ */
@@ -2696,6 +2705,39 @@ setInterval(function() {
 var style = document.createElement('style');
 style.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
 document.head.appendChild(style);
+
+
+/* ============ XLSX EXPORT ============ */
+function downloadSjAsXlsx(hdrs, rows, campName) {
+  try {
+    if (typeof XLSX === 'undefined') {
+      alert('Excel library not loaded yet, try again in a moment.');
+      return;
+    }
+    var wsData = [hdrs].concat(rows);
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Style header row bold
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    for (var C = range.s.c; C <= range.e.c; C++) {
+      var addr = XLSX.utils.encode_cell({r:0, c:C});
+      if (!ws[addr]) continue;
+      ws[addr].s = {font:{bold:true}, fill:{fgColor:{rgb:"F0EFFF"}}};
+    }
+    // Auto column widths
+    var colWidths = hdrs.map(function(h, i) {
+      var max = h.length;
+      rows.forEach(function(r) { if (r[i] && String(r[i]).length > max) max = String(r[i]).length; });
+      return {wch: Math.min(max + 2, 40)};
+    });
+    ws['!cols'] = colWidths;
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Selection');
+    XLSX.writeFile(wb, campName + '_selection.xlsx');
+  } catch(e) {
+    console.error('XLSX export failed:', e);
+    alert('Excel export failed: ' + e.message);
+  }
+}
 
 </script>
 </body>
