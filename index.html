@@ -1760,8 +1760,8 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  var labels=["Apply #","Username","Nickname","Grade","V","E","Skintone","English","Nationality","TT Followers","TT Avg Views","IG Followers","IG Avg Views","Caution","Notes"];
-  var keys=["_applyNum","username","nickname","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","caution","_notes"];
+  var labels=["Apply #","User ID","Username","Nickname","Grade","V","E","Skintone","English","Nationality","TT Followers","TT Avg Views","IG Followers","IG Avg Views","Caution","Notes"];
+  var keys=["_applyNum","_userId","username","nickname","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","caution","_notes"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk" onchange="sjToggleAll(this.checked)"/></th>';
   labels.forEach(function(l,i){
     var k=keys[i];
@@ -1882,8 +1882,8 @@ function splitCSVLine(line){
 function downloadSjSelected(){
   var sel=sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
   if(!sel.length){alert("No creators selected!");return;}
-  var hdrs=["Apply Number","Username","Nickname","Grade","V Rating","E Rating","Skintone","English","Nationality","TikTok Followers","TikTok Avg Views","IG Followers","IG Avg Views","Caution","Notes"];
-  var rows=sel.map(function(r){var g=getCreatorGrade(r.username)||{};return[r._applyNum,r.username,r.nickname,r.grade,g.video_quality||"",g.manager_evaluation||"",g.skintone||"",g.english_proficiency||"",r.nationality,r.tiktok_followers,r.tiktok_avg_views,r.instagram_followers,r.instagram_avg_views,r.caution,g.notes_manager||""];});
+  var hdrs=["apply number","user_id","ID(username)","nickname","Grade","V Rating","E Rating","Skintone","English","Nationality","TikTok Followers","TikTok Avg Views","IG Followers","IG Avg Views","Caution","Notes"];
+  var rows=sel.map(function(r){var g=getCreatorGrade(r.username)||{};return[r._applyNum,r._userId||"",r.username,r.nickname,r.grade,g.video_quality||"",g.manager_evaluation||"",g.skintone||"",g.english_proficiency||"",r.nationality,r.tiktok_followers,r.tiktok_avg_views,r.instagram_followers,r.instagram_avg_views,r.caution,g.notes_manager||""];});
   var csv=[hdrs].concat(rows).map(function(row){return row.map(function(v){var s=String(v);return s.indexOf(",")>=0?'"'+s+'"':s;}).join(",");}).join("\n");
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="sunjeong_"+new Date().toISOString().slice(0,10)+".csv";a.click();
 }
