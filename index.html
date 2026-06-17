@@ -2545,7 +2545,7 @@ function sjMsBtn(label, filterVar, options) {
   }
   var allChk = count === 0 ? ' checked' : '';
   return '<div class="ms-wrap" id="' + id + '_wrap">'
-    + '<button class="ms-btn ' + (count > 0 ? 'active' : '') + '" data-msbtn="' + id + '">'
+    + '<button class="ms-btn ' + (count > 0 ? 'active' : '') + '" data-msbtn="' + id + '" data-label="' + label + '">'
     + btnLabel + ' <i class="ti ti-chevron-down" style="font-size:9px;margin-left:2px;"></i></button>'
     + '<div class="ms-dropdown" id="' + id + '">'
     + '<label class="ms-option all"><input type="checkbox"' + allChk + ' data-fv="' + filterVar + '" data-val="_all" class="ms-chk"/> All</label>'
@@ -2582,6 +2582,21 @@ document.addEventListener('click', function(e) {
     if (!sel) return;
     if (val === '_all') { sel.clear(); }
     else { if (chk.checked) sel.add(val); else sel.delete(val); }
+    // Update button label immediately
+    var btnId = 'ms_' + fv;
+    var wrap = document.getElementById(btnId + '_wrap');
+    if (wrap) {
+      var btn = wrap.querySelector('.ms-btn');
+      var origLabel = btn ? btn.getAttribute('data-label') : fv;
+      var vals = []; sel.forEach(function(v){vals.push(v);});
+      if (btn) {
+        btn.innerHTML = (sel.size > 0 ? vals.join(', ') : origLabel) + ' <i class="ti ti-chevron-down" style="font-size:9px;margin-left:2px;"></i>';
+        btn.className = 'ms-btn ' + (sel.size > 0 ? 'active' : '');
+      }
+      // Update 'All' checkbox state
+      var allChk = wrap.querySelector('.ms-option.all input');
+      if (allChk) allChk.checked = sel.size === 0;
+    }
     renderSjTable();
     return;
   }
