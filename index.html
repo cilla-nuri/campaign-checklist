@@ -1740,6 +1740,7 @@ var sjSortCol=null,sjSortDir=1;
 var sjFilterGrade="",sjFilterSearch="",sjFilterV="",sjFilterE="";
 
 function renderSunjeongArea(){
+  sjLoadSettings();
   var el=document.getElementById("sunjeongArea");
   if(!el)return;
   var hasData=sjApplicants.length>0;
@@ -1778,11 +1779,12 @@ function renderSunjeongArea(){
   toolbar+='</div>';
   var tableHtml=hasData?buildSjTable(filtered)
     :'<div class="sj-empty"><i class="ti ti-file-upload" style="font-size:28px;display:block;margin-bottom:10px;"></i>Upload applicant CSV to start \uc120\uc815<br><small style="margin-top:6px;display:block;">Columns: apply number, ID(username), nickname, Grade, tiktok/instagram followers & avg views, nationality, Caution</small></div>';
-  el.innerHTML=toolbar+'<div class="sj-table-wrap" id="sjTableWrap">'+tableHtml+'</div><input type="file" id="sjFileInput" accept=".csv" style="display:none" onchange="handleSjCSV(this.files[0])"/>';
+  var settingsHtml='<div class="sj-settings-row">'+'<span class="sj-settings-label">Min Followers</span>'+'<input class="sj-setting-input" type="number" placeholder="e.g. 10000" value="'+(sjSettings.minFollowers||'')+'" oninput="sjSettings.minFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();"/>'+'<span class="sj-settings-label" style="margin-left:8px;">SNS</span>'+'<button class="sj-sns-btn '+(sjSettings.snsType==="ig"?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'ig\')"><i class="ti ti-brand-instagram"></i> IG</button>'+'<button class="sj-sns-btn '+(sjSettings.snsType==="tt"?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'tt\')"><i class="ti ti-brand-tiktok"></i> TT</button>'+'<button class="sj-sns-btn '+(sjSettings.snsType==="both"?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'both\')">Both</button>'+(sjSettings.minFollowers>0?'<button class="sj-sns-btn '+(sjSettings._showEligibleOnly?'active':'')+'" onclick="sjFilterEligible()">Eligible only</button>':'')+'</div>';
+  el.innerHTML=toolbar+settingsHtml+'<div class="sj-table-wrap" id="sjTableWrap">'+tableHtml+'</div><input type="file" id="sjFileInput" accept=".csv" style="display:none" onchange="handleSjCSV(this.files[0])"/>';
 }
 
 function getSjFiltered(){
-  return sjApplicants.filter(function(r){
+  var results=sjApplicants.filter(function(r){
     if(sjFilterGrade&&(r.grade||"").toUpperCase()!==sjFilterGrade)return false;
     var g=getCreatorGrade(r.username);
     if(sjFilterV&&(!g||g.video_quality!==sjFilterV))return false;
@@ -1793,6 +1795,8 @@ function getSjFiltered(){
     }
     return true;
   });
+  if(sjSettings&&sjSettings._showEligibleOnly&&sjSettings.minFollowers>0){results=results.filter(isEligible);}
+  return results;
 }
 
 function buildSjTable(rows){
@@ -2484,38 +2488,9 @@ function sjFilterEligible() {
   renderSjTable();
 }
 
-/* Override getSjFiltered to include eligible-only toggle */
-var _origGetSjFiltered = getSjFiltered;
-function getSjFiltered() {
-  var results = _origGetSjFiltered();
-  if (sjSettings._showEligibleOnly && sjSettings.minFollowers > 0) {
-    results = results.filter(isEligible);
-  }
-  return results;
-}
 
-/* Patch renderSunjeongArea to load settings + show settings row */
-var _origRenderSunjeongArea = renderSunjeongArea;
-function renderSunjeongArea() {
-  sjLoadSettings();
-  _origRenderSunjeongArea();
-  // Inject settings row after toolbar
-  var toolbar = document.querySelector('.sunjeong-toolbar');
-  if (!toolbar) return;
-  var settingsRow = document.createElement('div');
-  settingsRow.className = 'sj-settings-row';
-  var eligibleCount = sjApplicants.filter(isEligible).length;
-  settingsRow.innerHTML =
-    '<span class="sj-settings-label">Min Followers</span>'
-    + '<input class="sj-setting-input" type="number" placeholder="e.g. 10000" value="' + (sjSettings.minFollowers||'') + '" oninput="sjSettings.minFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();" style="width:100px;"/>'
-    + '<span class="sj-settings-label" style="margin-left:8px;">SNS</span>'
-    + '<button class="sj-sns-btn '+(sjSettings.snsType==='ig'?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'ig\')"><i class="ti ti-brand-instagram"></i> IG</button>'
-    + '<button class="sj-sns-btn '+(sjSettings.snsType==='tt'?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'tt\')"><i class="ti ti-brand-tiktok"></i> TT</button>'
-    + '<button class="sj-sns-btn '+(sjSettings.snsType==='both'?'active':'')+'" onclick="sjUpdateSetting(\'snsType\',\'both\')">Both</button>'
-    + (sjSettings.minFollowers > 0 ? '<button class="sj-sns-btn '+(sjSettings._showEligibleOnly?'active':'')+'" onclick="sjFilterEligible()" style="margin-left:8px;">Eligible only ('+ eligibleCount +')</button>' : '')
-    + (sjSettings.minFollowers > 0 ? '<span style="font-size:11px;color:#bbb;margin-left:4px;">Eligible = green rows</span>' : '');
-  toolbar.insertAdjacentElement('afterend', settingsRow);
-}
+
+
 
 </script>
 </body>
