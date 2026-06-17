@@ -2499,7 +2499,12 @@ var _msOpen = null;
 function sjMsBtn(label, filterVar, options) {
   var sel = window[filterVar];
   var count = sel ? sel.size : 0;
-  var btnLabel = count > 0 ? label + ' (' + count + ')' : label;
+  var btnLabel = label;
+  if (count > 0) {
+    var vals = [];
+    sel.forEach(function(v){vals.push(v);});
+    btnLabel = vals.join(', ');
+  }
   var id = 'ms_' + filterVar;
   var opts = '';
   for (var i = 0; i < options.length; i++) {
