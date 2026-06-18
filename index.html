@@ -569,6 +569,7 @@ function deleteCampaign(){
   if(!confirm('Delete "'+campaigns[activeCampaignId].name+'"?'))return;
   delete campaigns[activeCampaignId];activeCampaignId=null;activeCreatorId=null;
   document.getElementById("delCampaignBtn").style.display="none";
+  saveToLocalStorage();
   refreshCampaignSelect();resetUI();
 }
 
