@@ -2883,9 +2883,13 @@ function hideHomePage() {
   var hp = document.getElementById('homePage');
   var mh = document.getElementById('mainHeader');
   var ft = document.querySelector('.footer');
+  var ca = document.getElementById('checklistArea');
+  var mt = document.getElementById('mainTabs');
   if (hp) hp.classList.remove('active');
   if (mh) mh.style.display = '';
   if (ft) ft.style.display = '';
+  if (ca) ca.style.display = '';
+  // mainTabs shown by switchCampaign, not here
 }
 
 function renderHomePage() {
