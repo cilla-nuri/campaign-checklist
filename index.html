@@ -2731,11 +2731,15 @@ async function doAutoSave() {
   try {
     // 1. Save checklist to localStorage (always)
     saveToLocalStorage();
-    // 2. Save to GitHub if configured
+    // 2. Save to GitHub if configured (guard: skip if master is empty)
     var data = JSON.parse(localStorage.getItem('campaignChecklist_v1') || '{}');
-    if (data.ghToken && data.ghRepo && activeCampaignId) {
+    var c = getCampaign();
+    var masterHasItems = c && c.master && c.master.some(function(s){return s.items && s.items.length > 0;});
+    if (data.ghToken && data.ghRepo && activeCampaignId && masterHasItems) {
       await saveReviewToGitHub();
       showSaveIndicator('saved', 'Auto-saved');
+    } else if (data.ghToken && data.ghRepo && activeCampaignId && !masterHasItems) {
+      showSaveIndicator('saved', 'Saved locally (master empty — skipped GitHub)');
     } else {
       showSaveIndicator('saved', 'Saved locally');
     }
