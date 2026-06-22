@@ -1921,6 +1921,7 @@ function buildSjTable(rows){
       +'<td style="white-space:nowrap;">'+(r._ig_url||getCreatorGrade(r.username)&&getCreatorGrade(r.username).instagram_url?'<a href="'+(r._ig_url||(getCreatorGrade(r.username)||{}).instagram_url||'')+'" target="_blank" style="color:#E1306C;font-size:12px;text-decoration:none;margin-right:6px;" title="Instagram"><i class="ti ti-brand-instagram"></i></a>':'')+(r._tt_url||getCreatorGrade(r.username)&&getCreatorGrade(r.username).tiktok_url?'<a href="'+(r._tt_url||(getCreatorGrade(r.username)||{}).tiktok_url||'')+'" target="_blank" style="color:#111;font-size:12px;text-decoration:none;" title="TikTok"><i class="ti ti-brand-tiktok"></i></a>':'')||'-'+'</td>'
       +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:38px;font-size:11px;padding:1px 3px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
       +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
+      +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||"")+'</td>';
     return '<tr class="'+(sel?"sj-selected eligible-row":"")+(isEligible(r)?' eligible-row':'')+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'
