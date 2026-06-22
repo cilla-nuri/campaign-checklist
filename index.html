@@ -3183,30 +3183,36 @@ function sjGradeSel(field, username, current, options, cls) {
 
 function sjSaveGrade(sel) {
   var field = sel.getAttribute('data-sjgrade');
-  var username = sel.getAttribute('data-username');
+  var rawUsername = sel.getAttribute('data-username');
+  var cleanUsername = rawUsername.replace(/^@/, '');
   var value = sel.value;
   var dbField = SJ_GRADE_FIELD[field];
   if (!dbField) return;
 
-  // Update creatorGradeCache immediately
-  if (!creatorGradeCache[username]) creatorGradeCache[username] = {};
-  creatorGradeCache[username][dbField] = value;
+  // Update cache with clean username (no @)
+  if (!creatorGradeCache[cleanUsername]) creatorGradeCache[cleanUsername] = {};
+  creatorGradeCache[cleanUsername][dbField] = value;
 
-  // Update color class
+  // Update dropdown color class
   var clsMap = {'_vr':'v-sel','_er':'e-sel','_sk':'sk-sel','_en':'en-sel'};
-  sel.className = 'grade-edit-sel ' + (clsMap[field]||'');
+  sel.className = 'grade-edit-sel ' + (clsMap[field] || '');
 
-  // Save to Supabase creators table
-  sbFetch('creators?username=eq.' + encodeURIComponent(username.replace(/^@/,'')), {
-    method: 'PATCH', prefer: 'return=minimal',
-    body: JSON.stringify({[dbField]: value || null})
+  // Build patch object
+  var patch = {};
+  patch[dbField] = value || null;
+
+  // Save to Supabase
+  sbFetch('creators?username=eq.' + encodeURIComponent(cleanUsername), {
+    method: 'PATCH',
+    prefer: 'return=minimal',
+    body: JSON.stringify(patch)
   }).then(function() {
-    // Flash green
     sel.style.outline = '2px solid #059669';
-    setTimeout(function(){ sel.style.outline = ''; }, 800);
-  }).catch(function() {
+    setTimeout(function(){ sel.style.outline = ''; }, 1000);
+  }).catch(function(err) {
+    console.error('Grade save failed:', err);
     sel.style.outline = '2px solid #e24b4a';
-    setTimeout(function(){ sel.style.outline = ''; }, 800);
+    setTimeout(function(){ sel.style.outline = ''; }, 1000);
   });
 }
 
