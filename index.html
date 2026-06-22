@@ -299,8 +299,10 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .autosave-indicator.error{opacity:1;color:#e24b4a;border-color:#e24b4a55;}
 
 /* ===== CAMPAIGN HOME PAGE ===== */
-.home-page{display:none;flex:1;overflow-y:auto;padding:24px 32px;background:#fafafa;}
+.home-page{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;background:#fafafa;overflow-y:auto;padding:32px 40px;}
 .home-page.active{display:block;}
+.home-close{position:fixed;top:16px;right:20px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:6px 12px;font-size:12px;color:#666;cursor:pointer;z-index:301;display:flex;align-items:center;gap:5px;}
+.home-close:hover{background:#f5f5f5;}
 .home-header{margin-bottom:24px;}
 .home-title{font-size:20px;font-weight:600;color:#111;margin-bottom:4px;}
 .home-sub{font-size:13px;color:#bbb;}
@@ -541,7 +543,7 @@ window.addEventListener("DOMContentLoaded",function(){
       var _c=getCampaign();
       if(_c&&_c.creators.length){loadCreatorGrades(_c.creators.map(function(cr){return cr.handle;})).then(function(){renderSidebar();});}
     }else{
-      activeCampaignId=null;resetUI();showHomePage();
+      activeCampaignId=null;resetUI();
     }
     updateSaveButtons();
     if(Object.keys(campaigns).length>0){
@@ -2954,32 +2956,14 @@ var _showArchived = false;
 
 function showHomePage() {
   var hp = document.getElementById('homePage');
-  var mh = document.getElementById('mainHeader');
-  var mt = document.getElementById('mainTabs');
-  var ca = document.getElementById('checklistArea');
-  var sa = document.getElementById('sunjeongArea');
-  var ft = document.querySelector('.footer');
   if (!hp) return;
-  hp.classList.add('active');
-  if (mh) mh.style.display = 'none';
-  if (mt) mt.style.display = 'none';
-  if (ca) ca.style.display = 'none';
-  if (sa) sa.style.display = 'none';
-  if (ft) ft.style.display = 'none';
   renderHomePage();
+  hp.classList.add('active');
 }
 
 function hideHomePage() {
   var hp = document.getElementById('homePage');
-  var mh = document.getElementById('mainHeader');
-  var ft = document.querySelector('.footer');
-  var ca = document.getElementById('checklistArea');
-  var mt = document.getElementById('mainTabs');
   if (hp) hp.classList.remove('active');
-  if (mh) mh.style.display = '';
-  if (ft) ft.style.display = '';
-  if (ca) ca.style.display = '';
-  // mainTabs shown by switchCampaign, not here
 }
 
 function renderHomePage() {
@@ -3028,7 +3012,10 @@ function renderHomePage() {
       (_showArchived?'<div class="campaign-grid">'+archived.map(cardHtml).join('')+'</div>':'');
   }
 
-  hp.innerHTML =
+  var closeBtn = activeCampaignId
+    ? '<button class="home-close" onclick="hideHomePage()"><i class="ti ti-x"></i> Close</button>'
+    : '';
+  hp.innerHTML = closeBtn +
     '<div class="home-header">'+
     '<div class="home-title">Campaigns</div>'+
     '<div class="home-sub">Select a campaign to start reviewing</div>'+
@@ -3040,6 +3027,7 @@ function renderHomePage() {
 }
 
 function selectCampaignFromHome(id) {
+  hideHomePage();
   var sel = document.getElementById('campaignSelect');
   // If archived, need to temporarily add to dropdown
   if (campaigns[id] && campaigns[id].archived) {
