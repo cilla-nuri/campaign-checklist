@@ -1349,8 +1349,8 @@ function createCampaign(){
 
 function renderCSVPanel(){
   if(!activeCampaignId){document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please create or select a campaign first.</p>';document.getElementById("panelFooter").innerHTML="";return;}
-  var _sjCount=sjSelected?sjSelected.size:0;
-  var _sjBanner=_sjCount>0?'<div style="background:#f0efff;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">'+'<span style="font-size:13px;color:#534AB7;"><strong>'+_sjCount+'</strong> creators selected in 선정</span>'+'<button onclick="importFromSunjeong()" class="apply-btn">+ Import selected</button></div>':'';
+  var _preCount=sjApplicants.filter(function(r){return r._selStatus==='pre-selected';}).length;
+  var _sjBanner=_preCount>0?'<div style="background:#fff8e1;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">'+'<span style="font-size:13px;color:#f59e0b;"><strong>⭐ '+_preCount+' pre-selected</strong> creators ready to import</span>'+'<button onclick="importFromSunjeong()" class="apply-btn" style="background:#f59e0b;">Import pre-selected →</button></div>':'';
   document.getElementById("panelBody").innerHTML=
     _sjBanner+'<p class="hint">Columns needed: <strong>apply number</strong>, <strong>ID (username)</strong>, <strong>nickname</strong>.</p>'+
     '<div class="drop-zone" id="dropZone" onclick="document.getElementById(\'csvFile\').click()" ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDropCreator(event)">'+
@@ -2902,8 +2902,8 @@ function downloadSjAsXlsx(hdrs, rows, campName) {
 function importFromSunjeong() {
   var c = getCampaign();
   if (!c) return;
-  var selected = sjApplicants.filter(function(r) { return sjSelected.has(String(r._applyNum)); });
-  if (!selected.length) { alert('No creators selected in 선정!'); return; }
+  var selected = sjApplicants.filter(function(r) { return r._selStatus === 'pre-selected'; });
+  if (!selected.length) { alert('No pre-selected creators in 선정!'); return; }
 
   var added = 0, skipped = 0;
   selected.forEach(function(r) {
@@ -2922,6 +2922,17 @@ function importFromSunjeong() {
   saveToLocalStorage();
   markChanged();
   if (activeCampaignId) renderSidebar();
+  // Update pre-selected → selected in 선정
+  var c2 = getCampaign();
+  selected.forEach(function(r) {
+    r._selStatus = 'selected';
+    if (c2) {
+      sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c2.name) + '&apply_number=eq.' + encodeURIComponent(r._applyNum), {
+        method: 'PATCH', prefer: 'return=minimal',
+        body: JSON.stringify({sel_status: 'selected'})
+      }).catch(function(){});
+    }
+  });
   closePanel();
 
   var msg = added + ' creator' + (added!==1?'s':'') + ' imported to Check tab!';
