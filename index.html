@@ -1809,7 +1809,7 @@ function renderSunjeongArea(){
   var toolbar='<div class="sunjeong-toolbar">'
     +'<button class="sj-upload-btn" onclick="openSjUpload()"><i class="ti ti-upload"></i> Upload CSV</button>';
   if(hasData){
-    var selCount=0;sjSelected.forEach(function(id){if(filtered.some(function(r){return r._applyNum===id;}))selCount++;});
+    var selCount=0;filtered.forEach(function(r){if(sjSelected.has(String(r._applyNum)))selCount++;});
     toolbar+=sjMsBtn('Grade','sjFilterGrade',['A','B','C']);
     toolbar+=sjMsBtn('V','sjFilterV',['V1','V2','V3','V4','V5']);
     toolbar+=sjMsBtn('E','sjFilterE',['E1','E2','E3','E4','E5']);
@@ -1944,9 +1944,9 @@ function renderSjTable(){
       if(e.target.classList.contains('sj-rank-input'))sjUpdateRank(e.target.getAttribute('data-apply'),e.target.value);
     },{once:true});
   }
-  var cnt=0;sjSelected.forEach(function(id){if(filtered.some(function(r){return r._applyNum===id;}))cnt++;});
+  var cnt=0;filtered.forEach(function(r){if(sjSelected.has(String(r._applyNum)))cnt++;});
   var el=document.querySelector(".sj-count");
-  if(el)el.textContent=cnt+" selected / "+filtered.length+" shown / "+sjApplicants.length+" total";
+  if(el)el.textContent=(cnt>0?cnt+" selected from ":"")+filtered.length+" shown / "+sjApplicants.length+" total";
 }
 
 function sjSort(col){
@@ -1957,6 +1957,12 @@ function sjSort(col){
     var map={"_vr":"video_quality","_er":"manager_evaluation","_sk":"skintone","_en":"english_proficiency","_notes":"notes_manager"};
     var va=map[col]?ga[map[col]]||"":a[col]||"";
     var vb=map[col]?gb[map[col]]||"":b[col]||"";
+    // Always push empty/dash to bottom regardless of sort direction
+    var aEmpty=!va||va==="-"||va==="null";
+    var bEmpty=!vb||vb==="-"||vb==="null";
+    if(aEmpty&&bEmpty)return 0;
+    if(aEmpty)return 1;  // a goes after b (bottom)
+    if(bEmpty)return -1; // b goes after a (bottom)
     if(numC.includes(col)){return((parseFloat(va)||0)-(parseFloat(vb)||0))*sjSortDir;}
     return String(va).localeCompare(String(vb))*sjSortDir;
   });
