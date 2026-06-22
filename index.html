@@ -1811,10 +1811,10 @@ function renderSunjeongArea(){
   if(hasData){
     var selCount=0;filtered.forEach(function(r){if(sjSelected.has(String(r._applyNum)))selCount++;});
     toolbar+=sjMsBtn('Grade','sjFilterGrade',['A','B','C']);
-    toolbar+=sjMsBtn('V','sjFilterV',['V1','V2','V3','V4','V5']);
-    toolbar+=sjMsBtn('E','sjFilterE',['E1','E2','E3','E4','E5']);
-    toolbar+=sjMsBtn('Skin','sjFilterSkin',['Light','Fair','Medium','Tan','Deep']);
-    toolbar+=sjMsBtn('English','sjFilterEng',['Fluent','Good','Not Bad','Bad']);
+    toolbar+=sjMsBtn('V','sjFilterV',['V1','V2','V3','V4','V5','-']);
+    toolbar+=sjMsBtn('E','sjFilterE',['E1','E2','E3','E4','E5','-']);
+    toolbar+=sjMsBtn('Skin','sjFilterSkin',['Light','Fair','Medium','Tan','Deep','-']);
+    toolbar+=sjMsBtn('English','sjFilterEng',['Fluent','Good','Not Bad','Bad','-']);
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
     toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'csv\')"><i class="ti ti-file-text"></i> CSV</button>';
@@ -1831,10 +1831,22 @@ function getSjFiltered(){
   var results=sjApplicants.filter(function(r){
     if(sjFilterGrade.size>0&&!sjFilterGrade.has((r.grade||"").toUpperCase()))return false;
     var g=getCreatorGrade(r.username);
-    if(sjFilterV.size>0&&(!g||!sjFilterV.has(g.video_quality||'')))return false;
-    if(sjFilterE.size>0&&(!g||!sjFilterE.has(g.manager_evaluation||'')))return false;
-    if(sjFilterSkin.size>0&&(!g||!sjFilterSkin.has(g.skintone||'')))return false;
-    if(sjFilterEng.size>0&&(!g||!sjFilterEng.has(g.english_proficiency||'')))return false;
+    if(sjFilterV.size>0){
+      var _v=g&&g.video_quality?g.video_quality:'-';
+      if(!sjFilterV.has(_v))return false;
+    }
+    if(sjFilterE.size>0){
+      var _e=g&&g.manager_evaluation?g.manager_evaluation:'-';
+      if(!sjFilterE.has(_e))return false;
+    }
+    if(sjFilterSkin.size>0){
+      var _sk=g&&g.skintone?g.skintone:'-';
+      if(!sjFilterSkin.has(_sk))return false;
+    }
+    if(sjFilterEng.size>0){
+      var _en=g&&g.english_proficiency?g.english_proficiency:'-';
+      if(!sjFilterEng.has(_en))return false;
+    }
     if(sjFilterSearch){
       var s=sjFilterSearch.toLowerCase();
       if(!r.username.toLowerCase().includes(s)&&!(r.nickname||"").toLowerCase().includes(s))return false;
