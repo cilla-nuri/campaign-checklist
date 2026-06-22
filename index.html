@@ -1887,8 +1887,8 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  var labels=["Apply","UID","Username","Nickname","SNS","Grade","V","E","Skin","English","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","Status","⚠","Notes"];
-  var keys=["_applyNum","_userId","username","nickname","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","_selStatus","caution","_notes"];
+  var labels=["Apply","UID","Username","Nickname","Status","SNS","Grade","V","E","Skin","English","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠","Notes"];
+  var keys=["_applyNum","_userId","username","nickname","_selStatus","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution","_notes"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk sj-select-all" data-selectall="1" '+
     (rows.length>0&&rows.every(function(r){return sjSelected.has(String(r._applyNum));})?'checked':'')+
     '/></th>';
@@ -1921,7 +1921,6 @@ function buildSjTable(rows){
       +'<td style="white-space:nowrap;">'+(r._ig_url||getCreatorGrade(r.username)&&getCreatorGrade(r.username).instagram_url?'<a href="'+(r._ig_url||(getCreatorGrade(r.username)||{}).instagram_url||'')+'" target="_blank" style="color:#E1306C;font-size:12px;text-decoration:none;margin-right:6px;" title="Instagram"><i class="ti ti-brand-instagram"></i></a>':'')+(r._tt_url||getCreatorGrade(r.username)&&getCreatorGrade(r.username).tiktok_url?'<a href="'+(r._tt_url||(getCreatorGrade(r.username)||{}).tiktok_url||'')+'" target="_blank" style="color:#111;font-size:12px;text-decoration:none;" title="TikTok"><i class="ti ti-brand-tiktok"></i></a>':'')||'-'+'</td>'
       +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:38px;font-size:11px;padding:1px 3px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
       +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
-      +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||"")+'</td>';
     return '<tr class="'+(sel?"sj-selected eligible-row":"")+(isEligible(r)?' eligible-row':'')+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'
@@ -1932,6 +1931,7 @@ function buildSjTable(rows){
       +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+';cursor:text;">'+
       (bl?"[BL] ":"")+r.username+'<button onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.username+'\')" title="Copy" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ti ti-copy"></i></button></td>'
       +'<td>'+(r.nickname||"")+'</td>'
+      +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td style="white-space:nowrap;">'+sjSnsLinks(r)+'</td>'
       +'<td>'+(r.grade?'<span class="grade-pill '+gc+'">'+r.grade+'</span>':'-')+'</td>'
       +'<td>'+(g.video_quality?'<span class="vgrade-pill">'+g.video_quality+'</span>':'-')+'</td>'
