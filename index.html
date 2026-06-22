@@ -327,7 +327,10 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .home-new-btn:hover{background:#4740a0;}
 
 /* ===== SELECTION STATUS ===== */
-.ss-pill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:2px 7px;border-radius:6px;cursor:pointer;border:none;white-space:nowrap;}
+.ss-select{font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;border:none;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:none;}
+.ss-pre{background:#fff8e1;color:#f59e0b;}
+.ss-sel{background:#d1fae5;color:#059669;}
+.ss-not{background:#f3f4f6;color:#9ca3af;}
 .ss-pre{background:#fff8e1;color:#f59e0b;}
 .ss-selected{background:#d1fae5;color:#059669;}
 .ss-not{background:#fee2e2;color:#dc2626;}
@@ -1923,7 +1926,7 @@ function buildSjTable(rows){
       +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||"")+'</td>';
-    return '<tr class="'+(sel?"sj-selected eligible-row":"")+(isEligible(r)?' eligible-row':'')+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'
+    return '<tr class="'+(sel?"sj-selected eligible-row":"")+(isEligible(r)?' eligible-row':'')+'" data-apply="'+r._applyNum+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'
       +'<td><input type="checkbox" class="sj-chk" '+(sel?"checked":"")
       +' onclick="event.stopPropagation();sjToggleRow(\''+r._applyNum+'\')"/></td>'
       +'<td>'+r._applyNum+'</td>'
@@ -2553,7 +2556,7 @@ async function loadSjFromSupabase(campaignName) {
         _ig_url: r.ig_url || "",
         _tt_url: r.tt_url || "",
         _rank: r.rank || "",
-        _selStatus: r.sel_status || ""
+        _selStatus: r.sel_status || 'not-selected'
       };
     });
     // Restore selections (must be BEFORE return)
@@ -3055,15 +3058,30 @@ function toggleArchive(id) {
    SELECTION STATUS
    ============================================================ */
 function sjSelStatusPill(status) {
-  if (!status) return '<span class="ss-pill ss-empty">—</span>';
-  var map = {
-    'pre-selected': ['ss-pre', '⭐ Pre-selected'],
-    'selected':     ['ss-selected', '✓ Selected'],
-    'not-selected': ['ss-not', '✗ Not selected']
-  };
-  var m = map[status];
-  return m ? '<span class="ss-pill ' + m[0] + '">' + m[1] + '</span>'
-           : '<span class="ss-pill ss-empty">—</span>';
+  var val = status || 'not-selected';
+  var cls = {'pre-selected':'ss-pre','selected':'ss-sel','not-selected':'ss-not'}[val]||'ss-not';
+  return '<select class="ss-select ' + cls + '" data-ssstatus="1" onchange="sjSetStatus(this.closest(\'tr\').getAttribute(\'data-apply\'),this.value)">'
+    + '<option value="not-selected"' + (val==='not-selected'?' selected':'') + '>✗ Not selected</option>'
+    + '<option value="pre-selected"' + (val==='pre-selected'?' selected':'') + '>⭐ Pre-selected</option>'
+    + '<option value="selected"' + (val==='selected'?' selected':'') + '>✓ Selected</option>'
+    + '</select>';
+}
+
+function sjSetStatus(applyNum, value) {
+  var r = sjApplicants.find(function(a){ return a._applyNum === applyNum; });
+  if (!r) return;
+  r._selStatus = value;
+  // Update dropdown color class
+  var sel = document.querySelector('tr[data-apply="'+applyNum+'"] .ss-select');
+  if (sel) {
+    sel.className = 'ss-select ' + ({'pre-selected':'ss-pre','selected':'ss-sel','not-selected':'ss-not'}[value]||'ss-not');
+  }
+  var c = getCampaign();
+  if (!c) return;
+  sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c.name) + '&apply_number=eq.' + encodeURIComponent(applyNum), {
+    method: 'PATCH', prefer: 'return=minimal',
+    body: JSON.stringify({sel_status: value})
+  }).catch(function(){});
 }
 
 function updateBulkBar() {
@@ -3087,7 +3105,7 @@ function bulkSetStatus(status) {
   var affected = filtered.filter(function(r){ return sjSelected.has(String(r._applyNum)); });
   if (!affected.length) return;
   affected.forEach(function(r) {
-    r._selStatus = status;
+    r._selStatus = status || 'not-selected';
     // Save to Supabase
     if (c) {
       sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c.name) + '&apply_number=eq.' + encodeURIComponent(r._applyNum), {
