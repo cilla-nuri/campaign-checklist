@@ -204,7 +204,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .sj-upload-btn:hover{background:#e4e2ff;}
 .sj-dl-btn{font-size:11px;padding:5px 12px;border-radius:8px;border:none;color:#1D9E75;background:#e8f5e9;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;font-weight:500;}
 .sj-dl-btn:hover{background:#d4edda;}
-.sj-table-wrap{flex:1;overflow:auto;}
+.sj-table-wrap{flex:1;overflow:auto;padding-bottom:70px;}
 .sj-table{width:100%;border-collapse:collapse;font-size:12px;}
 .sj-table th{position:sticky;top:0;background:#fafafa;padding:5px 7px;text-align:left;font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f0f0f0;white-space:nowrap;cursor:pointer;}
 .sj-table th:hover{color:#534AB7;}
@@ -338,7 +338,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .ss-not{background:#fee2e2;color:#dc2626;}
 .ss-empty{background:#f3f4f6;color:#9ca3af;}
 /* Bulk action bar */
-.bulk-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.15);padding:10px 16px;display:flex;align-items:center;gap:8px;z-index:200;font-size:12px;opacity:0;pointer-events:none;transition:all 0.2s;}
+.bulk-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.15);padding:10px 16px;display:flex;align-items:center;gap:8px;z-index:200;font-size:12px;opacity:0;pointer-events:none;transition:all 0.2s;}
 .bulk-bar.show{opacity:1;pointer-events:all;}
 .bulk-bar-label{color:#888;font-weight:500;margin-right:4px;}
 .bulk-btn{padding:5px 12px;border-radius:8px;border:none;font-size:11px;font-weight:600;cursor:pointer;}
@@ -1839,6 +1839,7 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('Skin','sjFilterSkin',['Light','Fair','Medium','Tan','Deep','-']);
     toolbar+=sjMsBtn('Status','sjFilterStatus',['pre-selected','selected','not-selected','-']);
     toolbar+=sjMsBtn('English','sjFilterEng',['Fluent','Good','Not Bad','Bad','-']);
+    toolbar+=sjMsBtn('Region','sjFilterRegion',['영어권','CIS','SEA','MENA','South Asia','East Asia','Europe','Latin America','Other']);
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
     toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'csv\')"><i class="ti ti-file-text"></i> CSV</button>';
@@ -1885,6 +1886,10 @@ function getSjFiltered(){
       var _ss=r._selStatus||'-';
       if(!sjFilterStatus.has(_ss))return false;
     }
+    if(sjFilterRegion.size>0){
+      var _rg=getRegion(r.nationality);
+      if(!sjFilterRegion.has(_rg))return false;
+    }
     return true;
   });
   if(sjSettings&&sjSettings._showEligibleOnly&&sjSettings.minFollowers>0){results=results.filter(isEligible);}
@@ -1918,7 +1923,7 @@ function buildSjTable(rows){
       +'<td>'+(g.manager_evaluation?'<span class="egrade-pill">'+g.manager_evaluation+'</span>':'-')+'</td>'
       +'<td>'+(g.skintone||'-')+'</td>'
       +'<td>'+(g.english_proficiency||'-')+'</td>'
-      +'<td>'+(r.nationality||'-')+'</td>'
+      +'<td>'+(r.nationality||'-')+(r.nationality&&r.nationality!=='-'?' <span style="font-size:9px;color:#bbb;">('+getRegion(r.nationality)+')</span>':'')+'</td>'
       +'<td>'+fmtNum(r.tiktok_followers)+'</td>'
       +'<td>'+fmtNum(r.tiktok_avg_views)+'</td>'
       +'<td>'+fmtNum(r.instagram_followers)+'</td>'
@@ -3128,6 +3133,33 @@ function bulkSetStatus(status) {
 }
 
 
+
+
+/* ============================================================
+   REGION MAPPING
+   ============================================================ */
+var REGION_MAP = {
+  '영어권':  ['United States','USA','UK','United Kingdom','Australia','Canada','Ireland','New Zealand','South Africa'],
+  'CIS':     ['Russia','Kazakhstan','Ukraine','Uzbekistan','Kyrgyzstan','Belarus','Georgia','Armenia','Azerbaijan','Moldova','Tajikistan'],
+  'SEA':     ['Philippines','Indonesia','Vietnam','Thailand','Malaysia','Singapore','Myanmar','Cambodia','Laos'],
+  'MENA':    ['Morocco','Egypt','UAE','Saudi Arabia','Turkey','Jordan','Lebanon','Tunisia','Algeria','Kuwait','Bahrain'],
+  'South Asia': ['India','Pakistan','Bangladesh','Nepal','Sri Lanka'],
+  'East Asia': ['Japan','South Korea','Korea','China','Taiwan','Hong Kong'],
+  'Europe':  ['Germany','France','Spain','Italy','Netherlands','Poland','Czech Republic','Hungary','Romania','Sweden','Norway','Denmark','Finland','Portugal','Switzerland','Austria','Belgium','Bulgaria','Croatia'],
+  'Latin America': ['Brazil','Mexico','Colombia','Argentina','Peru','Chile','Venezuela','Ecuador']
+};
+
+function getRegion(nationality) {
+  if (!nationality || nationality === '-') return 'Other';
+  for (var region in REGION_MAP) {
+    if (REGION_MAP[region].some(function(c){ return c.toLowerCase() === nationality.toLowerCase(); })) {
+      return region;
+    }
+  }
+  return 'Other';
+}
+
+var sjFilterRegion = new Set();
 
 </script>
 </body>
