@@ -1992,7 +1992,17 @@ function renderSjTable(){
   }
   var cnt=0;filtered.forEach(function(r){if(sjSelected.has(String(r._applyNum)))cnt++;});
   var el=document.querySelector(".sj-count");
-  if(el)el.textContent=(cnt>0?cnt+" selected from ":"")+filtered.length+" shown / "+sjApplicants.length+" total";
+  if(el){
+    var preN=sjApplicants.filter(function(r){return r._selStatus==="pre-selected";}).length;
+    var selN=sjApplicants.filter(function(r){return r._selStatus==="selected";}).length;
+    var notN=sjApplicants.length-preN-selN;
+    var statusTxt="";
+    if(preN>0)statusTxt+='<span style="color:#f59e0b;font-weight:600;">⭐ '+preN+'</span> ';
+    if(selN>0)statusTxt+='<span style="color:#059669;font-weight:600;">✓ '+selN+'</span> ';
+    statusTxt+='<span style="color:#bbb;">✕ '+notN+'</span>';
+    statusTxt+=' &nbsp;|  '+(cnt>0?'<strong>'+cnt+'</strong> checked &middot; ':"")+filtered.length+" shown / "+sjApplicants.length+" total";
+    el.innerHTML=statusTxt;
+  }
   updateBulkBar();
 }
 
