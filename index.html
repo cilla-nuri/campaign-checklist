@@ -1887,7 +1887,7 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  var labels=["Apply","UID","Username","Nickname","SNS","Grade","V","E","Skin","English","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠","Notes"];
+  var labels=["Apply","UID","Username","Nickname","SNS","Grade","V","E","Skin","English","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","Status","⚠","Notes"];
   var keys=["_applyNum","_userId","username","nickname","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","_selStatus","caution","_notes"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk sj-select-all" data-selectall="1" '+
     (rows.length>0&&rows.every(function(r){return sjSelected.has(String(r._applyNum));})?'checked':'')+
