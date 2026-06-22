@@ -1849,7 +1849,13 @@ function getSjFiltered(){
     }
     if(sjFilterSearch){
       var s=sjFilterSearch.toLowerCase();
-      if(!r.username.toLowerCase().includes(s)&&!(r.nickname||"").toLowerCase().includes(s))return false;
+      var g=getCreatorGrade(r.username)||{};
+      var igUser=(r._ig_url||g.instagram_url||'').replace(/.*instagram\.com\/([^/?]+).*/,'$1').toLowerCase();
+      var ttUser=(r._tt_url||g.tiktok_url||'').replace(/.*tiktok\.com\/@([^/?]+).*/,'$1').toLowerCase();
+      if(!r.username.toLowerCase().includes(s)
+        &&!(r.nickname||"").toLowerCase().includes(s)
+        &&!igUser.includes(s)
+        &&!ttUser.includes(s))return false;
     }
     return true;
   });
