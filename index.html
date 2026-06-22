@@ -1909,7 +1909,15 @@ function buildSjTable(rows){
 }
 
 function fmtNum(v){if(!v||isNaN(v))return"-";var n=parseFloat(v);if(n>=1000000)return(n/1000000).toFixed(1)+"M";if(n>=1000)return(n/1000).toFixed(1)+"K";return Math.round(n).toLocaleString();}
-function sjRowClick(e,id){if(e.target.tagName==="INPUT"||e.target.tagName==="BUTTON")return;var sel=window.getSelection();if(sel&&sel.toString().length>0)return;sjToggleRow(id);}
+function sjRowClick(e,id){
+  // Only toggle when clicking the checkbox cell (first column)
+  var td=e.target.closest('td');
+  if(!td)return;
+  var idx=Array.from(td.parentNode.children).indexOf(td);
+  if(idx!==0)return; // only first column (checkbox)
+  if(e.target.tagName==="INPUT")return; // checkbox handles itself
+  sjToggleRow(id);
+}
 function sjToggleRow(id){if(sjSelected.has(id))sjSelected.delete(id);else sjSelected.add(id);renderSjTable();sjSaveSelection(id,sjSelected.has(id));}
 function sjToggleAll(checked){
   var _f=getSjFiltered();
