@@ -325,6 +325,22 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .home-empty{text-align:center;padding:40px;color:#ccc;font-size:13px;}
 .home-new-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:none;background:#534AB7;color:#fff;font-size:13px;font-weight:500;cursor:pointer;margin-top:12px;}
 .home-new-btn:hover{background:#4740a0;}
+
+/* ===== SELECTION STATUS ===== */
+.ss-pill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:600;padding:2px 7px;border-radius:6px;cursor:pointer;border:none;white-space:nowrap;}
+.ss-pre{background:#fff8e1;color:#f59e0b;}
+.ss-selected{background:#d1fae5;color:#059669;}
+.ss-not{background:#fee2e2;color:#dc2626;}
+.ss-empty{background:#f3f4f6;color:#9ca3af;}
+/* Bulk action bar */
+.bulk-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.15);padding:10px 16px;display:flex;align-items:center;gap:8px;z-index:200;font-size:12px;opacity:0;pointer-events:none;transition:all 0.2s;}
+.bulk-bar.show{opacity:1;pointer-events:all;}
+.bulk-bar-label{color:#888;font-weight:500;margin-right:4px;}
+.bulk-btn{padding:5px 12px;border-radius:8px;border:none;font-size:11px;font-weight:600;cursor:pointer;}
+.bulk-btn-pre{background:#fff8e1;color:#f59e0b;}
+.bulk-btn-sel{background:#d1fae5;color:#059669;}
+.bulk-btn-not{background:#fee2e2;color:#dc2626;}
+.bulk-btn-clear{background:#f3f4f6;color:#9ca3af;}
 </style>
 </head>
 <body>
@@ -408,6 +424,8 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 </div>
 
 <div id="autosaveIndicator" class="autosave-indicator"></div>
+
+<div class="bulk-bar" id="bulkBar"><span class="bulk-bar-label" id="bulkBarLabel">0 selected</span><span style="color:#e0e0e0;margin:0 4px;">|</span><span style="font-size:11px;color:#888;margin-right:4px;">Set as:</span><button class="bulk-btn bulk-btn-pre" onclick="bulkSetStatus('pre-selected')">⭐ Pre-selected</button><button class="bulk-btn bulk-btn-sel" onclick="bulkSetStatus('selected')">✓ Selected</button><button class="bulk-btn bulk-btn-not" onclick="bulkSetStatus('not-selected')">✗ Not selected</button><button class="bulk-btn bulk-btn-clear" onclick="bulkSetStatus('')">Clear</button></div>
 
 <div class="overlay" id="overlay" onclick="bgClick(event)">
   <div class="panel" id="panel">
@@ -1796,7 +1814,7 @@ window.addEventListener("DOMContentLoaded",function(){
 var sjApplicants=[];
 var sjSelected=new Set();
 var sjSortCol=null,sjSortDir=1;
-var sjFilterGrade=new Set(),sjFilterSearch="",sjFilterV=new Set(),sjFilterE=new Set(),sjFilterSkin=new Set(),sjFilterEng=new Set();
+var sjFilterGrade=new Set(),sjFilterSearch="",sjFilterV=new Set(),sjFilterE=new Set(),sjFilterSkin=new Set(),sjFilterEng=new Set(),sjFilterStatus=new Set();
 
 function renderSunjeongArea(){
   sjLoadSettings();
@@ -1814,6 +1832,7 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('V','sjFilterV',['V1','V2','V3','V4','V5','-']);
     toolbar+=sjMsBtn('E','sjFilterE',['E1','E2','E3','E4','E5','-']);
     toolbar+=sjMsBtn('Skin','sjFilterSkin',['Light','Fair','Medium','Tan','Deep','-']);
+    toolbar+=sjMsBtn('Status','sjFilterStatus',['pre-selected','selected','not-selected','-']);
     toolbar+=sjMsBtn('English','sjFilterEng',['Fluent','Good','Not Bad','Bad','-']);
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
@@ -1857,6 +1876,10 @@ function getSjFiltered(){
         &&!igUser.includes(s)
         &&!ttUser.includes(s))return false;
     }
+    if(sjFilterStatus.size>0){
+      var _ss=r._selStatus||'-';
+      if(!sjFilterStatus.has(_ss))return false;
+    }
     return true;
   });
   if(sjSettings&&sjSettings._showEligibleOnly&&sjSettings.minFollowers>0){results=results.filter(isEligible);}
@@ -1865,7 +1888,7 @@ function getSjFiltered(){
 
 function buildSjTable(rows){
   var labels=["Apply","UID","Username","Nickname","SNS","Grade","V","E","Skin","English","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠","Notes"];
-  var keys=["_applyNum","_userId","username","nickname","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution","_notes"];
+  var keys=["_applyNum","_userId","username","nickname","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","_selStatus","caution","_notes"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk sj-select-all" data-selectall="1" '+
     (rows.length>0&&rows.every(function(r){return sjSelected.has(String(r._applyNum));})?'checked':'')+
     '/></th>';
@@ -1897,6 +1920,7 @@ function buildSjTable(rows){
       +'<td>'+fmtNum(r.instagram_avg_views)+'</td>'
       +'<td style="white-space:nowrap;">'+(r._ig_url||getCreatorGrade(r.username)&&getCreatorGrade(r.username).instagram_url?'<a href="'+(r._ig_url||(getCreatorGrade(r.username)||{}).instagram_url||'')+'" target="_blank" style="color:#E1306C;font-size:12px;text-decoration:none;margin-right:6px;" title="Instagram"><i class="ti ti-brand-instagram"></i></a>':'')+(r._tt_url||getCreatorGrade(r.username)&&getCreatorGrade(r.username).tiktok_url?'<a href="'+(r._tt_url||(getCreatorGrade(r.username)||{}).tiktok_url||'')+'" target="_blank" style="color:#111;font-size:12px;text-decoration:none;" title="TikTok"><i class="ti ti-brand-tiktok"></i></a>':'')||'-'+'</td>'
       +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:38px;font-size:11px;padding:1px 3px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
+      +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
       +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||"")+'</td>';
     return '<tr class="'+(sel?"sj-selected eligible-row":"")+(isEligible(r)?' eligible-row':'')+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'
@@ -1965,6 +1989,7 @@ function renderSjTable(){
   var cnt=0;filtered.forEach(function(r){if(sjSelected.has(String(r._applyNum)))cnt++;});
   var el=document.querySelector(".sj-count");
   if(el)el.textContent=(cnt>0?cnt+" selected from ":"")+filtered.length+" shown / "+sjApplicants.length+" total";
+  updateBulkBar();
 }
 
 function sjSort(col){
@@ -2493,6 +2518,7 @@ async function saveSjToSupabase(campaignName, applicants) {
           ig_url: r._ig_url || "",
           tt_url: r._tt_url || "",
           rank: r._rank || "",
+          sel_status: r._selStatus || "",
           selected: sjSelected.has(r._applyNum)||false
         };
       });
@@ -2525,7 +2551,8 @@ async function loadSjFromSupabase(campaignName) {
         caution: r.caution || "",
         _ig_url: r.ig_url || "",
         _tt_url: r.tt_url || "",
-        _rank: r.rank || ""
+        _rank: r.rank || "",
+        _selStatus: r.sel_status || ""
       };
     });
     // Restore selections (must be BEFORE return)
@@ -3021,6 +3048,58 @@ function toggleArchive(id) {
     renderHomePage();
   }
 }
+
+
+/* ============================================================
+   SELECTION STATUS
+   ============================================================ */
+function sjSelStatusPill(status) {
+  if (!status) return '<span class="ss-pill ss-empty">—</span>';
+  var map = {
+    'pre-selected': ['ss-pre', '⭐ Pre-selected'],
+    'selected':     ['ss-selected', '✓ Selected'],
+    'not-selected': ['ss-not', '✗ Not selected']
+  };
+  var m = map[status];
+  return m ? '<span class="ss-pill ' + m[0] + '">' + m[1] + '</span>'
+           : '<span class="ss-pill ss-empty">—</span>';
+}
+
+function updateBulkBar() {
+  var bar = document.getElementById('bulkBar');
+  var lbl = document.getElementById('bulkBarLabel');
+  if (!bar) return;
+  var filtered = getSjFiltered();
+  var cnt = 0;
+  filtered.forEach(function(r){ if(sjSelected.has(String(r._applyNum))) cnt++; });
+  if (cnt > 0) {
+    bar.classList.add('show');
+    if (lbl) lbl.textContent = cnt + ' creator' + (cnt > 1 ? 's' : '') + ' selected';
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+function bulkSetStatus(status) {
+  var c = getCampaign();
+  var filtered = getSjFiltered();
+  var affected = filtered.filter(function(r){ return sjSelected.has(String(r._applyNum)); });
+  if (!affected.length) return;
+  affected.forEach(function(r) {
+    r._selStatus = status;
+    // Save to Supabase
+    if (c) {
+      sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c.name) + '&apply_number=eq.' + encodeURIComponent(r._applyNum), {
+        method: 'PATCH', prefer: 'return=minimal',
+        body: JSON.stringify({sel_status: status})
+      }).catch(function(){});
+    }
+  });
+  renderSjTable();
+  updateBulkBar();
+}
+
+
 
 </script>
 </body>
