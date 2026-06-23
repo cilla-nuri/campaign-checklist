@@ -1499,7 +1499,10 @@ function renderFeedbackPanel(){
       '</div>';
   }
 
-  var msg=generateFeedback(feedbackLang,missing,cr.nick,feedbackPayType,feedbackTone);
+  // Use sjApplicants nickname if available (more human-friendly)
+  var _sjMatch=sjApplicants.find(function(r){return r.username&&cr.handle&&r.username.replace(/^@/,'').toLowerCase()===cr.handle.replace(/^@/,'').toLowerCase();});
+  var _nick=(_sjMatch&&_sjMatch.nickname)||cr.nick||cr.handle;
+  var msg=generateFeedback(feedbackLang,missing,_nick,feedbackPayType,feedbackTone);
 
   document.getElementById("panelBody").innerHTML=
     '<div class="feedback-area">'+
