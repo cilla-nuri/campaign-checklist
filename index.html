@@ -353,6 +353,11 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .grade-edit-sel.sk-sel{background:#fde8d8;color:#7a3b1e;}
 .grade-edit-sel.en-sel{background:#f3f4f6;color:#555;}
 .grade-edit-sel:hover{opacity:0.85;}
+
+.sec-block.drag-over{border-top:2px solid #534AB7;}
+.sec-block.dragging{opacity:0.4;}
+.irow.drag-over{border-top:2px dashed #534AB7;}
+.irow.dragging{opacity:0.4;}
 </style>
 </head>
 <body>
@@ -917,7 +922,8 @@ async function saveToSheets(){
 function renderLoadGitHubPanel(){
   if(!ghToken){
     document.getElementById("panelBody").innerHTML='<p class="hint" style="color:#e24b4a;">Please set up GitHub first in Save settings.</p>';
-    document.getElementById("panelFooter").innerHTML='<span class="pf-warn"></span><button class="apply-btn" onclick="openPanel(\'savesetup\')">Set up GitHub</button>';
+    setTimeout(initMasterDrag, 50);
+  document.getElementById("panelFooter").innerHTML='<span class="pf-warn"></span><button class="apply-btn" onclick="openPanel(\'savesetup\')">Set up GitHub</button>';
     return;
   }
   if(!activeCampaignId){
@@ -1513,11 +1519,11 @@ function copyMsg(){
 }
 
 function renderSecBlock(s){
-  return '<div class="sec-block" id="sb-'+s.id+'">'+
-    '<div class="sec-row"><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
+  return '<div class="sec-block" id="sb-'+s.id+'" draggable="true" data-sid="'+s.id+'">'+
+    '<div class="sec-row"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;margin-right:4px;" title="Drag to reorder section"></i><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
     '<button class="smb" onclick="addItm(\''+s.id+'\')"><i class="ti ti-plus"></i> Item</button>'+
     '<button class="dsbtn" onclick="delSec(\''+s.id+'\')"><i class="ti ti-trash"></i></button></div>'+
-    s.items.map(function(it){return '<div class="irow" id="ir-'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+s.id+'\',\''+it.id+'\',this.value)"/><button class="dibtn" onclick="delItm(\''+s.id+'\',\''+it.id+'\')"><i class="ti ti-x"></i></button></div>';}).join('')+
+    s.items.map(function(it){return '<div class="irow" id="ir-'+it.id+'" draggable="true" data-sid="'+s.id+'" data-iid="'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+s.id+'\',\''+it.id+'\',this.value)"/><button class="dibtn" onclick="delItm(\''+s.id+'\',\''+it.id+'\')"><i class="ti ti-x"></i></button></div>';}).join('')+
     '</div>';
 }
 
@@ -3295,6 +3301,103 @@ function editCreatorHandle(currentHandle) {
   markChanged();
   renderSidebar();
   renderMainPanel();
+}
+
+
+/* ============================================================
+   MASTER CHECKLIST DRAG SORT
+   ============================================================ */
+var _dragSid = null;   // section being dragged
+var _dragIid = null;   // item being dragged (null = dragging section)
+
+function initMasterDrag() {
+  var container = document.getElementById('masterItems');
+  if (!container || container._dragInited) return;
+  container._dragInited = true;
+
+  container.addEventListener('dragstart', function(e) {
+    var irow = e.target.closest('.irow');
+    var sblock = e.target.closest('.sec-block');
+    if (irow) {
+      _dragSid = irow.getAttribute('data-sid');
+      _dragIid = irow.getAttribute('data-iid');
+      irow.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    } else if (sblock && !e.target.closest('.irow')) {
+      _dragSid = sblock.getAttribute('data-sid');
+      _dragIid = null;
+      sblock.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  });
+
+  container.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    // Clear previous indicators
+    container.querySelectorAll('.drag-over').forEach(function(el){ el.classList.remove('drag-over'); });
+    var irow = e.target.closest('.irow');
+    var sblock = e.target.closest('.sec-block');
+    if (_dragIid && irow && irow.getAttribute('data-iid') !== _dragIid) {
+      irow.classList.add('drag-over');
+    } else if (!_dragIid && sblock && sblock.getAttribute('data-sid') !== _dragSid && !irow) {
+      sblock.classList.add('drag-over');
+    }
+  });
+
+  container.addEventListener('dragleave', function(e) {
+    if (!container.contains(e.relatedTarget)) {
+      container.querySelectorAll('.drag-over').forEach(function(el){ el.classList.remove('drag-over'); });
+    }
+  });
+
+  container.addEventListener('drop', function(e) {
+    e.preventDefault();
+    container.querySelectorAll('.drag-over,.dragging').forEach(function(el){
+      el.classList.remove('drag-over','dragging');
+    });
+    var irow = e.target.closest('.irow');
+    var sblock = e.target.closest('.sec-block');
+
+    if (_dragIid) {
+      // Reorder item
+      var targetIid = irow ? irow.getAttribute('data-iid') : null;
+      var targetSid = irow ? irow.getAttribute('data-sid') : (sblock ? sblock.getAttribute('data-sid') : null);
+      if (!targetSid || targetIid === _dragIid) { _dragSid=_dragIid=null; return; }
+      // Find source
+      var srcSec = masterDraft.find(function(s){ return s.id === _dragSid; });
+      var tgtSec = masterDraft.find(function(s){ return s.id === targetSid; });
+      if (!srcSec || !tgtSec) { _dragSid=_dragIid=null; return; }
+      var srcIdx = srcSec.items.findIndex(function(i){ return i.id === _dragIid; });
+      var item = srcSec.items.splice(srcIdx, 1)[0];
+      if (targetIid) {
+        var tgtIdx = tgtSec.items.findIndex(function(i){ return i.id === targetIid; });
+        tgtSec.items.splice(tgtIdx, 0, item);
+      } else {
+        tgtSec.items.push(item);
+      }
+    } else if (_dragSid) {
+      // Reorder section
+      var targetSid2 = sblock && !irow ? sblock.getAttribute('data-sid') : null;
+      if (!targetSid2 || targetSid2 === _dragSid) { _dragSid=_dragIid=null; return; }
+      var srcIdx2 = masterDraft.findIndex(function(s){ return s.id === _dragSid; });
+      var tgtIdx2 = masterDraft.findIndex(function(s){ return s.id === targetSid2; });
+      var sec = masterDraft.splice(srcIdx2, 1)[0];
+      masterDraft.splice(tgtIdx2, 0, sec);
+    }
+    _dragSid = _dragIid = null;
+    setPanelDirty('Master reordered — Apply to all before closing!');
+    document.getElementById('masterItems').innerHTML =
+      masterDraft.length ? masterDraft.map(renderSecBlock).join('') : '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">No items yet.</div>';
+    initMasterDrag();
+  });
+
+  container.addEventListener('dragend', function() {
+    container.querySelectorAll('.drag-over,.dragging').forEach(function(el){
+      el.classList.remove('drag-over','dragging');
+    });
+    _dragSid = _dragIid = null;
+  });
 }
 
 </script>
