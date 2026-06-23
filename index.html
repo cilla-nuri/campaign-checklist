@@ -1531,7 +1531,8 @@ function addItm(sid){
 function delItm(sid,iid){const s=masterDraft.find(function(x){return x.id===sid;});if(s)s.items=s.items.filter(function(x){return x.id!==iid;});const el=document.getElementById("ir-"+iid);if(el)el.remove();}
 function delSec(sid){masterDraft=masterDraft.filter(function(x){return x.id!==sid;});const el=document.getElementById("sb-"+sid);if(el)el.remove();}
 function addSec(){
-  const s={id:uid(),name:"New section",items:[]};masterDraft.push(s);
+  const s={id:uid(),name:"New section",items:[]};setPanelDirty('Master not applied yet. Apply to all first!');
+  masterDraft.push(s);
   document.getElementById("masterItems").insertAdjacentHTML("beforeend",renderSecBlock(s));
   const inp=document.querySelector("#sb-"+s.id+" .sec-inp");if(inp){inp.focus();inp.select();}
 }
