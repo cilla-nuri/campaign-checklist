@@ -358,7 +358,19 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .sec-block.dragging{opacity:0.4;}
 .irow.drag-over{border-top:2px dashed #534AB7;}
 .irow.dragging{opacity:0.4;}
+
+/* ===== LOGIN SCREEN ===== */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#f0efff 0%,#fff 60%);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-card{background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(83,74,183,0.12);padding:48px 40px;width:380px;text-align:center;}
+.login-logo{font-size:36px;margin-bottom:16px;}
+.login-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px;}
+.login-sub{font-size:13px;color:#aaa;margin-bottom:32px;}
+.login-google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;border-radius:12px;border:1.5px solid #e0e0e0;background:#fff;font-size:14px;font-weight:500;color:#333;cursor:pointer;transition:all 0.15s;}
+.login-google-btn:hover{border-color:#534AB7;box-shadow:0 2px 12px rgba(83,74,183,0.1);}
+.login-google-btn img{width:20px;height:20px;}
+.login-loading{color:#aaa;font-size:13px;margin-top:16px;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="app">
@@ -3549,6 +3561,81 @@ function resetCampaignTemplate() {
   delete c.feedbackTemplates;
   saveToLocalStorage();
   renderFeedbackTemplatePanel();
+}
+
+
+/* ============================================================
+   SUPABASE AUTH - GOOGLE OAUTH
+   ============================================================ */
+const SUPA_URL = 'https://odmtkkevzuavgtbnhgja.supabase.co';
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
+const supabaseClient = supabase.createClient(SUPA_URL, SUPA_ANON);
+
+var currentUser = null;
+
+async function initAuth() {
+  // Handle OAuth redirect
+  const { data: { session }, error } = await supabaseClient.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showApp();
+  } else {
+    showLogin();
+  }
+  // Listen for auth changes
+  supabaseClient.auth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
+      showApp();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      showLogin();
+    }
+  });
+}
+
+async function signInWithGoogle() {
+  var status = document.getElementById('loginStatus');
+  if (status) status.textContent = 'Redirecting to Google...';
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: 'https://cilla-nuri.github.io/campaign-checklist' }
+  });
+  if (error) {
+    if (status) status.textContent = 'Error: ' + error.message;
+  }
+}
+
+async function signOut() {
+  await supabaseClient.auth.signOut();
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.querySelector('.app-wrap').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.querySelector('.app-wrap').style.display = '';
+  // Add user info + logout to header
+  addUserToHeader();
+}
+
+function addUserToHeader() {
+  if (!currentUser) return;
+  var existing = document.getElementById('userHeaderBtn');
+  if (existing) existing.remove();
+  var header = document.querySelector('.top-bar-right') || document.querySelector('.campaign-bar');
+  if (!header) return;
+  var btn = document.createElement('div');
+  btn.id = 'userHeaderBtn';
+  btn.style.cssText = 'display:flex;align-items:center;gap:8px;margin-left:8px;';
+  var avatar = currentUser.user_metadata && currentUser.user_metadata.avatar_url
+    ? '<img src="'+currentUser.user_metadata.avatar_url+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">'
+    : '<div style="width:24px;height:24px;border-radius:50%;background:#534AB7;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;">'+((currentUser.email||'?')[0].toUpperCase())+'</div>';
+  btn.innerHTML = avatar + '<button onclick="signOut()" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;">Sign out</button>';
+  header.appendChild(btn);
 }
 
 </script>
