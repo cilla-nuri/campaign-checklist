@@ -1523,11 +1523,11 @@ function copyMsg(){
 }
 
 function renderSecBlock(s){
-  return '<div class="sec-block" id="sb-'+s.id+'" draggable="true" data-sid="'+s.id+'">'+
+  return '<div class="sec-block" id="sb-'+s.id+'" data-sid="'+s.id+'">'+
     '<div class="sec-row"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;margin-right:4px;" title="Drag to reorder section"></i><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
     '<button class="smb" onclick="addItm(\''+s.id+'\')"><i class="ti ti-plus"></i> Item</button>'+
     '<button class="dsbtn" onclick="delSec(\''+s.id+'\')"><i class="ti ti-trash"></i></button></div>'+
-    s.items.map(function(it){return '<div class="irow" id="ir-'+it.id+'" draggable="true" data-sid="'+s.id+'" data-iid="'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+s.id+'\',\''+it.id+'\',this.value)"/><button class="dibtn" onclick="delItm(\''+s.id+'\',\''+it.id+'\')"><i class="ti ti-x"></i></button></div>';}).join('')+
+    s.items.map(function(it){return '<div class="irow" id="ir-'+it.id+'" data-sid="'+s.id+'" data-iid="'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+s.id+'\',\''+it.id+'\',this.value)"/><button class="dibtn" onclick="delItm(\''+s.id+'\',\''+it.id+'\')"><i class="ti ti-x"></i></button></div>';}).join('')+
     '</div>';
 }
 
@@ -3307,101 +3307,6 @@ function editCreatorHandle(id) {
 }
 
 
-/* ============================================================
-   MASTER CHECKLIST DRAG SORT
-   ============================================================ */
-var _dragSid = null;   // section being dragged
-var _dragIid = null;   // item being dragged (null = dragging section)
-
-function initMasterDrag() {
-  var container = document.getElementById('masterItems');
-  if (!container || container._dragInited) return;
-  container._dragInited = true;
-
-  container.addEventListener('dragstart', function(e) {
-    var irow = e.target.closest('.irow');
-    var sblock = e.target.closest('.sec-block');
-    if (irow) {
-      _dragSid = irow.getAttribute('data-sid');
-      _dragIid = irow.getAttribute('data-iid');
-      irow.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    } else if (sblock && !e.target.closest('.irow')) {
-      _dragSid = sblock.getAttribute('data-sid');
-      _dragIid = null;
-      sblock.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    }
-  });
-
-  container.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    // Clear previous indicators
-    container.querySelectorAll('.drag-over').forEach(function(el){ el.classList.remove('drag-over'); });
-    var irow = e.target.closest('.irow');
-    var sblock = e.target.closest('.sec-block');
-    if (_dragIid && irow && irow.getAttribute('data-iid') !== _dragIid) {
-      irow.classList.add('drag-over');
-    } else if (!_dragIid && sblock && sblock.getAttribute('data-sid') !== _dragSid && !irow) {
-      sblock.classList.add('drag-over');
-    }
-  });
-
-  container.addEventListener('dragleave', function(e) {
-    if (!container.contains(e.relatedTarget)) {
-      container.querySelectorAll('.drag-over').forEach(function(el){ el.classList.remove('drag-over'); });
-    }
-  });
-
-  container.addEventListener('drop', function(e) {
-    e.preventDefault();
-    container.querySelectorAll('.drag-over,.dragging').forEach(function(el){
-      el.classList.remove('drag-over','dragging');
-    });
-    var irow = e.target.closest('.irow');
-    var sblock = e.target.closest('.sec-block');
-
-    if (_dragIid) {
-      // Reorder item
-      var targetIid = irow ? irow.getAttribute('data-iid') : null;
-      var targetSid = irow ? irow.getAttribute('data-sid') : (sblock ? sblock.getAttribute('data-sid') : null);
-      if (!targetSid || targetIid === _dragIid) { _dragSid=_dragIid=null; return; }
-      // Find source
-      var srcSec = masterDraft.find(function(s){ return s.id === _dragSid; });
-      var tgtSec = masterDraft.find(function(s){ return s.id === targetSid; });
-      if (!srcSec || !tgtSec) { _dragSid=_dragIid=null; return; }
-      var srcIdx = srcSec.items.findIndex(function(i){ return i.id === _dragIid; });
-      var item = srcSec.items.splice(srcIdx, 1)[0];
-      if (targetIid) {
-        var tgtIdx = tgtSec.items.findIndex(function(i){ return i.id === targetIid; });
-        tgtSec.items.splice(tgtIdx, 0, item);
-      } else {
-        tgtSec.items.push(item);
-      }
-    } else if (_dragSid) {
-      // Reorder section
-      var targetSid2 = sblock && !irow ? sblock.getAttribute('data-sid') : null;
-      if (!targetSid2 || targetSid2 === _dragSid) { _dragSid=_dragIid=null; return; }
-      var srcIdx2 = masterDraft.findIndex(function(s){ return s.id === _dragSid; });
-      var tgtIdx2 = masterDraft.findIndex(function(s){ return s.id === targetSid2; });
-      var sec = masterDraft.splice(srcIdx2, 1)[0];
-      masterDraft.splice(tgtIdx2, 0, sec);
-    }
-    _dragSid = _dragIid = null;
-    setPanelDirty('Master reordered — Apply to all before closing!');
-    document.getElementById('masterItems').innerHTML =
-      masterDraft.length ? masterDraft.map(renderSecBlock).join('') : '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">No items yet.</div>';
-    initMasterDrag();
-  });
-
-  container.addEventListener('dragend', function() {
-    container.querySelectorAll('.drag-over,.dragging').forEach(function(el){
-      el.classList.remove('drag-over','dragging');
-    });
-    _dragSid = _dragIid = null;
-  });
-}
 
 
 /* ============ SYNC CREATOR FROM 선정 ============ */
@@ -3448,6 +3353,105 @@ function renderCreator(id) {
     });
     syncBtn.style.display = sjM ? 'inline-flex' : 'none';
   }
+}
+
+
+/* ============================================================
+   MASTER CHECKLIST DRAG SORT (mouse-based)
+   ============================================================ */
+var _msDrag = null; // {type:'sec'|'item', sid, iid, el, clone, startY, container}
+
+function initMasterDrag() {
+  var container = document.getElementById('masterItems');
+  if (!container) return;
+
+  container.addEventListener('mousedown', function(e) {
+    var grip = e.target.closest('.ti-grip-vertical');
+    if (!grip) return;
+    e.preventDefault();
+
+    var irow = grip.closest('.irow');
+    var sblock = grip.closest('.sec-block');
+    if (!irow && !sblock) return;
+    var el = irow || sblock;
+    var rect = el.getBoundingClientRect();
+    var clone = el.cloneNode(true);
+    clone.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;opacity:0.85;'
+      + 'width:' + rect.width + 'px;left:' + rect.left + 'px;top:' + rect.top + 'px;'
+      + 'box-shadow:0 4px 16px rgba(0,0,0,0.18);border-radius:8px;background:#fff;';
+    document.body.appendChild(clone);
+    el.style.opacity = '0.3';
+
+    _msDrag = {
+      type: irow ? 'item' : 'sec',
+      sid: irow ? irow.getAttribute('data-sid') : sblock.getAttribute('data-sid'),
+      iid: irow ? irow.getAttribute('data-iid') : null,
+      el: el, clone: clone, startY: e.clientY, offsetY: e.clientY - rect.top
+    };
+  });
+
+  document.addEventListener('mousemove', _msDragMove);
+  document.addEventListener('mouseup', _msDragEnd);
+}
+
+function _msDragMove(e) {
+  if (!_msDrag) return;
+  _msDrag.clone.style.top = (e.clientY - _msDrag.offsetY) + 'px';
+  // Highlight drop target
+  var container = document.getElementById('masterItems');
+  if (!container) return;
+  container.querySelectorAll('.drag-over').forEach(function(x){ x.classList.remove('drag-over'); });
+  var target = document.elementFromPoint(e.clientX, e.clientY);
+  if (!target) return;
+  if (_msDrag.type === 'item') {
+    var targetRow = target.closest('.irow');
+    if (targetRow && targetRow !== _msDrag.el) targetRow.classList.add('drag-over');
+  } else {
+    var targetSec = target.closest('.sec-block');
+    if (targetSec && !target.closest('.irow') && targetSec !== _msDrag.el) targetSec.classList.add('drag-over');
+  }
+}
+
+function _msDragEnd(e) {
+  if (!_msDrag) return;
+  var d = _msDrag;
+  _msDrag = null;
+  d.clone.remove();
+  d.el.style.opacity = '';
+  var container = document.getElementById('masterItems');
+  if (!container) return;
+  container.querySelectorAll('.drag-over').forEach(function(x){ x.classList.remove('drag-over'); });
+
+  var target = document.elementFromPoint(e.clientX, e.clientY);
+  if (!target) return;
+
+  if (d.type === 'item') {
+    var targetRow = target.closest('.irow');
+    if (!targetRow || targetRow === d.el) return;
+    var targetIid = targetRow.getAttribute('data-iid');
+    var targetSid = targetRow.getAttribute('data-sid');
+    var srcSec = masterDraft.find(function(s){ return s.id === d.sid; });
+    var tgtSec = masterDraft.find(function(s){ return s.id === targetSid; });
+    if (!srcSec || !tgtSec) return;
+    var srcIdx = srcSec.items.findIndex(function(i){ return i.id === d.iid; });
+    var item = srcSec.items.splice(srcIdx, 1)[0];
+    var tgtIdx = tgtSec.items.findIndex(function(i){ return i.id === targetIid; });
+    tgtSec.items.splice(tgtIdx, 0, item);
+  } else {
+    var targetSec = target.closest('.sec-block');
+    if (!targetSec || target.closest('.irow') || targetSec === d.el) return;
+    var targetSid = targetSec.getAttribute('data-sid');
+    var srcIdx2 = masterDraft.findIndex(function(s){ return s.id === d.sid; });
+    var tgtIdx2 = masterDraft.findIndex(function(s){ return s.id === targetSid; });
+    if (srcIdx2 < 0 || tgtIdx2 < 0) return;
+    var sec = masterDraft.splice(srcIdx2, 1)[0];
+    masterDraft.splice(tgtIdx2, 0, sec);
+  }
+
+  setPanelDirty('Master reordered — Apply to all before closing!');
+  container.innerHTML = masterDraft.length
+    ? masterDraft.map(renderSecBlock).join('')
+    : '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">No items yet.</div>';
 }
 
 </script>
