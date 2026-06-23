@@ -3011,10 +3011,7 @@ function renderHomePage() {
     var pct = total && c.creators.length ? Math.round(checked/(total*c.creators.length)*100) : 0;
     var isArch = c.archived;
     return '<div class="campaign-card'+(isArch?' archived':'')+'" onclick="selectCampaignFromHome(\''+id+'\')">'+
-      '<div class="cc-actions">'+
-      '<button class="cc-action-btn" onclick="event.stopPropagation();toggleArchive(\''+id+'\')" title="'+(isArch?'Unarchive':'Archive')+'">'+
-        '<i class="ti ti-'+(isArch?'archive-off':'archive')+'"></i></button>'+
-      '</div>'+
+      '<div class="cc-actions">'+'<button class="cc-action-btn" onclick="event.stopPropagation();renameCampaign(\''+id+'\')" title="Rename"><i class="ti ti-pencil"></i></button>'+'<button class="cc-action-btn" onclick="event.stopPropagation();toggleArchive(\''+id+'\')" title="'+(isArch?'Unarchive':'Archive')+'"><i class="ti ti-'+(isArch?'archive-off':'archive')+'"></i></button>'+'</div>'+
       '<div class="cc-name">'+c.name+(isArch?'<span class="cc-archived-badge"><i class="ti ti-archive" style="font-size:8px;"></i> Archived</span>':'')+'</div>'+
       '<div class="cc-meta">'+
         '<span><i class="ti ti-users" style="font-size:10px;"></i> '+c.creators.length+' creators</span>'+
