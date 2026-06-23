@@ -3569,12 +3569,21 @@ function resetCampaignTemplate() {
    ============================================================ */
 const SUPA_URL = 'https://odmtkkevzuavgtbnhgja.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
-const supabaseClient = supabase.createClient(SUPA_URL, SUPA_ANON);
-
+var supabaseClient = null;
 var currentUser = null;
 
 async function initAuth() {
+  // Guard: if Supabase SDK not loaded, skip auth
+  if (typeof supabase === 'undefined' || !supabase.createClient) {
+    console.warn('Supabase SDK not loaded, skipping auth');
+    showApp(); return;
+  }
+  try {
+    supabaseClient = supabase.createClient(SUPA_URL, SUPA_ANON);
+  } catch(e) { showApp(); return; }
+
   // Handle OAuth redirect
+  try {
   const { data: { session }, error } = await supabaseClient.auth.getSession();
   if (session) {
     currentUser = session.user;
@@ -3592,11 +3601,13 @@ async function initAuth() {
       showLogin();
     }
   });
+  } catch(e) { console.error('Auth error:', e); showApp(); }
 }
 
 async function signInWithGoogle() {
   var status = document.getElementById('loginStatus');
   if (status) status.textContent = 'Redirecting to Google...';
+  if (!supabaseClient) { document.getElementById('loginStatus').textContent='Auth not ready, please refresh.'; return; }
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: 'https://cilla-nuri.github.io/campaign-checklist' }
