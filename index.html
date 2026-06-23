@@ -1308,6 +1308,7 @@ function openPanel(type){
   else if(type==="feedback")renderFeedbackPanel();
   else if(type==="export")renderExportPanel();
   else if(type==="feedbacktemplate")renderFeedbackTemplatePanel();
+  else if(type==="editcreator"){document.getElementById('panelTitle').textContent='Edit creator';document.getElementById('panelSub').textContent='Update handle, nickname, or display name';}
   else if(type==="loadgithub")renderLoadGitHubPanel();
   else if(type==="backup")renderBackupPanel();
 
@@ -3288,27 +3289,36 @@ function editCreatorHandle(id) {
   if (!c) return;
   var cr = c.creators.find(function(x){ return x.id === id; });
   if (!cr) return;
+  openPanel('editcreator');
+  document.getElementById('panelBody').innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">' +
+    '<div><label style="font-size:11px;font-weight:600;color:#888;display:block;margin-bottom:4px;">HANDLE (@ username)</label>' +
+    '<input id="ecHandle" type="text" value="'+cr.handle+'" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0e0e0;font-size:13px;outline:none;" onfocus="this.style.borderColor='#534AB7'" onblur="this.style.borderColor='#e0e0e0'"/></div>' +
+    '<div><label style="font-size:11px;font-weight:600;color:#888;display:block;margin-bottom:4px;">NICKNAME</label>' +
+    '<input id="ecNick" type="text" value="'+(cr.nick||'')+'" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0e0e0;font-size:13px;outline:none;" onfocus="this.style.borderColor='#534AB7'" onblur="this.style.borderColor='#e0e0e0'"/></div>' +
+    '<div><label style="font-size:11px;font-weight:600;color:#888;display:block;margin-bottom:4px;">DISPLAY NAME <span style="font-weight:400;color:#bbb;">(used in feedback "Hi ___")</span></label>' +
+    '<input id="ecDisplay" type="text" value="'+(cr.displayName||'')+'" placeholder="Leave blank to use nickname" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0e0e0;font-size:13px;outline:none;" onfocus="this.style.borderColor='#534AB7'" onblur="this.style.borderColor='#e0e0e0'"/></div>' +
+    '</div>';
+  document.getElementById('panelFooter').innerHTML =
+    '<button class="apply-btn" onclick="saveCreatorEdit(''+id+'')">Save</button>';
+}
 
-  // Check if this creator exists in 선정
-  var sjMatch = sjApplicants.find(function(r){
-    return r.username && cr.handle && r.username.replace(/^@/,'').toLowerCase() === cr.handle.replace(/^@/,'').toLowerCase();
-  });
-
-  var msg = 'Edit creator\n\nHandle: ' + cr.handle + '\nNickname: ' + (cr.nick||'');
-  if (sjMatch) msg += '\n\n[선정 data available — leave fields blank to keep current]';
-  
-  var handleIn = prompt('Handle (@ username):', cr.handle);
-  if (handleIn === null) return;
-  if (handleIn.trim()) cr.handle = handleIn.trim().startsWith('@') ? handleIn.trim() : '@'+handleIn.trim();
-
-  var nickIn = prompt('Nickname:', cr.nick||'');
-  if (nickIn === null) return;
-  if (nickIn.trim()) cr.nick = nickIn.trim();
-
+function saveCreatorEdit(id) {
+  var c = getCampaign();
+  if (!c) return;
+  var cr = c.creators.find(function(x){ return x.id === id; });
+  if (!cr) return;
+  var h = document.getElementById('ecHandle').value.trim();
+  var n = document.getElementById('ecNick').value.trim();
+  var d = document.getElementById('ecDisplay').value.trim();
+  if (h) cr.handle = h.startsWith('@') ? h : '@'+h;
+  if (n) cr.nick = n;
+  cr.displayName = d || null;
   saveToLocalStorage();
   markChanged();
   renderSidebar();
-  if(activeCreatorId===id) renderCreator(id);
+  closePanel();
+  if (activeCreatorId === id) renderCreator(id);
 }
 
 
