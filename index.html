@@ -3454,6 +3454,23 @@ function _msDragEnd(e) {
     : '<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">No items yet.</div>';
 }
 
+
+function renameCampaign(id) {
+  if (!campaigns[id]) return;
+  var newName = prompt('Rename campaign:', campaigns[id].name);
+  if (!newName || !newName.trim() || newName.trim() === campaigns[id].name) return;
+  campaigns[id].name = newName.trim();
+  saveToLocalStorage();
+  markChanged();
+  refreshCampaignSelect();
+  renderHomePage();
+  // Update header if this is the active campaign
+  if (activeCampaignId === id) {
+    var el = document.getElementById('mainTitle');
+    if (el) el.textContent = newName.trim();
+  }
+}
+
 </script>
 </body>
 </html>
