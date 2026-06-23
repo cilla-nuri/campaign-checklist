@@ -406,6 +406,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
             <div class="main-title" id="mainTitle">No campaign selected</div>
             <div id="mainGrades" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
             <button id="gradeEditBtn" onclick="editCurrentGrade()" style="display:none;background:none;border:1px solid #e0e0e0;border-radius:6px;padding:2px 8px;font-size:11px;color:#888;cursor:pointer;"><i class="ti ti-pencil"></i> Edit grade</button>
+          <button id="syncSunjeongBtn" onclick="syncCreatorFromSunjeong(activeCreatorId)" style="display:none;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1.5px solid #534AB7;background:#f0efff;color:#534AB7;font-size:11px;font-weight:500;cursor:pointer;"><i class="ti ti-refresh"></i> Sync from 선정</button>
           </div>
           <div class="main-sub" id="mainSub">Create a new campaign to get started</div>
         </div>
@@ -699,6 +700,9 @@ function selectCreator(id){
   const el=document.getElementById("ci-"+id);if(el)el.classList.add("active");
   const cr=c.creators.find(function(x){return x.id===id;});
   document.getElementById("mainTitle").textContent=cr.nick;
+  document.getElementById("mainTitle").title="Click to edit";
+  document.getElementById("mainTitle").style.cursor="pointer";
+  document.getElementById("mainTitle").onclick=function(){editCreatorHandle(id);};
   document.getElementById("mainSub").textContent=cr.handle+" / Apply #"+cr.applyNum+" / "+c.name;
   document.getElementById("sbadge").style.display="block";document.getElementById("feedbackBtn").style.display="flex";
   // Show grade pills in header
@@ -1297,7 +1301,7 @@ function openPanel(type){
   if(type==="howto")renderHowToPanel();
   else if(type==="newcampaign")renderNewCampaignPanel();
   else if(type==="csv")renderCSVPanel();
-  else if(type==="master"){masterDraft=JSON.parse(JSON.stringify(c?c.master:[]));renderMasterPanel();}
+  else if(type==="master"){masterDraft=JSON.parse(JSON.stringify(c?c.master:[]));setPanelDirty('Apply to all before closing the master checklist!');renderMasterPanel();}
   else if(type==="savesetup")renderSaveSetupPanel();
   else if(type==="feedback")renderFeedbackPanel();
   else if(type==="export")renderExportPanel();
@@ -3274,33 +3278,32 @@ function editCampaignName() {
 
 
 /* ============ EDIT CREATOR HANDLE / NICK ============ */
-function editCreatorHandle(currentHandle) {
+function editCreatorHandle(id) {
   var c = getCampaign();
   if (!c) return;
-  var cr = c.creators.find(function(x){ return x.handle === currentHandle; });
+  var cr = c.creators.find(function(x){ return x.id === id; });
   if (!cr) return;
+
+  // Check if this creator exists in 선정
+  var sjMatch = sjApplicants.find(function(r){
+    return r.username && cr.handle && r.username.replace(/^@/,'').toLowerCase() === cr.handle.replace(/^@/,'').toLowerCase();
+  });
+
+  var msg = 'Edit creator\n\nHandle: ' + cr.handle + '\nNickname: ' + (cr.nick||'');
+  if (sjMatch) msg += '\n\n[선정 data available — leave fields blank to keep current]';
   
-  var input = prompt('Edit creator:\nHandle (current: ' + cr.handle + ')\nLeave blank to keep:', cr.handle);
-  if (input === null) return; // cancelled
-  
-  if (input.trim()) {
-    var oldHandle = cr.handle;
-    cr.handle = input.trim().startsWith('@') ? input.trim() : '@' + input.trim();
-    // Update state key if handle is used as key
-    if (c.state[cr.id]) {
-      c.state[cr.id].handle = cr.handle;
-    }
-  }
-  
-  var nickInput = prompt('Nickname (current: ' + (cr.nick||'') + ')\nLeave blank to keep:', cr.nick||'');
-  if (nickInput !== null && nickInput.trim()) {
-    cr.nick = nickInput.trim();
-  }
-  
+  var handleIn = prompt('Handle (@ username):', cr.handle);
+  if (handleIn === null) return;
+  if (handleIn.trim()) cr.handle = handleIn.trim().startsWith('@') ? handleIn.trim() : '@'+handleIn.trim();
+
+  var nickIn = prompt('Nickname:', cr.nick||'');
+  if (nickIn === null) return;
+  if (nickIn.trim()) cr.nick = nickIn.trim();
+
   saveToLocalStorage();
   markChanged();
   renderSidebar();
-  renderMainPanel();
+  if(activeCreatorId===id) renderCreator(id);
 }
 
 
@@ -3398,6 +3401,53 @@ function initMasterDrag() {
     });
     _dragSid = _dragIid = null;
   });
+}
+
+
+/* ============ SYNC CREATOR FROM 선정 ============ */
+function syncCreatorFromSunjeong(id) {
+  var c = getCampaign();
+  if (!c || !id) return;
+  var cr = c.creators.find(function(x){ return x.id === id; });
+  if (!cr) return;
+  var sjM = sjApplicants.find(function(r){
+    return r.username && cr.handle &&
+      r.username.replace(/^@/,'').toLowerCase() === cr.handle.replace(/^@/,'').toLowerCase();
+  });
+  if (!sjM) { alert('No matching creator found in 선정.'); return; }
+
+  var changes = [];
+  if (sjM.nickname && sjM.nickname !== cr.nick) changes.push('Nickname: "'+cr.nick+'" → "'+sjM.nickname+'"');
+  if (sjM._applyNum && sjM._applyNum !== cr.applyNum) changes.push('Apply #: '+cr.applyNum+' → '+sjM._applyNum);
+
+  if (!changes.length) { alert('No differences found — already in sync!'); return; }
+
+  if (!confirm('Sync from 선정?\n\n' + changes.join('\n') + '\n\nContinue?')) return;
+
+  if (sjM.nickname) cr.nick = sjM.nickname;
+  if (sjM._applyNum) cr.applyNum = sjM._applyNum;
+
+  saveToLocalStorage();
+  markChanged();
+  renderSidebar();
+  renderCreator(id);
+  alert('Synced!');
+}
+
+function renderCreator(id) {
+  var c = getCampaign();
+  if (!c) return;
+  var cr = c.creators.find(function(x){ return x.id === id; });
+  if (!cr) return;
+  // Update sync button visibility
+  var syncBtn = document.getElementById('syncSunjeongBtn');
+  if (syncBtn) {
+    var sjM = sjApplicants.find(function(r){
+      return r.username && cr.handle &&
+        r.username.replace(/^@/,'').toLowerCase() === cr.handle.replace(/^@/,'').toLowerCase();
+    });
+    syncBtn.style.display = sjM ? 'inline-flex' : 'none';
+  }
 }
 
 </script>
