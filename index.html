@@ -1865,7 +1865,7 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('E','sjFilterE',['E1','E2','E3','E4','E5','-']);
     toolbar+=sjMsBtn('Skin','sjFilterSkin',['Light','Fair','Medium','Tan','Deep','-']);
     toolbar+=sjMsBtn('Status','sjFilterStatus',['pre-selected','selected','not-selected','-']);
-    toolbar+=sjMsBtn('Subtitle','sjFilterEng',['Fluent','Good','Not Bad','Bad','-']);
+    toolbar+=sjMsBtn('Subtitle','sjFilterEng',['Fluent','Good','Not Bad','Bad','Subtitle only','-']);
     toolbar+=sjMsBtn('Region','sjFilterRegion',['영어권','CIS','SEA','MENA','South Asia','East Asia','Europe','Latin America','Other']);
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
@@ -1949,7 +1949,7 @@ function buildSjTable(rows){
       +'<td>'+(sjGradeSel('_vr',r.username,g.video_quality||'',['','V1','V2','V3','V4','V5'],'v-sel'))+'</td>'
       +'<td>'+(sjGradeSel('_er',r.username,g.manager_evaluation||'',['','E1','E2','E3','E4','E5'],'e-sel'))+'</td>'
       +'<td>'+(g.skintone||'-')+'</td>'
-      +'<td>'+sjGradeSel('_en',r.username,g.english_proficiency||'',['','Fluent','Good','Not Bad','Bad'],'en-sel')+'</td>'
+      +'<td>'+sjGradeSel('_en',r.username,g.english_proficiency||'',['','Fluent','Good','Not Bad','Bad','Subtitle only'],'en-sel')+'</td>'
       +'<td>'+(r.nationality||'-')+(r.nationality&&r.nationality!=='-'?' <span style="font-size:9px;color:#bbb;">('+getRegion(r.nationality)+')</span>':'')+'</td>'
       +'<td>'+fmtNum(r.tiktok_followers)+'</td>'
       +'<td>'+fmtNum(r.tiktok_avg_views)+'</td>'
@@ -1974,7 +1974,7 @@ function buildSjTable(rows){
       +'<td>'+(sjGradeSel('_vr',r.username,g.video_quality||'',['','V1','V2','V3','V4','V5'],'v-sel'))+'</td>'
       +'<td>'+(sjGradeSel('_er',r.username,g.manager_evaluation||'',['','E1','E2','E3','E4','E5'],'e-sel'))+'</td>'
       +'<td>'+sjGradeSel('_sk',r.username,g.skintone||'',['','Light','Fair','Medium','Tan','Deep'],'sk-sel')+'</td>'
-      +'<td>'+sjGradeSel('_en',r.username,g.english_proficiency||'',['','Fluent','Good','Not Bad','Bad'],'en-sel')+'</td>'
+      +'<td>'+sjGradeSel('_en',r.username,g.english_proficiency||'',['','Fluent','Good','Not Bad','Bad','Subtitle only'],'en-sel')+'</td>'
       +'<td>'+(r.nationality||'-')+'</td>'
       +'<td>'+fmtNum(r.tiktok_followers)+'</td>'
       +'<td>'+fmtNum(r.tiktok_avg_views)+'</td>'
