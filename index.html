@@ -3573,14 +3573,19 @@ var supabaseClient = null;
 var currentUser = null;
 
 async function initAuth() {
-  // Guard: if Supabase SDK not loaded, skip auth
-  if (typeof supabase === 'undefined' || !supabase.createClient) {
-    console.warn('Supabase SDK not loaded, skipping auth');
-    showApp(); return;
+  // Show login while checking
+  showLogin();
+  // Try multiple possible SDK globals
+  var _supaLib = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase
+    : (typeof window.supabase !== 'undefined') ? window.supabase : null;
+  if (!_supaLib) {
+    console.warn('Supabase SDK not loaded');
+    document.getElementById('loginStatus').textContent = 'Auth unavailable - contact admin';
+    return;
   }
   try {
-    supabaseClient = supabase.createClient(SUPA_URL, SUPA_ANON);
-  } catch(e) { showApp(); return; }
+    supabaseClient = _supaLib.createClient(SUPA_URL, SUPA_ANON);
+  } catch(e) { console.error(e); document.getElementById('loginStatus').textContent = 'Init error: '+e.message; return; }
 
   // Handle OAuth redirect
   try {
@@ -3601,7 +3606,7 @@ async function initAuth() {
       showLogin();
     }
   });
-  } catch(e) { console.error('Auth error:', e); showApp(); }
+  } catch(e) { console.error('Auth error:', e); document.getElementById('loginStatus').textContent = 'Error: '+e.message; }
 }
 
 async function signInWithGoogle() {
