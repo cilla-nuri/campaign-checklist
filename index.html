@@ -703,7 +703,7 @@ function selectCreator(id){
   document.getElementById("mainTitle").title="Click to edit";
   document.getElementById("mainTitle").style.cursor="pointer";
   document.getElementById("mainTitle").onclick=function(){editCreatorHandle(id);};
-  document.getElementById("mainSub").textContent=cr.handle+" / Apply #"+cr.applyNum+" / "+c.name;
+  document.getElementById("mainSub").textContent=cr.handle+" / Apply #"+cr.applyNum+" / "+c.name+(cr.displayName?' | Feedback name: '+cr.displayName:'');
   document.getElementById("sbadge").style.display="block";document.getElementById("feedbackBtn").style.display="flex";
   // Show grade pills in header
   renderMainGrades(cr.handle);
@@ -1501,7 +1501,7 @@ function renderFeedbackPanel(){
 
   // Use sjApplicants nickname if available (more human-friendly)
   var _sjMatch=sjApplicants.find(function(r){return r.username&&cr.handle&&r.username.replace(/^@/,'').toLowerCase()===cr.handle.replace(/^@/,'').toLowerCase();});
-  var _nick=(_sjMatch&&_sjMatch.nickname)||cr.nick||cr.handle;
+  var _nick=(_sjMatch&&_sjMatch.nickname)||cr.displayName||cr.nick||cr.handle;
   var msg=generateFeedback(feedbackLang,missing,_nick,feedbackPayType,feedbackTone);
 
   document.getElementById("panelBody").innerHTML=
