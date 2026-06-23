@@ -3578,57 +3578,70 @@ function resetCampaignTemplate() {
 
 
 /* ============================================================
-   SUPABASE AUTH - GOOGLE OAUTH
+   AUTH - GOOGLE OAUTH via Supabase REST
    ============================================================ */
-const SUPA_URL = 'https://odmtkkevzuavgtbnhgja.supabase.co';
-const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
-var supabaseClient = null;
 var currentUser = null;
+var _authToken = null;
+var SUPA_URL = 'https://odmtkkevzuavgtbnhgja.supabase.co';
+var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
 
 async function initAuth() {
-  if (!supabaseClient) {
-    document.getElementById('loginStatus').textContent = 'Reload the page to try again.';
-    return;
-  }
-  try {
-    var result = await supabaseClient.auth.getSession();
-    var session = result.data && result.data.session;
-    if (session) {
-      currentUser = session.user;
-      showApp();
-    } else {
-      showLogin();
+  // Check for OAuth callback in URL hash
+  var hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    var params = new URLSearchParams(hash.replace('#', '?').slice(1));
+    _authToken = params.get('access_token');
+    if (_authToken) {
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Save token
+      try { localStorage.setItem('sb_token', _authToken); } catch(e){}
+      await loadUser();
+      return;
     }
-    supabaseClient.auth.onAuthStateChange(function(event, sess) {
-      if (event === 'SIGNED_IN' && sess) {
-        currentUser = sess.user;
-        showApp();
-      } else if (event === 'SIGNED_OUT') {
-        currentUser = null;
-        showLogin();
-      }
-    });
-  } catch(e) {
-    console.error('Auth error:', e);
-    document.getElementById('loginStatus').textContent = 'Error: ' + e.message;
+  }
+  // Check saved token
+  try { _authToken = localStorage.getItem('sb_token'); } catch(e){}
+  if (_authToken) {
+    var ok = await loadUser();
+    if (!ok) { _authToken = null; try{localStorage.removeItem('sb_token');}catch(e){} showLogin(); }
+  } else {
+    showLogin();
   }
 }
 
-async function signInWithGoogle() {
-  var status = document.getElementById('loginStatus');
-  if (status) status.textContent = 'Redirecting to Google...';
-  if (!supabaseClient) { document.getElementById('loginStatus').textContent='Auth not ready, please refresh.'; return; }
-  const { error } = await supabaseClient.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: 'https://cilla-nuri.github.io/campaign-checklist' }
-  });
-  if (error) {
-    if (status) status.textContent = 'Error: ' + error.message;
-  }
+async function loadUser() {
+  try {
+    var res = await fetch(SUPA_URL + '/auth/v1/user', {
+      headers: { 'Authorization': 'Bearer ' + _authToken, 'apikey': SUPA_ANON }
+    });
+    if (!res.ok) return false;
+    var data = await res.json();
+    if (data && data.email) {
+      currentUser = data;
+      showApp();
+      return true;
+    }
+    return false;
+  } catch(e) { return false; }
+}
+
+function signInWithGoogle() {
+  var redirect = encodeURIComponent('https://cilla-nuri.github.io/campaign-checklist');
+  window.location.href = SUPA_URL + '/auth/v1/authorize?provider=google&redirect_to=' + redirect;
 }
 
 async function signOut() {
-  await supabaseClient.auth.signOut();
+  try {
+    await fetch(SUPA_URL + '/auth/v1/logout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _authToken, 'apikey': SUPA_ANON }
+    });
+  } catch(e) {}
+  _authToken = null;
+  currentUser = null;
+  try { localStorage.removeItem('sb_token'); } catch(e) {}
+  showLogin();
 }
 
 function showLogin() {
@@ -3643,7 +3656,6 @@ function showApp() {
   var app = document.querySelector('.app');
   if (ls) ls.style.display = 'none';
   if (app) app.style.display = '';
-  // Add user info + logout to header
   addUserToHeader();
 }
 
@@ -3651,18 +3663,16 @@ function addUserToHeader() {
   if (!currentUser) return;
   var existing = document.getElementById('userHeaderBtn');
   if (existing) existing.remove();
-  var header = document.querySelector('.top-bar-right') || document.querySelector('.campaign-bar');
-  if (!header) return;
+  var bar = document.querySelector('.campaign-bar');
+  if (!bar) return;
   var btn = document.createElement('div');
   btn.id = 'userHeaderBtn';
-  btn.style.cssText = 'display:flex;align-items:center;gap:8px;margin-left:8px;';
-  var avatar = currentUser.user_metadata && currentUser.user_metadata.avatar_url
-    ? '<img src="'+currentUser.user_metadata.avatar_url+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">'
-    : '<div style="width:24px;height:24px;border-radius:50%;background:#534AB7;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;">'+((currentUser.email||'?')[0].toUpperCase())+'</div>';
-  btn.innerHTML = avatar + '<button onclick="signOut()" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;">Sign out</button>';
-  header.appendChild(btn);
+  btn.style.cssText = 'display:flex;align-items:center;gap:6px;margin-left:auto;';
+  var initial = (currentUser.email||'?')[0].toUpperCase();
+  btn.innerHTML = '<div style="width:26px;height:26px;border-radius:50%;background:#534AB7;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;">'+initial+'</div>'
+    + '<span style="font-size:11px;color:#888;">'+currentUser.email+'</span>'
+    + '<button onclick="signOut()" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;">Sign out</button>';
+  bar.appendChild(btn);
 }
 
-</script>
-</body>
-</html>
+
