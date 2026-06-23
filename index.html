@@ -3588,20 +3588,20 @@ var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 async function initAuth() {
   // Check for OAuth callback in URL hash
   var hash = window.location.hash;
+  console.log('[Auth] hash:', hash ? hash.substring(0,50) : 'empty');
   if (hash && hash.includes('access_token')) {
-    var params = new URLSearchParams(hash.replace('#', '?').slice(1));
+    var params = new URLSearchParams(hash.slice(1));
     _authToken = params.get('access_token');
+    console.log('[Auth] token found:', _authToken ? _authToken.substring(0,20)+'...' : 'null');
     if (_authToken) {
-      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
-      // Save token
       try { localStorage.setItem('sb_token', _authToken); } catch(e){}
       await loadUser();
       return;
     }
   }
-  // Check saved token
   try { _authToken = localStorage.getItem('sb_token'); } catch(e){}
+  console.log('[Auth] stored token:', _authToken ? 'exists' : 'none');
   if (_authToken) {
     var ok = await loadUser();
     if (!ok) { _authToken = null; try{localStorage.removeItem('sb_token');}catch(e){} showLogin(); }
@@ -3612,18 +3612,20 @@ async function initAuth() {
 
 async function loadUser() {
   try {
+    console.log('[Auth] calling /user with token...');
     var res = await fetch(SUPA_URL + '/auth/v1/user', {
       headers: { 'Authorization': 'Bearer ' + _authToken, 'apikey': SUPA_ANON }
     });
-    if (!res.ok) return false;
+    console.log('[Auth] /user status:', res.status);
     var data = await res.json();
-    if (data && data.email) {
+    console.log('[Auth] /user data:', JSON.stringify(data).substring(0,100));
+    if (res.ok && data && data.email) {
       currentUser = data;
       showApp();
       return true;
     }
     return false;
-  } catch(e) { return false; }
+  } catch(e) { console.error('[Auth] loadUser error:', e); return false; }
 }
 
 function signInWithGoogle() {
