@@ -1299,8 +1299,8 @@ function openPanel(type){
   else if(type==="backup")renderBackupPanel();
 
 }
-function closePanel(){document.getElementById("overlay").classList.remove("open");}
-function bgClick(e){if(e.target===document.getElementById("overlay"))closePanel();}
+
+
 
 function renderHowToPanel(){
   document.getElementById("panelBody").innerHTML=
@@ -3214,6 +3214,35 @@ function sjSaveGrade(sel) {
     sel.style.outline = '2px solid #e24b4a';
     setTimeout(function(){ sel.style.outline = ''; }, 1000);
   });
+}
+
+
+/* ============================================================
+   PANEL DIRTY STATE (unsaved changes lock)
+   ============================================================ */
+var _panelDirty = false;
+var _panelDirtyMsg = 'You have unsaved changes. Close anyway?';
+
+function setPanelDirty(msg) {
+  _panelDirty = true;
+  if (msg) _panelDirtyMsg = msg;
+}
+
+function clearPanelDirty() {
+  _panelDirty = false;
+  _panelDirtyMsg = 'You have unsaved changes. Close anyway?';
+}
+
+function closePanel() {
+  if (_panelDirty) {
+    if (!confirm(_panelDirtyMsg)) return;
+  }
+  clearPanelDirty();
+  document.getElementById("overlay").classList.remove("open");
+}
+
+function bgClick(e) {
+  if (e.target === document.getElementById("overlay")) closePanel();
 }
 
 </script>
