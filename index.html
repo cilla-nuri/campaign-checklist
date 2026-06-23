@@ -786,6 +786,8 @@ var CLOSE_TEMPLATES={
 
 function generateFeedback(lang,missing,nick,payType,tone){
   if(missing.length){
+    var tmpl=getCampaignTemplates()[lang==='en'?'revision_en':'revision_kr'];
+    if(tmpl)return applyPlaceholders(tmpl,nick,missing);
     const list=missing.map(function(m,i){return (i+1)+". "+m;}).join("\n");
     return lang==="en"
       ?"Hi "+nick+"! \uD83D\uDE0A\n\nThank you so much for submitting your content! We really appreciate your effort.\n\nAfter reviewing your video, we noticed a few points that need to be updated before we can approve it:\n\n"+list+"\n\nCould you please revise and resubmit at your earliest convenience?\n\nThank you so much for your understanding \uD83D\uDE4F"
@@ -1305,6 +1307,7 @@ function openPanel(type){
   else if(type==="savesetup")renderSaveSetupPanel();
   else if(type==="feedback")renderFeedbackPanel();
   else if(type==="export")renderExportPanel();
+  else if(type==="feedbacktemplate")renderFeedbackTemplatePanel();
   else if(type==="loadgithub")renderLoadGitHubPanel();
   else if(type==="backup")renderBackupPanel();
 
@@ -1505,6 +1508,8 @@ function renderFeedbackPanel(){
     '<button class="lang-btn'+(feedbackLang==="en"?" active":"")+'" onclick="switchFeedbackLang(\'en\')">English</button>'+
     '<button class="lang-btn'+(feedbackLang==="kr"?" active":"")+'" onclick="switchFeedbackLang(\'kr\')">Korean</button>'+
     '</div></div>'+
+    '<button onclick="openPanel(\'feedbacktemplate\')" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;display:flex;align-items:center;gap:4px;"><i class="ti ti-template"></i> Template</button>'+
+    '</div>'+
     missingHtml+
     closeOptions+
     '<div><div class="msg-label"><span>Message to creator</span><button class="copy-btn" id="copyBtn" onclick="copyMsg()"><i class="ti ti-copy"></i> Copy</button></div>'+
@@ -3466,6 +3471,81 @@ function renameCampaign(id) {
     var el = document.getElementById('mainTitle');
     if (el) el.textContent = newName.trim();
   }
+}
+
+
+/* ============================================================
+   CUSTOM FEEDBACK TEMPLATE
+   ============================================================ */
+var DEFAULT_TEMPLATES = {
+  revision_en: "Hi {creator}! \uD83D\uDE0A\n\nThank you so much for submitting your content! We really appreciate your effort.\n\nAfter reviewing your video, we noticed a few points that need to be updated before we can approve it:\n\n{missing}\n\nCould you please revise and resubmit at your earliest convenience?\n\nThank you so much for your understanding \uD83D\uDE4F",
+  revision_kr: "\uC548\uB155\uD558\uC138\uC694 {creator}\uB2D8! \uD83D\uDE0A\n\n\uCF58\uD150\uCE20 \uC81C\uCD9C\uD574 \uC8FC\uC154\uC11C \uC815\uB9D0 \uAC10\uC0AC\uD569\uB2C8\uB2E4!\n\n\uC601\uC0C1\uC744 \uAC80\uD1A0\uD55C \uACB0\uACFC, \uC2B9\uC778 \uC804\uC5D0 \uC218\uC815\uC774 \uD544\uC694\uD55C \uBA87 \uAC00\uC9C0 \uC0AC\uD56D\uC744 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4:\n\n{missing}\n\n\uAC00\uB2A5\uD558\uC2E0 \uBE60\uB978 \uC2DC\uC77C \uB0B4\uC5D0 \uC218\uC815 \uD6C4 \uC7AC\uC81C\uCD9C \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4. \uAD81\uAE08\uD55C \uC810\uC774 \uC788\uC73C\uC2DC\uBA74 \uC5B8\uC81C\uB4E0\uC9C0 \uD3B8\uD558\uAC8C \uBB38\uC758\uD574 \uC8FC\uC138\uC694!\n\n\uC774\uD574\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F"
+};
+
+function getCampaignTemplates() {
+  var c = getCampaign();
+  if (!c) return Object.assign({}, DEFAULT_TEMPLATES);
+  return Object.assign({}, DEFAULT_TEMPLATES, c.feedbackTemplates || {});
+}
+
+function applyPlaceholders(template, nick, missing) {
+  var c = getCampaign();
+  var brand = c ? c.name.replace(/^#\d+\s*\[?([^\]]*)\]?.*/, '$1').trim() || c.name : '';
+  var missingList = missing.map(function(m, i){ return (i+1) + '. ' + m; }).join('\n');
+  return template
+    .replace(/\{creator\}/g, nick || '')
+    .replace(/\{brand\}/g, brand)
+    .replace(/\{product\}/g, brand)
+    .replace(/\{missing\}/g, missingList)
+    .replace(/\{date\}/g, new Date().toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'}))
+    .replace(/\{campaign\}/g, c ? c.name : '');
+}
+
+
+
+function renderFeedbackTemplatePanel() {
+  var c = getCampaign();
+  if (!c) return;
+  var tmpls = c.feedbackTemplates || {};
+  var enVal = tmpls.revision_en || DEFAULT_TEMPLATES.revision_en;
+  var krVal = tmpls.revision_kr || DEFAULT_TEMPLATES.revision_kr;
+  var isCustom = !!c.feedbackTemplates;
+
+  document.getElementById('panel').classList.add('wide');
+  document.getElementById('panelBody').innerHTML =
+    '<div style="margin-bottom:10px;font-size:12px;color:#888;">Placeholders: <code>{creator}</code> <code>{brand}</code> <code>{product}</code> <code>{missing}</code> <code>{date}</code> <code>{campaign}</code></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'+
+      '<div style="font-size:11px;font-weight:600;color:#555;">Revision feedback — English</div>'+
+      (isCustom ? '<button onclick="resetCampaignTemplate()" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid #e0e0e0;background:#fff;color:#e24b4a;cursor:pointer;">↩ Reset to default</button>' : '')+
+    '</div>'+
+    '<textarea id="tmplEnInput" style="width:100%;height:160px;padding:8px;font-size:12px;border-radius:8px;border:1.5px solid #e0e0e0;line-height:1.6;resize:vertical;font-family:inherit;">'+enVal+'</textarea>'+
+    '<div style="font-size:11px;font-weight:600;color:#555;margin:10px 0 6px;">Revision feedback — Korean</div>'+
+    '<textarea id="tmplKrInput" style="width:100%;height:160px;padding:8px;font-size:12px;border-radius:8px;border:1.5px solid #e0e0e0;line-height:1.6;resize:vertical;font-family:inherit;">'+krVal+'</textarea>';
+
+  document.getElementById('panelFooter').innerHTML =
+    '<button class="apply-btn" onclick="saveFeedbackTemplate()">Save template</button>'+
+    '<span style="font-size:11px;color:#bbb;margin-left:8px;">Applies to this campaign only</span>';
+}
+
+function saveFeedbackTemplate() {
+  var c = getCampaign();
+  if (!c) return;
+  var en = document.getElementById('tmplEnInput').value.trim();
+  var kr = document.getElementById('tmplKrInput').value.trim();
+  if (!en || !kr) { alert('Template cannot be empty.'); return; }
+  c.feedbackTemplates = { revision_en: en, revision_kr: kr };
+  saveToLocalStorage();
+  markChanged();
+  closePanel();
+}
+
+function resetCampaignTemplate() {
+  if (!confirm('Reset to default template for this campaign?')) return;
+  var c = getCampaign();
+  if (!c) return;
+  delete c.feedbackTemplates;
+  saveToLocalStorage();
+  renderFeedbackTemplatePanel();
 }
 
 </script>
