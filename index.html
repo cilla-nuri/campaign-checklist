@@ -1403,10 +1403,25 @@ function createCampaign(){
   const el=document.getElementById("ncName");
   const name=el?el.value.trim():"";
   if(!name){document.getElementById("pfWarn").textContent="Please enter a name.";return;}
-  const id=newCampaign(name);activeCampaignId=id;activeCreatorId=null;
+  const id=newCampaign(name);
+  // Save campaign meta
+  var payType=document.getElementById("ncPayType");
+  var deadline=document.getElementById("ncDeadline");
+  var activePeriodBtn=document.querySelector('[data-period].active');
+  if(campaigns[id]){
+    campaigns[id].payType=payType?payType.value:"";
+    campaigns[id].deadline=deadline?deadline.value:"";
+    campaigns[id].period=activePeriodBtn?activePeriodBtn.getAttribute('data-period'):"";
+  }
+  activeCampaignId=id;activeCreatorId=null;
   document.getElementById("delCampaignBtn").style.display="flex";
   refreshCampaignSelect();renderSidebar();resetMainPanel();
   saveToLocalStorage();closePanel();
+}
+
+function selectPeriod(btn) {
+  document.querySelectorAll('[data-period]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
 }
 
 function renderCSVPanel(){
