@@ -369,6 +369,26 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .login-google-btn:hover{border-color:#534AB7;box-shadow:0 2px 12px rgba(83,74,183,0.1);}
 .login-google-btn img{width:20px;height:20px;}
 .login-loading{color:#aaa;font-size:13px;margin-top:16px;}
+
+/* ===== CUSTOM CAMPAIGN DROPDOWN ===== */
+.camp-select-wrap{position:relative;display:inline-block;}
+.camp-select-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;font-size:12px;font-weight:500;color:#333;cursor:pointer;max-width:280px;min-width:160px;}
+.camp-select-btn:hover{border-color:#534AB7;}
+.camp-select-btn .camp-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+.camp-select-btn i{font-size:11px;color:#bbb;flex-shrink:0;}
+.camp-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border-radius:12px;border:1px solid #efefef;box-shadow:0 8px 32px rgba(0,0,0,0.12);z-index:500;width:360px;overflow:hidden;display:none;}
+.camp-dropdown.open{display:block;}
+.camp-search-wrap{padding:10px;border-bottom:1px solid #f0f0f0;}
+.camp-search-input{width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid #e8e8e8;font-size:12px;outline:none;}
+.camp-search-input:focus{border-color:#534AB7;}
+.camp-list{max-height:320px;overflow-y:auto;}
+.camp-option{padding:9px 14px;font-size:12px;color:#333;cursor:pointer;display:flex;align-items:center;gap:8px;border-radius:0;transition:background 0.1s;}
+.camp-option:hover{background:#f8f7ff;}
+.camp-option.active{background:#f0efff;color:#534AB7;font-weight:500;}
+.camp-option .camp-num{font-size:10px;color:#bbb;flex-shrink:0;font-weight:600;}
+.camp-option .camp-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.camp-option-divider{padding:5px 14px 3px;font-size:9px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:0.08em;}
+.camp-option.placeholder{color:#bbb;font-style:italic;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -376,9 +396,15 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 <div class="app">
   <div class="campaign-bar">
     <span class="campaign-bar-label" onclick="showHomePage()" style="cursor:pointer;" title="View all campaigns"><i class="ti ti-layout-grid" style="font-size:11px;margin-right:3px;"></i>Campaign</span>
-    <div class="campaign-select-wrap">
-      <select id="campaignSelect" onchange="if(this.value){switchCampaign(this.value);}else{switchCampaign(null);}"><option value="">— select —</option></select>
-      <i class="ti ti-chevron-down"></i>
+    <div class="camp-select-wrap" id="campSelectWrap">
+      <button class="camp-select-btn" onclick="toggleCampDropdown()" id="campSelectBtn">
+        <span class="camp-name" id="campSelectLabel">-- select --</span>
+        <i class="ti ti-chevron-down"></i>
+      </button>
+      <div class="camp-dropdown" id="campDropdown">
+        <div class="camp-search-wrap"><input class="camp-search-input" id="campSearchInput" placeholder="Search campaign..." oninput="filterCampOptions(this.value)" /></div>
+        <div class="camp-list" id="campList"></div>
+      </div>
     </div>
     <button class="bar-btn new" onclick="openPanel('newcampaign')"><i class="ti ti-plus"></i> New</button>
     <div class="bar-spacer"></div>
@@ -597,8 +623,9 @@ function newCampaign(name){const id=uid();campaigns[id]={id,name,creators:[],mas
 
 function refreshCampaignSelect(){
   const sel=document.getElementById("campaignSelect");
-  const active=Object.keys(campaigns).filter(function(id){return !campaigns[id].archived;});
-  sel.innerHTML='<option value="">-- select --</option>'+active.map(function(id){return '<option value="'+id+'"'+(id===activeCampaignId?' selected':'')+'>'+campaigns[id].name+'</option>';}).join('');
+  if(sel){const active=Object.keys(campaigns).filter(function(id){return !campaigns[id].archived;});
+  sel.innerHTML='<option value="">-- select --</option>'+active.map(function(id){return '<option value="'+id+'"'+(id===activeCampaignId?' selected':'')+'>'+campaigns[id].name+'</option>';}).join('');}
+  updateCampSelectBtn();
 }
 
 function switchCampaign(id){
@@ -607,6 +634,7 @@ function switchCampaign(id){
   document.getElementById("searchInput").value="";
   document.getElementById("delCampaignBtn").style.display="flex";
   document.getElementById("mainTabs").style.display="flex";
+  updateCampSelectBtn();
   sjApplicants=[];sjSelected=new Set(); // reset 선정 data on campaign switch
   renderSidebar();resetMainPanel();
   var c=getCampaign();
@@ -3711,6 +3739,108 @@ async function syncNewCreatorsToSupabase(applicants) {
     console.log('✓ Inserted', newOnes.length, 'new creators to Supabase');
     showSaveIndicator('saved', '+ ' + newOnes.length + ' new creators added to DB');
   } catch(e) { console.warn('syncNewCreators failed:', e); }
+}
+
+
+/* ============================================================
+   CUSTOM CAMPAIGN DROPDOWN
+   ============================================================ */
+var _campDropOpen = false;
+
+function toggleCampDropdown() {
+  var dd = document.getElementById('campDropdown');
+  if (!dd) return;
+  _campDropOpen = !_campDropOpen;
+  dd.classList.toggle('open', _campDropOpen);
+  if (_campDropOpen) {
+    var inp = document.getElementById('campSearchInput');
+    if (inp) { inp.value = ''; inp.focus(); }
+    renderCampOptions('');
+  }
+}
+
+function filterCampOptions(q) { renderCampOptions(q); }
+
+function renderCampOptions(q) {
+  var list = document.getElementById('campList');
+  if (!list) return;
+  var active = Object.keys(campaigns).filter(function(id){ return !campaigns[id].archived; });
+  var archived = Object.keys(campaigns).filter(function(id){ return campaigns[id].archived; });
+  q = (q||'').toLowerCase();
+
+  function matchCamp(id) {
+    return !q || campaigns[id].name.toLowerCase().includes(q);
+  }
+
+  var html = '<div class="camp-option placeholder" onclick="selectCampOption(\'\')">-- select --</div>';
+
+  var activeFiltered = active.filter(matchCamp);
+  if (activeFiltered.length) {
+    if (q === '') html += '<div class="camp-option-divider">Active</div>';
+    activeFiltered.forEach(function(id) {
+      var name = campaigns[id].name;
+      var num = name.match(/^#(\d+)/);
+      var title = num ? name.replace(/^#\d+\s*/, '') : name;
+      var isActive = id === activeCampaignId;
+      html += '<div class="camp-option'+(isActive?' active':'')+'" onclick="selectCampOption(\''+id+'\')">'
+        + (num ? '<span class="camp-num">#'+num[1]+'</span>' : '')
+        + '<span class="camp-title">'+title+'</span>'
+        + '</div>';
+    });
+  }
+
+  var archivedFiltered = archived.filter(matchCamp);
+  if (archivedFiltered.length) {
+    html += '<div class="camp-option-divider">Archived</div>';
+    archivedFiltered.forEach(function(id) {
+      var name = campaigns[id].name;
+      var num = name.match(/^#(\d+)/);
+      var title = num ? name.replace(/^#\d+\s*/, '') : name;
+      html += '<div class="camp-option" onclick="selectCampOption(\''+id+'\')" style="opacity:0.6;">'
+        + (num ? '<span class="camp-num">#'+num[1]+'</span>' : '')
+        + '<span class="camp-title">'+title+' <i class="ti ti-archive" style="font-size:9px;"></i></span>'
+        + '</div>';
+    });
+  }
+
+  if (!activeFiltered.length && !archivedFiltered.length) {
+    html = '<div style="padding:16px;text-align:center;color:#bbb;font-size:12px;">No campaigns found</div>';
+  }
+  list.innerHTML = html;
+}
+
+function selectCampOption(id) {
+  // Close dropdown
+  _campDropOpen = false;
+  var dd = document.getElementById('campDropdown');
+  if (dd) dd.classList.remove('open');
+  // Switch campaign
+  if (id) { switchCampaign(id); } else { switchCampaign(null); }
+}
+
+// Close on outside click
+document.addEventListener('click', function(e) {
+  if (_campDropOpen && !e.target.closest('#campSelectWrap')) {
+    _campDropOpen = false;
+    var dd = document.getElementById('campDropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
+// refreshCampaignSelect patched inline
+
+function updateCampSelectBtn() {
+  var lbl = document.getElementById('campSelectLabel');
+  if (!lbl) return;
+  if (activeCampaignId && campaigns[activeCampaignId]) {
+    var name = campaigns[activeCampaignId].name;
+    var num = name.match(/^#(\d+)/);
+    lbl.textContent = num ? '#'+num[1]+' '+name.replace(/^#\d+\s*/,'') : name;
+    lbl.style.color = '#111';
+  } else {
+    lbl.textContent = '-- select --';
+    lbl.style.color = '#aaa';
+  }
 }
 
 </script>
