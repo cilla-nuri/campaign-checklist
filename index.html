@@ -3879,26 +3879,25 @@ function updateCampSelectBtn() {
 /* ============ EDIT CAMPAIGN META ============ */
 function renderEditCampMetaPanel() {
   var c = getCampaign();
-  if (!c) return;
-  document.getElementById('panelTitle').textContent = 'Campaign details';
-  document.getElementById('panelSub').textContent = c.name;
-  var payOpts = ['','Paid\uD83D\uDCB8','Gifted','UGC Paid\uD83D\uDCB8','Offline Event','Paid+Offline'];
+  if (!c) { alert('Please select a campaign first.'); return; }
+  var payOpts = ['','Paid','Gifted','UGC Paid','Offline Event','Paid+Offline'];
   var payHtml = payOpts.map(function(p){
     return '<option value="'+p+'"'+(p===(c.payType||'')?' selected':'')+'>'+( p||'-- Select type --')+'</option>';
   }).join('');
   document.getElementById('panelBody').innerHTML =
-    '<div style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">'+
-    '<div><label class="field-label">Payment type</label>'+
-    '<select class="nc-input" id="ecmPayType" style="cursor:pointer;">'+payHtml+'</select></div>'+
-    '<div><label class="field-label">Upload deadline</label>'+
-    '<input class="nc-input" id="ecmDeadline" type="date" value="'+(c.deadline||'')+'"/></div>'+
-    '<div><label class="field-label">독려기간 (encouragement period)</label>'+
-    '<div style="display:flex;gap:8px;margin-top:4px;">'+
-    '<button class="sj-sns-btn'+(c.period==='0.5'?' active':'')+'" data-period="0.5" onclick="selectPeriod(this)">0.5 week</button>'+
-    '<button class="sj-sns-btn'+(c.period==='1'?' active':'')+'" data-period="1" onclick="selectPeriod(this)">1 week</button>'+
-    '<button class="sj-sns-btn'+(c.period==='2'?' active':'')+'" data-period="2" onclick="selectPeriod(this)">2 weeks</button>'+
-    '</div></div>'+
-    '</div>';
+    '<div style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">'
+    +'<div><label class="field-label">Campaign name</label>'
+    +'<input class="nc-input" id="ecmName" type="text" value="'+c.name.replace(/"/g,'&quot;')+'"/></div>'
+    +'<div><label class="field-label">Payment type</label>'
+    +'<select class="nc-input" id="ecmPayType" style="cursor:pointer;">'+payHtml+'</select></div>'
+    +'<div><label class="field-label">Upload deadline</label>'
+    +'<input class="nc-input" id="ecmDeadline" type="date" value="'+(c.deadline||'')+'"/></div>'
+    +'<div><label class="field-label">도글려기간 (encouragement period)</label>'
+    +'<div style="display:flex;gap:8px;margin-top:4px;">'
+    +'<button class="sj-sns-btn'+(c.period==="0.5"?" active":"")+'" data-period="0.5" onclick="selectPeriod(this)">0.5 wk</button>'
+    +'<button class="sj-sns-btn'+(c.period==="1"?" active":"")+'" data-period="1" onclick="selectPeriod(this)">1 wk</button>'
+    +'<button class="sj-sns-btn'+(c.period==="2"?" active":"")+'" data-period="2" onclick="selectPeriod(this)">2 wk</button>'
+    +'</div></div></div>';
   document.getElementById('panelFooter').innerHTML =
     '<button class="apply-btn" onclick="saveCampMeta()">Save</button>';
 }
