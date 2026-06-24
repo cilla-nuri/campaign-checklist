@@ -667,7 +667,16 @@ function resetMainPanel(){
   activeCreatorId=null;
   const c=getCampaign();
   document.getElementById("mainTitle").textContent=c?c.name:"No campaign selected";
-  document.getElementById("mainSub").textContent=c?(c.creators.length+" creators / "+c.master.reduce(function(a,s){return a+s.items.length;},0)+" checklist items"):"";
+  var _c2=c,_meta2=[];
+  if(_c2&&_c2.payType)_meta2.push(_c2.payType);
+  if(_c2&&_c2.deadline)_meta2.push("📅 "+_c2.deadline);
+  if(_c2&&_c2.period)_meta2.push("⏱ "+_c2.period+" wk");
+  var _subEl2=document.getElementById("mainSub");
+  if(_subEl2){
+    var _subTxt2=_meta2.length?_meta2.join(" · "):(c?(c.creators.length+" creators / "+c.master.reduce(function(a,s){return a+s.items.length;},0)+" checklist items"):"");
+    if(c)_subTxt2+=' <button onclick="openPanel(\'editcampmeta\')" style="font-size:10px;padding:1px 6px;border-radius:5px;border:1px solid #ddd;background:#fff;color:#aaa;cursor:pointer;"><i class="ti ti-pencil"></i></button>';
+    _subEl2.innerHTML=_subTxt2;
+  }
   document.getElementById("sbadge").style.display="none";document.getElementById("feedbackBtn").style.display="none";
   document.getElementById("checklistArea").innerHTML='<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;"><i class="ti ti-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>'+(c&&c.creators.length?"Select a creator from the sidebar":"Import creators via CSV and load checklist via Master")+'</div>';
   document.getElementById("ftext").textContent="-- / -- items";document.getElementById("pbarFill").style.width="0%";
