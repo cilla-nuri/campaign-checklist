@@ -3588,16 +3588,23 @@ var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 async function initAuth() {
   // Check for OAuth callback in URL hash
   var hash = window.location.hash;
-  console.log('[Auth] hash:', hash ? hash.substring(0,50) : 'empty');
+  var search = window.location.search;
+  console.log('[Auth] hash:', hash ? hash.substring(0,60) : 'empty');
+  console.log('[Auth] search:', search ? search.substring(0,60) : 'empty');
+  // Check hash for Supabase JWT (starts with eyJ)
   if (hash && hash.includes('access_token')) {
     var params = new URLSearchParams(hash.slice(1));
-    _authToken = params.get('access_token');
-    console.log('[Auth] token found:', _authToken ? _authToken.substring(0,20)+'...' : 'null');
-    if (_authToken) {
+    var token = params.get('access_token');
+    // Only use if it's a Supabase JWT (starts with eyJ)
+    if (token && token.startsWith('eyJ')) {
+      _authToken = token;
+      console.log('[Auth] Supabase JWT found in hash');
       window.history.replaceState({}, document.title, window.location.pathname);
       try { localStorage.setItem('sb_token', _authToken); } catch(e){}
       await loadUser();
       return;
+    } else {
+      console.log('[Auth] token in hash is not a Supabase JWT, ignoring');
     }
   }
   try { _authToken = localStorage.getItem('sb_token'); } catch(e){}
@@ -3630,7 +3637,7 @@ async function loadUser() {
 
 function signInWithGoogle() {
   var redirect = encodeURIComponent('https://cilla-nuri.github.io/campaign-checklist');
-  window.location.href = SUPA_URL + '/auth/v1/authorize?provider=google&response_type=token&redirect_to=' + redirect;
+  window.location.href = SUPA_URL + '/auth/v1/authorize?provider=google&redirect_to=' + redirect;
 }
 
 async function signOut() {
