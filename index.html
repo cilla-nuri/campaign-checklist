@@ -3630,7 +3630,7 @@ async function loadUser() {
 
 function signInWithGoogle() {
   var redirect = encodeURIComponent('https://cilla-nuri.github.io/campaign-checklist');
-  window.location.href = SUPA_URL + '/auth/v1/authorize?provider=google&redirect_to=' + redirect;
+  window.location.href = SUPA_URL + '/auth/v1/authorize?provider=google&response_type=token&redirect_to=' + redirect;
 }
 
 async function signOut() {
