@@ -1811,6 +1811,9 @@ function switchMainTab(tab){
   var sjArea=document.getElementById("sunjeongArea");
   var chkArea=document.getElementById("checklistArea");
   var footer=document.querySelector(".footer");
+  // Hide bulk bar when leaving 선정
+  var _bb=document.getElementById('bulkBar');
+  if(_bb)_bb.classList.remove('show');
   if(tab==="sunjeong"){
     sjArea.style.display="flex";
     chkArea.style.display="none";
