@@ -1350,7 +1350,7 @@ function openPanel(type){
   const c=getCampaign();
   document.getElementById("panel").classList.remove("wide");
   document.getElementById("overlay").classList.add("open");
-  const titles={howto:"How to use",newcampaign:"New campaign",csv:"Import creators",master:"Master checklist",savesetup:"Save settings",feedback:"Feedback message",export:"Export",loadgithub:"Load from GitHub",backup:"Backup & Restore"};
+  const titles={howto:"How to use",newcampaign:"New campaign",csv:"Import creators",master:"Master checklist",savesetup:"Save settings",feedback:"Feedback message",export:"Export",loadgithub:"Load from GitHub",backup:"Backup & Restore",editcampmeta:"Campaign details",editcreator:"Edit creator"};
   const subs={howto:"Quick guide",newcampaign:"Name your campaign",csv:"Upload creator CSV",master:"Import checklist or edit manually",savesetup:"GitHub and Google Sheets",feedback:"Auto-generated from unchecked items",export:"Download review data",loadgithub:"Restore saved reviews from your repo",backup:"Export / import all campaign data"};
   document.getElementById("panelTitle").textContent=titles[type]||type;
   document.getElementById("panelSub").textContent=subs[type]||"";
