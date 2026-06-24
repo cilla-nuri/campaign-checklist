@@ -3906,7 +3906,7 @@ function saveCampMeta() {
   var c = getCampaign();
   if (!c) return;
   c.payType = (document.getElementById('ecmPayType')||{}).value || '';
-  c.deadline = (document.getElementById('ecmDeadline')||{}).value || '';
+  c.deadline = parseDDMMYYYY((document.getElementById('ecmDeadline')||{}).value || '');
   var pb = document.querySelector('[data-period].active');
   c.period = pb ? pb.getAttribute('data-period') : '';
   saveToLocalStorage();
@@ -3964,6 +3964,26 @@ function saveCampMeta() {
     });
   });
 })();
+
+
+/* ============ DATE INPUT FORMAT ============ */
+function fmtDateInput(el) {
+  var v = el.value.replace(/[^\d]/g,'');
+  var out = '';
+  if (v.length > 0) out = v.substring(0,2);
+  if (v.length > 2) out += '/' + v.substring(2,4);
+  if (v.length > 4) out += '/' + v.substring(4,8);
+  el.value = out;
+}
+
+function parseDDMMYYYY(str) {
+  if (!str) return '';
+  var parts = str.split('/');
+  if (parts.length === 3 && parts[2].length === 4) {
+    return parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
+  }
+  return str; // return as-is if not valid
+}
 
 </script>
 </body>
