@@ -3140,9 +3140,9 @@ function updateBulkBar() {
   var bar = document.getElementById('bulkBar');
   var lbl = document.getElementById('bulkBarLabel');
   if (!bar) return;
-  var filtered = getSjFiltered();
-  var cnt = 0;
-  filtered.forEach(function(r){ if(sjSelected.has(String(r._applyNum))) cnt++; });
+  // Count actually checked checkboxes in DOM (source of truth)
+  var checked = document.querySelectorAll('#sjTableWrap .sj-chk:checked:not(.sj-select-all)');
+  var cnt = checked.length;
   if (cnt > 0) {
     bar.classList.add('show');
     if (lbl) lbl.textContent = cnt + ' creator' + (cnt > 1 ? 's' : '') + ' selected';
