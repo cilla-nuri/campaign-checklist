@@ -1357,6 +1357,8 @@ function openPanel(type){
   else if(type==="feedback")renderFeedbackPanel();
   else if(type==="export")renderExportPanel();
   else if(type==="feedbacktemplate")renderFeedbackTemplatePanel();
+  else if(type==="editcampmeta")renderEditCampMetaPanel();
+  else if(type==="editcreator"){document.getElementById('panelTitle').textContent='Edit creator';document.getElementById('panelSub').textContent='Update handle, nickname, or display name';}
   else if(type==="loadgithub")renderLoadGitHubPanel();
   else if(type==="backup")renderBackupPanel();
 
