@@ -373,20 +373,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div id="loginScreen" class="login-screen">
-  <div class="login-card">
-    <div class="login-logo">✨</div>
-    <div class="login-title">Campaign Checklist</div>
-    <div class="login-sub">Sign in to access your campaigns</div>
-    <button class="login-google-btn" onclick="signInWithGoogle()">
-      <img src="https://www.google.com/favicon.ico" alt="Google" style="width:20px;height:20px;">
-      Continue with Google
-    </button>
-    <div class="login-loading" id="loginStatus"></div>
-  </div>
-</div>
-
-<div class="app" style="display:none;">
+<div class="app">
   <div class="campaign-bar">
     <span class="campaign-bar-label" onclick="showHomePage()" style="cursor:pointer;" title="View all campaigns"><i class="ti ti-layout-grid" style="font-size:11px;margin-right:3px;"></i>Campaign</span>
     <div class="campaign-select-wrap">
