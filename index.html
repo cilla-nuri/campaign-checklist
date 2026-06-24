@@ -3859,6 +3859,58 @@ function updateCampSelectBtn() {
   }
 }
 
+
+/* ============ EDIT CAMPAIGN META ============ */
+function renderEditCampMetaPanel() {
+  var c = getCampaign();
+  if (!c) return;
+  document.getElementById('panelTitle').textContent = 'Campaign details';
+  document.getElementById('panelSub').textContent = c.name;
+  var payOpts = ['','Paid\uD83D\uDCB8','Gifted','UGC Paid\uD83D\uDCB8','Offline Event','Paid+Offline'];
+  var payHtml = payOpts.map(function(p){
+    return '<option value="'+p+'"'+(p===(c.payType||'')?' selected':'')+'>'+( p||'-- Select type --')+'</option>';
+  }).join('');
+  document.getElementById('panelBody').innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">'+
+    '<div><label class="field-label">Payment type</label>'+
+    '<select class="nc-input" id="ecmPayType" style="cursor:pointer;">'+payHtml+'</select></div>'+
+    '<div><label class="field-label">Upload deadline</label>'+
+    '<input class="nc-input" id="ecmDeadline" type="date" value="'+(c.deadline||'')+'"/></div>'+
+    '<div><label class="field-label">독려기간 (encouragement period)</label>'+
+    '<div style="display:flex;gap:8px;margin-top:4px;">'+
+    '<button class="sj-sns-btn'+(c.period==='0.5'?' active':'')+'" data-period="0.5" onclick="selectPeriod(this)">0.5 week</button>'+
+    '<button class="sj-sns-btn'+(c.period==='1'?' active':'')+'" data-period="1" onclick="selectPeriod(this)">1 week</button>'+
+    '<button class="sj-sns-btn'+(c.period==='2'?' active':'')+'" data-period="2" onclick="selectPeriod(this)">2 weeks</button>'+
+    '</div></div>'+
+    '</div>';
+  document.getElementById('panelFooter').innerHTML =
+    '<button class="apply-btn" onclick="saveCampMeta()">Save</button>';
+}
+
+function saveCampMeta() {
+  var c = getCampaign();
+  if (!c) return;
+  c.payType = (document.getElementById('ecmPayType')||{}).value || '';
+  c.deadline = (document.getElementById('ecmDeadline')||{}).value || '';
+  var pb = document.querySelector('[data-period].active');
+  c.period = pb ? pb.getAttribute('data-period') : '';
+  saveToLocalStorage();
+  markChanged();
+  // Refresh subtitle
+  var _meta=[];
+  if(c.payType)_meta.push(c.payType);
+  if(c.deadline)_meta.push('\uD83D\uDCC5 '+c.deadline);
+  if(c.period)_meta.push('\u23F1 '+c.period+' wk');
+  var _subEl=document.getElementById('mainSub');
+  if(_subEl){
+    var _subTxt=_meta.length?_meta.join(' \xb7 '):'No details set';
+    _subEl.innerHTML=_subTxt+' <button onclick="openPanel(\'editcampmeta\')" style="font-size:10px;padding:1px 6px;border-radius:5px;border:1px solid #ddd;background:#fff;color:#aaa;cursor:pointer;"><i class="ti ti-pencil"></i></button>';
+  }
+  // Refresh home page card if open
+  if(document.getElementById('homePage').classList.contains('active')) renderHomePage();
+  closePanel();
+}
+
 </script>
 </body>
 </html>
