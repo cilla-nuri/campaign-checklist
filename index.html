@@ -2113,6 +2113,8 @@ function handleSjCSV(file){
     // Save to Supabase for persistence
     var c=getCampaign();
     if(c)saveSjToSupabase(c.name,sjApplicants);
+    // Auto-insert new creators to creators DB
+    syncNewCreatorsToSupabase(sjApplicants);
     renderSunjeongArea();
   };
   reader.readAsText(file);
@@ -3670,6 +3672,44 @@ function addUserToHeader() {
     + '<button onclick="signOut()" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;">Sign out</button>';
   bar.appendChild(btn);
 }
+
+/* ============================================================
+   AUTO-INSERT NEW CREATORS TO SUPABASE FROM 선정 CSV
+   ============================================================ */
+async function syncNewCreatorsToSupabase(applicants) {
+  if (!applicants || !applicants.length) return;
+  // Get existing usernames from Supabase
+  try {
+    var usernames = applicants.map(function(r){ return r.username.replace(/^@/,''); });
+    // Batch check in chunks of 100
+    var existing = new Set();
+    for (var i = 0; i < usernames.length; i += 100) {
+      var chunk = usernames.slice(i, i+100);
+      var data = await sbFetch('creators?username=in.(' + chunk.map(encodeURIComponent).join(',') + ')&select=username');
+      if (data) data.forEach(function(r){ existing.add(r.username.toLowerCase()); });
+    }
+    // Filter truly new creators
+    var newOnes = applicants.filter(function(r){
+      return !existing.has(r.username.replace(/^@/,'').toLowerCase());
+    });
+    if (!newOnes.length) { console.log('No new creators to insert'); return; }
+    // Insert new creators
+    var toInsert = newOnes.map(function(r){
+      return { username: r.username.replace(/^@/,''), blacklist: false, cant_evaluate: false };
+    });
+    // Insert in chunks of 100
+    for (var j = 0; j < toInsert.length; j += 100) {
+      await sbFetch('creators', {
+        method: 'POST',
+        prefer: 'resolution=ignore-duplicates,return=minimal',
+        body: JSON.stringify(toInsert.slice(j, j+100))
+      });
+    }
+    console.log('✓ Inserted', newOnes.length, 'new creators to Supabase');
+    showSaveIndicator('saved', '+ ' + newOnes.length + ' new creators added to DB');
+  } catch(e) { console.warn('syncNewCreators failed:', e); }
+}
+
 </script>
 </body>
 </html>
