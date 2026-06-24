@@ -3891,7 +3891,7 @@ function renderEditCampMetaPanel() {
     +'<div><label class="field-label">Payment type</label>'
     +'<select class="nc-input" id="ecmPayType" style="cursor:pointer;">'+payHtml+'</select></div>'
     +'<div><label class="field-label">Upload deadline</label>'
-    +'<input class="nc-input" id="ecmDeadline" type="date" value="'+(c.deadline||'')+'"/></div>'
+    +'<input class="nc-input" id="ecmDeadline" type="text" placeholder="dd/mm/yyyy" maxlength="10" oninput="fmtDateInput(this)" value="'+(c.deadline?c.deadline.split('-').reverse().join('/'):'')+'"/></div>'
     +'<div><label class="field-label">도글려기간 (encouragement period)</label>'
     +'<div style="display:flex;gap:8px;margin-top:4px;">'
     +'<button class="sj-sns-btn'+(c.period==="0.5"?" active":"")+'" data-period="0.5" onclick="selectPeriod(this)">0.5 wk</button>'
