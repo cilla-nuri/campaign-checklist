@@ -2279,7 +2279,7 @@ async function saveGradeEdit(handle){
 /* ============ CREATORS PANEL ============ */
 function buildCreatorRow(cr,g){
   var bl=g&&g.blacklist;
-    return '<tr data-handle="'+cr.handle+'" data-nick="'+(cr.nick||'')+'">' +
+    return '<tr class="cp-editing">' +
     +'<td style="padding:6px 8px;font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+(bl?"[BL] ":"")+cr.handle+'</td>'
     +'<td style="padding:6px 8px;">'+cr.nick+'</td>'
     +'<td style="padding:6px 8px;">'+(g&&sjGradeSel('_vr',r.username,g.video_quality||'',['','V1','V2','V3','V4','V5'],'v-sel'))+'</td>'
@@ -2556,7 +2556,7 @@ function buildCpRow(cr) {
 
   if(!window.cpHandleLookup) window.cpHandleLookup={};
   window.cpHandleLookup[cr.handle]={handle:cr.handle,nick:cr.nick||''};
-  return '<tr>' +
+  return '<tr data-handle="'+cr.handle+'" data-nick="'+(cr.nick||'')+'">' +
     '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+'<div style="font-size:11px;color:#bbb;">'+cr.nick+'</div></td>' +
     '<td>'+vPill+'</td>' +
     '<td>'+ePill+'</td>' +
