@@ -3990,6 +3990,34 @@ function parseDDMMYYYY(str) {
   return str; // return as-is if not valid
 }
 
+
+function saveCreatorEdit(id) {
+  id = id || window._ecEditId;
+  var c = getCampaign();
+  if (!c) return;
+  var cr = c.creators.find(function(x){ return x.id === id; });
+  if (!cr) return;
+  var h = document.getElementById('ecHandle') ? document.getElementById('ecHandle').value : '';
+  var n = document.getElementById('ecNick') ? document.getElementById('ecNick').value : '';
+  var d = document.getElementById('ecDisplay') ? document.getElementById('ecDisplay').value : '';
+  var notes = document.getElementById('ecNotes') ? document.getElementById('ecNotes').value : null;
+  if (h.trim()) cr.handle = h.trim().startsWith('@') ? h.trim() : '@'+h.trim();
+  if (n.trim()) cr.nick = n.trim();
+  cr.displayName = d.trim() || null;
+  if (notes !== null) {
+    var cu = cr.handle.replace(/^@/,'');
+    if (!creatorGradeCache[cu]) creatorGradeCache[cu] = {};
+    creatorGradeCache[cu].notes_manager = notes;
+    var np = {}; np.notes_manager = notes || null;
+    sbFetch('creators?username=eq.'+encodeURIComponent(cu),{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(np)}).catch(function(){});
+  }
+  saveToLocalStorage();
+  markChanged();
+  renderSidebar();
+  closePanel();
+  if (activeCreatorId === id) renderCreator(id);
+}
+
 </script>
 </body>
 </html>
