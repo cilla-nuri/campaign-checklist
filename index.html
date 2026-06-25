@@ -452,6 +452,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
           <button id="syncSunjeongBtn" onclick="syncCreatorFromSunjeong(activeCreatorId)" style="display:none;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1.5px solid #534AB7;background:#f0efff;color:#534AB7;font-size:11px;font-weight:500;cursor:pointer;"><i class="ti ti-refresh"></i> Sync from 선정</button>
           </div>
           <div class="main-sub" id="mainSub">Create a new campaign to get started</div>
+        <div id="creatorNoteBar" style="display:none;font-size:11px;color:#f59e0b;background:#fff8e1;padding:3px 8px;border-radius:6px;margin-top:3px;max-width:600px;"></div>
         </div>
         <div class="main-header-right">
           <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openPanel('feedback')"><i class="ti ti-message-2"></i> Feedback</button>
@@ -758,6 +759,9 @@ function selectCreator(id){
   document.getElementById("mainTitle").style.cursor="pointer";
   document.getElementById("mainTitle").onclick=function(){editCreatorHandle(id);};
   document.getElementById("mainSub").textContent=cr.handle+" / Apply #"+cr.applyNum+" / "+c.name+(cr.displayName?' | Feedback name: '+cr.displayName:'');
+  var _gn=getCreatorGrade(cr.handle)||{};
+  var _noteEl=document.getElementById('creatorNoteBar');
+  if(_noteEl){_noteEl.textContent=_gn.notes_manager||'';_noteEl.style.display=_gn.notes_manager?'block':'none';}
   document.getElementById("sbadge").style.display="block";document.getElementById("feedbackBtn").style.display="flex";
   // Show grade pills in header
   renderMainGrades(cr.handle);
@@ -3364,6 +3368,7 @@ function editCreatorHandle(id) {
   var c = getCampaign();
   if (!c) return;
   var cr = c.creators.find(function(x){ return x.id === id; });
+  var g = getCreatorGrade(cr ? cr.handle : '') || {};
   if (!cr) return;
 
   // Check if this creator exists in 선정
