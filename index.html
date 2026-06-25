@@ -2530,7 +2530,7 @@ function buildCpRow(cr) {
         opts.map(function(o){return '<option value="'+o+'"'+(val===o?' selected':'')+'>'+o+'</option>';}).join('') +
         '</select>';
     }
-    return '<tr class="cp-editing">' +
+    return '<tr data-handle="'+cr.handle+'" data-nick="'+(cr.nick||'')+'">' +
       '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+'</td>' +
       '<td>'+mkSel('vq',g.video_quality||'',['V1','V2','V3','V4','V5'])+'</td>' +
       '<td>'+mkSel('me',g.manager_evaluation||'',['E1','E2','E3','E4','E5'])+'</td>' +
