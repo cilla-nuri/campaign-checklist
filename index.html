@@ -2554,6 +2554,8 @@ function buildCpRow(cr) {
   var ttLink = g.tiktok_url ? '<a class="cp-link" href="'+g.tiktok_url+'" target="_blank"><i class="ti ti-brand-tiktok"></i> TT</a>' : '<span style="color:#ddd;font-size:11px;">—</span>';
   var camps = '<span style="font-size:11px;color:#bbb;max-width:160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(cr.campaigns||[]).join(', ')+'">'+(cr.campaigns||[]).join(', ')+'</span>';
 
+  if(!window.cpHandleLookup) window.cpHandleLookup={};
+  window.cpHandleLookup[cr.handle]={handle:cr.handle,nick:cr.nick||''};
   return '<tr>' +
     '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+'<div style="font-size:11px;color:#bbb;">'+cr.nick+'</div></td>' +
     '<td>'+vPill+'</td>' +
@@ -2563,7 +2565,7 @@ function buildCpRow(cr) {
     '<td>'+igLink+'</td>' +
     '<td>'+ttLink+'</td>' +
     '<td>'+camps+'</td>' +
-    '<td><button class="cp-edit-btn" onclick="cpEditingHandle=\''+cr.handle+'\';refreshCpTable()">Edit</button></td>' +
+    '<td onclick="event.stopPropagation()"><button class="cp-edit-btn" onclick="cpEditingHandle=\''+cr.handle+'\';refreshCpTable()">Edit</button><button class="cp-edit-btn" style="background:#f0efff;color:#534AB7;">Profile</button></td>' +
     '</tr>';
 }
 
