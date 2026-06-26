@@ -2029,7 +2029,21 @@ function getSjFiltered(){
     }
     return true;
   });
-  if(sjSettings&&sjSettings._showEligibleOnly&&sjSettings.minFollowers>0){results=results.filter(isEligible);}
+  // Min/max followers filter (independent of eligible toggle)
+  var _min = parseFloat((sjSettings||{}).minFollowers)||0;
+  var _max = parseFloat((sjSettings||{}).maxFollowers)||0;
+  if (_min > 0 || _max > 0) {
+    results = results.filter(function(r) {
+      var ttF = parseFloat(r.tiktok_followers)||0;
+      var igF = parseFloat(r.instagram_followers)||0;
+      var sns = (sjSettings||{}).snsType||'both';
+      var f = sns==='tt' ? ttF : sns==='ig' ? igF : Math.max(ttF, igF);
+      if (_min > 0 && f < _min) return false;
+      if (_max > 0 && f > _max) return false;
+      return true;
+    });
+  }
+  if(sjSettings&&sjSettings._showEligibleOnly&&(sjSettings.minFollowers>0||sjSettings.maxFollowers>0)){results=results.filter(isEligible);}
   return results;
 }
 
