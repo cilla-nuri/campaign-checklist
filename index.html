@@ -2105,6 +2105,7 @@ function sjToggleAll(checked){
     document.querySelectorAll('#sjTableWrap tr.sj-selected').forEach(function(tr){tr.classList.remove('sj-selected');});
     var countEl=document.querySelector('.sj-count');
     if(countEl)countEl.textContent='0 selected / '+_f.length+' shown / '+sjApplicants.length+' total';
+    updateBulkBar();
   } else {
     _f.forEach(function(r){sjSelected.add(String(r._applyNum));});
     renderSjTable();
