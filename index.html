@@ -2784,14 +2784,19 @@ function sjUpdateSetting(key, value) {
 }
 
 function isEligible(r) {
-  if (!sjSettings.minFollowers || sjSettings.minFollowers <= 0) return false;
   var min = parseFloat(sjSettings.minFollowers) || 0;
+  var max = parseFloat(sjSettings.maxFollowers) || 0;
+  if (min <= 0 && max <= 0) return false;
   var ttF = parseFloat(r.tiktok_followers) || 0;
   var igF = parseFloat(r.instagram_followers) || 0;
-  if (sjSettings.snsType === 'ig') return igF >= min;
-  if (sjSettings.snsType === 'tt') return ttF >= min;
-  // 'both' = either one qualifies
-  return igF >= min || ttF >= min;
+  function inRange(f) {
+    if (min > 0 && f < min) return false;
+    if (max > 0 && f > max) return false;
+    return min > 0 || max > 0;
+  }
+  if (sjSettings.snsType === 'ig') return inRange(igF);
+  if (sjSettings.snsType === 'tt') return inRange(ttF);
+  return inRange(igF) || inRange(ttF);
 }
 
 function sjFilterEligible() {
