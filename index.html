@@ -2963,11 +2963,9 @@ async function doAutoSave() {
     var data = JSON.parse(localStorage.getItem('campaignChecklist_v1') || '{}');
     var c = getCampaign();
     var masterHasItems = c && c.master && c.master.some(function(s){return s.items && s.items.length > 0;});
-    if (data.ghToken && data.ghRepo && activeCampaignId && masterHasItems) {
-      await saveReviewToGitHub();
-      showSaveIndicator('saved', 'Auto-saved');
-    } else if (data.ghToken && data.ghRepo && activeCampaignId && !masterHasItems) {
-      showSaveIndicator('saved', 'Saved locally (master empty — skipped GitHub)');
+    if (data.ghToken && data.ghRepo) {
+      await saveAllDataToGitHub();
+      showSaveIndicator('saved', 'Auto-saved ✓');
     } else {
       showSaveIndicator('saved', 'Saved locally');
     }
@@ -4144,6 +4142,79 @@ function removeCreatorFromList(creatorId) {
   saveToLocalStorage();
   markChanged();
   renderSidebar();
+}
+
+
+/* ============================================================
+   SAVE ALL DATA TO GITHUB
+   ============================================================ */
+async function saveAllDataToGitHub() {
+  var data = JSON.parse(localStorage.getItem('campaignChecklist_v1') || '{}');
+  if (!data.ghToken || !data.ghRepo) return;
+  
+  var token = data.ghToken;
+  var repo = data.ghRepo;
+  var payload = JSON.stringify(data, null, 2);
+  var encoded = btoa(unescape(encodeURIComponent(payload)));
+  var path = 'campaign_data.json';
+
+  try {
+    // Get current SHA
+    var sha = null;
+    var getResp = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (getResp.ok) {
+      var existing = await getResp.json();
+      sha = existing.sha;
+    }
+    // Save
+    var body = { message: 'Auto-save: ' + new Date().toISOString().slice(0,16).replace('T',' '), content: encoded };
+    if (sha) body.sha = sha;
+    var putResp = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+      body: JSON.stringify(body)
+    });
+    if (!putResp.ok) throw new Error('GitHub save failed: ' + putResp.status);
+    return true;
+  } catch(e) {
+    console.error('saveAllDataToGitHub:', e);
+    throw e;
+  }
+}
+
+async function triggerSaveAll() {
+  var btn = document.getElementById('saveAllBtn');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+  try {
+    saveToLocalStorage();
+    await saveAllDataToGitHub();
+    if (btn) { btn.innerHTML = '<i class="ti ti-check"></i> Saved!'; setTimeout(function(){ btn.innerHTML = '<i class="ti ti-device-floppy"></i> Save'; btn.disabled = false; }, 2000); }
+    showSaveIndicator('saved', 'Saved to GitHub ✓');
+  } catch(e) {
+    if (btn) { btn.innerHTML = '<i class="ti ti-device-floppy"></i> Save'; btn.disabled = false; }
+    alert('Save failed: ' + e.message + '\n\nMake sure GitHub token & repo are set in Backup settings.');
+  }
+}
+
+/* Try restore from GitHub on first load if localStorage is empty */
+async function tryRestoreFromGitHub() {
+  var existing = localStorage.getItem('campaignChecklist_v1');
+  if (existing && JSON.parse(existing).campaigns && Object.keys(JSON.parse(existing).campaigns).length > 0) return false;
+  // Check if there's saved data with token
+  var data = existing ? JSON.parse(existing) : {};
+  if (!data.ghToken || !data.ghRepo) return false;
+  try {
+    var resp = await fetch('https://api.github.com/repos/' + data.ghRepo + '/contents/campaign_data.json', {
+      headers: { 'Authorization': 'token ' + data.ghToken, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!resp.ok) return false;
+    var file = await resp.json();
+    var restored = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, '')))));
+    localStorage.setItem('campaignChecklist_v1', JSON.stringify(restored));
+    return true;
+  } catch(e) { return false; }
 }
 
 </script>
