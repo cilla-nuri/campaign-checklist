@@ -4172,7 +4172,13 @@ async function saveAllDataToGitHub() {
   
   var token = data.ghToken;
   var repo = data.ghRepo;
-  var payload = JSON.stringify(data, null, 2);
+  // Strip secrets before saving to GitHub (prevent secret scanning blocks)
+  var saveData = JSON.parse(JSON.stringify(data));
+  delete saveData.ghToken;
+  delete saveData.ghRepo;
+  delete saveData.supabaseUrl;
+  delete saveData.supabaseKey;
+  var payload = JSON.stringify(saveData, null, 2);
   var encoded = btoa(unescape(encodeURIComponent(payload)));
   var path = 'campaign_data.json';
   var msg = 'Save: ' + new Date().toISOString().slice(0,16).replace('T',' ');
@@ -4246,6 +4252,9 @@ async function tryRestoreFromGitHub() {
     if (!resp.ok) return false;
     var file = await resp.json();
     var restored = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, '')))));
+    // Re-inject credentials from current settings (they were stripped before save)
+    restored.ghToken = data.ghToken;
+    restored.ghRepo = data.ghRepo;
     localStorage.setItem('campaignChecklist_v1', JSON.stringify(restored));
     return true;
   } catch(e) { return false; }
