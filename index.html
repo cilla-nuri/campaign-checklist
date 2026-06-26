@@ -2907,7 +2907,9 @@ function buildSettingsRow() {
   var s = sjSettings;
   var html = '<div class="sj-settings-row">';
   html += '<span class="sj-settings-label">Min Followers</span>';
-  html += '<input class="sj-setting-input" type="number" placeholder="e.g. 10000" value="' + (s.minFollowers||'') + '" oninput="sjSettings.minFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();"/>';
+  html += '<input class="sj-setting-input" type="number" placeholder="min" value="' + (s.minFollowers||'') + '" oninput="sjSettings.minFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();" style="width:80px;"/>';
+  html += '<span style="font-size:13px;color:#ccc;margin:0 2px;">—</span>';
+  html += '<input class="sj-setting-input" type="number" placeholder="max" value="' + (s.maxFollowers||'') + '" oninput="sjSettings.maxFollowers=parseFloat(this.value)||0;sjSaveSettings();renderSjTable();" style="width:80px;"/>';
   html += '<span class="sj-settings-label" style="margin-left:8px;">SNS</span>';
   html += '<button class="sj-sns-btn' + (s.snsType==='ig'?' active':'') + '" data-setsns="ig"><i class="ti ti-brand-instagram"></i> IG</button>';
   html += '<button class="sj-sns-btn' + (s.snsType==='tt'?' active':'') + '" data-setsns="tt"><i class="ti ti-brand-tiktok"></i> TT</button>';
