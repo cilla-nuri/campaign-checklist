@@ -2067,7 +2067,7 @@ function buildSjTable(rows){
       +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:38px;font-size:11px;padding:1px 3px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
       +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td style="white-space:nowrap;">'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'')+(g.notes_manager?'<span title="'+encodeURIComponent(g.notes_manager)+'" style="cursor:help;font-size:10px;color:#f59e0b;margin-left:2px;">&#128172;</span>':'')+'</td>'
-      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||"")+'</td>';
+      
     return '<tr class="'+(sel?"sj-selected eligible-row":"")+(isEligible(r)?' eligible-row':'')+'" data-apply="'+r._applyNum+'" onclick="sjRowClick(event,\''+r._applyNum+'\')">'
       +'<td><input type="checkbox" class="sj-chk" '+(sel?"checked":"")
       +' onclick="event.stopPropagation();sjToggleRow(\''+r._applyNum+'\')"/></td>'
@@ -2090,8 +2090,7 @@ function buildSjTable(rows){
       +'<td>'+fmtNum(r.instagram_avg_views)+'</td>'
       +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:38px;font-size:11px;padding:1px 3px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
       +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
-      +'<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="'+(g.notes_manager||"")+'">'+(g.notes_manager||'')+'</td>'
-      +'</tr>';
+            +'</tr>';
   }).join("");
   return '<table class="sj-table"><thead><tr>'+th+'</tr></thead><tbody>'+tbody+'</tbody></table>';
 }
