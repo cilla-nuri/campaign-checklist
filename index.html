@@ -414,11 +414,12 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .creator-item.active .cr-remove-btn { display:block !important; }
 
 /* ===== STICKY FIRST COLS ===== */
-.sj-table th:nth-child(1),
-.sj-table td:nth-child(1) { position:sticky;left:0;z-index:3;background:#fff; }
-.sj-table tr:hover td:nth-child(1) { background:#faf9ff; }
-.sj-table tr.sj-selected td:nth-child(1) { background:#f0efff; }
-.sj-table th:nth-child(1) { z-index:4; }
+.sj-table th:nth-child(1),.sj-table td:nth-child(1){position:sticky;left:0;z-index:3;background:#fff;}
+.sj-table th:nth-child(2),.sj-table td:nth-child(2){position:sticky;left:30px;z-index:3;background:#fff;border-right:1px solid #f0efff;}
+.sj-table th:nth-child(3),.sj-table td:nth-child(3){position:sticky;left:98px;z-index:3;background:#fff;}
+.sj-table tr:hover td:nth-child(1),.sj-table tr:hover td:nth-child(2),.sj-table tr:hover td:nth-child(3){background:#faf9ff;}
+.sj-table tr.sj-selected td:nth-child(1),.sj-table tr.sj-selected td:nth-child(2),.sj-table tr.sj-selected td:nth-child(3){background:#f0efff;}
+.sj-table th:nth-child(1),.sj-table th:nth-child(2),.sj-table th:nth-child(3){z-index:4;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -2031,8 +2032,8 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  var labels=["Apply","UID","Username","Nickname","Status","SNS","Grade","V","E","Skin","Subtitle","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠"];
-  var keys=["_applyNum","_userId","username","nickname","_selStatus","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution"];
+  var labels=["Apply","Username","Nickname","Status","SNS","Grade","V","E","Skin","Subtitle","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠"];
+  var keys=["_applyNum","username","nickname","_selStatus","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk sj-select-all" data-selectall="1" '+
     (rows.length>0&&rows.every(function(r){return sjSelected.has(String(r._applyNum));})?'checked':'')+
     '/></th>';
