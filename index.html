@@ -4168,33 +4168,49 @@ function removeCreatorFromList(creatorId) {
    ============================================================ */
 async function saveAllDataToGitHub() {
   var data = JSON.parse(localStorage.getItem('campaignChecklist_v1') || '{}');
-  if (!data.ghToken || !data.ghRepo) return;
+  if (!data.ghToken || !data.ghRepo) throw new Error('GitHub token & repo not set. Go to Backup settings.');
   
   var token = data.ghToken;
   var repo = data.ghRepo;
   var payload = JSON.stringify(data, null, 2);
   var encoded = btoa(unescape(encodeURIComponent(payload)));
   var path = 'campaign_data.json';
+  var msg = 'Save: ' + new Date().toISOString().slice(0,16).replace('T',' ');
 
-  try {
-    // Get current SHA
-    var sha = null;
-    var getResp = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
+  // Always fetch latest SHA first
+  async function getLatestSha() {
+    var r = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
       headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
     });
-    if (getResp.ok) {
-      var existing = await getResp.json();
-      sha = existing.sha;
-    }
-    // Save
-    var body = { message: 'Auto-save: ' + new Date().toISOString().slice(0,16).replace('T',' '), content: encoded };
+    if (r.status === 404) return null;
+    if (!r.ok) return null;
+    var j = await r.json();
+    return j.sha || null;
+  }
+
+  async function doPut(sha) {
+    var body = { message: msg, content: encoded };
     if (sha) body.sha = sha;
-    var putResp = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
+    var r = await fetch('https://api.github.com/repos/' + repo + '/contents/' + path, {
       method: 'PUT',
       headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
       body: JSON.stringify(body)
     });
-    if (!putResp.ok) throw new Error('GitHub save failed: ' + putResp.status);
+    return r;
+  }
+
+  try {
+    var sha = await getLatestSha();
+    var putResp = await doPut(sha);
+    // Retry once on 409 (stale SHA)
+    if (putResp.status === 409) {
+      sha = await getLatestSha();
+      putResp = await doPut(sha);
+    }
+    if (!putResp.ok) {
+      var errBody = await putResp.json().catch(function(){return {};});
+      throw new Error('GitHub ' + putResp.status + ': ' + (errBody.message || putResp.statusText));
+    }
     return true;
   } catch(e) {
     console.error('saveAllDataToGitHub:', e);
