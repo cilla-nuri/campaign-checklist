@@ -1982,6 +1982,7 @@ function renderSunjeongArea(){
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
     toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'csv\')"><i class="ti ti-file-text"></i> CSV</button>';
     toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'xlsx\')"><i class="ti ti-file-spreadsheet"></i> Excel</button>';
+    toolbar+='<button class="sj-dl-btn" onclick="downloadPreSelected()" style="background:#fff8e1;color:#d97706;border:1px solid #fcd34d;"><i class="ti ti-star"></i> Pre-selected</button>';
   }
   toolbar+='</div>';
   var tableHtml=hasData?buildSjTable(filtered)
@@ -4232,6 +4233,39 @@ async function tryRestoreFromGitHub() {
     localStorage.setItem('campaignChecklist_v1', JSON.stringify(restored));
     return true;
   } catch(e) { return false; }
+}
+
+
+/* ============ DOWNLOAD PRE-SELECTED ============ */
+function downloadPreSelected() {
+  var preSelected = sjApplicants.filter(function(r){ return r._selStatus === 'pre-selected'; });
+  if (!preSelected.length) { alert('No pre-selected creators found.'); return; }
+  
+  var g = getCampaign();
+  var campName = g ? g.name.replace(/[^a-zA-Z0-9_\-]/g,'_') : 'preselected';
+  
+  // Build CSV: username(no @), ig_url, ig_followers, tt_url, tt_followers, country
+  var rows = [['username','instagram_url','instagram_followers','tiktok_url','tiktok_followers','country']];
+  preSelected.forEach(function(r) {
+    var gr = getCreatorGrade(r.username) || {};
+    rows.push([
+      r.username.replace(/^@/, ''),
+      gr.instagram_url || r._ig_url || '',
+      r.instagram_followers || '',
+      gr.tiktok_url || r._tt_url || '',
+      r.tiktok_followers || '',
+      r.nationality || ''
+    ]);
+  });
+  
+  var csv = rows.map(function(row){ return row.map(function(c){ var s=String(c||''); return s.includes(',')?'"'+s+'"':s; }).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = campName + '_preselected.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 </script>
