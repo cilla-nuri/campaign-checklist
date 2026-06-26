@@ -35,7 +35,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .body-wrap{display:flex;flex:1;overflow:hidden;min-width:0;}
 
 /* ===== SIDEBAR ===== */
-.sidebar{width:210px;border-right:1px solid #efefef;display:flex;flex-direction:column;flex-shrink:0;background:#fafafa;}
+.sidebar{width:260px;border-right:1px solid #efefef;display:flex;flex-direction:column;flex-shrink:0;background:#fafafa;}
 .sidebar-header{padding:10px 10px 8px;}
 .header-actions{display:flex;gap:5px;flex-wrap:wrap;}
 .hbtn{font-size:11px;padding:5px 9px;border-radius:7px;border:none;background:#fff;color:#555;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
@@ -4010,7 +4010,7 @@ function saveCampMeta() {
     });
     document.addEventListener('mousemove', function(e) {
       if (!isDragging) return;
-      var newW = Math.max(140, Math.min(380, startW + (e.clientX - startX)));
+      var newW = Math.max(180, Math.min(420, startW + (e.clientX - startX)));
       sidebar.style.width = newW + 'px';
     });
     document.addEventListener('mouseup', function() {
