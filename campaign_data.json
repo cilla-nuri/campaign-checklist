@@ -17962,7 +17962,7 @@
           "savedAt": null
         },
         "u2207": {
-          "status": "Pending Review",
+          "status": "Revision Requested",
           "checks": {
             "u1695": true,
             "u1697": true,
@@ -18234,5 +18234,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2224,
-  "savedAt": "2026-06-29T05:12:48.286Z"
+  "savedAt": "2026-06-29T05:15:27.896Z"
 }
