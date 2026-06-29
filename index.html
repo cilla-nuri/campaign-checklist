@@ -3117,8 +3117,14 @@ function importFromSunjeong() {
     var exists = c.creators.some(function(cr) { return cr.handle.toLowerCase() === handle.toLowerCase(); });
     if (exists) { skipped++; return; }
     var newCr = {id: uid(), applyNum: r._applyNum || String(c.creators.length+1), handle: handle, nick: r.nickname || handle};
-    c.creators.push(newCr);
-    c.state[newCr.id] = {checks: {}, status: 'Pending Review'};
+    // Skip if creator already exists in Check list
+    var alreadyExists = c.creators.find(function(x){
+      return x.handle.replace(/^@/,'').toLowerCase() === handle.replace(/^@/,'').toLowerCase();
+    });
+    if (!alreadyExists) {
+      c.creators.push(newCr);
+      c.state[newCr.id] = {checks: {}, status: 'Pending Review'};
+    }
     c.master.forEach(function(s) { s.items.forEach(function(item) { c.state[newCr.id].checks[item.id] = false; }); });
     added++;
   });
