@@ -1944,7 +1944,21 @@ function switchMainTab(tab){
         renderSunjeongArea(); // show loading state
         loadSjFromSupabase(_c.name).then(async function(rows){
           if(rows.length){
-            sjApplicants=rows;
+            // Upsert: keep existing, add only new rows (by _applyNum)
+            var existingNums = new Set(sjApplicants.map(function(r){return String(r._applyNum);}));
+            var newRows = rows.filter(function(r){return !existingNums.has(String(r._applyNum));});
+            // For existing rows, update sel_status/grade if changed
+            rows.forEach(function(r){
+              var ex = sjApplicants.find(function(e){return String(e._applyNum)===String(r._applyNum);});
+              if(ex){
+                // Update fields that might change but preserve sel_status/grades
+                ex.nickname = r.nickname || ex.nickname;
+                ex._ig_url = r._ig_url || ex._ig_url;
+                ex._tt_url = r._tt_url || ex._tt_url;
+              }
+            });
+            if(newRows.length) sjApplicants = sjApplicants.concat(newRows);
+            if(!sjApplicants.length) sjApplicants = rows;
             await loadCreatorGrades(sjApplicants.map(function(r){return r.username;}));
             renderSunjeongArea();
           }
