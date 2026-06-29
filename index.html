@@ -2097,7 +2097,7 @@ function buildSjTable(rows){
       +' onclick="event.stopPropagation();sjToggleRow(\''+r._applyNum+'\')"/></td>'
       +'<td>'+r._applyNum+'</td>'
       
-      +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+(bl?"[BL] ":"")+r.username+'</td>'
+      +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+(bl?"[BL] ":"")+r.username.replace(/^@/,'')+'</td>'
       +'<td style="min-width:110px;white-space:nowrap;">'+(r.nickname||"")+'</td>'
       +'<td>'+(r.grade?'<span class="grade-pill '+gc+'">'+r.grade+'</span>':'-')+'</td>'
       +'<td>'+(sjGradeSel('_vr',r.username,g.video_quality||'',['','V1','V2','V3','V4','V5'],'v-sel'))+'</td>'
