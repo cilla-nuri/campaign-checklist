@@ -18077,7 +18077,7 @@
             "u1712": true,
             "u1732": true,
             "u1784": true,
-            "u1786": false,
+            "u1786": true,
             "u1787": true
           },
           "savedAt": null
@@ -18098,5 +18098,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2224,
-  "savedAt": "2026-06-29T02:37:28.047Z"
+  "savedAt": "2026-06-29T02:37:32.108Z"
 }
