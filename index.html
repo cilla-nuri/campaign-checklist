@@ -2924,8 +2924,23 @@ document.addEventListener('click', function(e) {
     var val = chk.getAttribute('data-val');
     var sel = window[fv];
     if (!sel) return;
-    if (val === '_all') { sel.clear(); }
-    else { if (chk.checked) sel.add(val); else sel.delete(val); }
+    if (val === '_all') {
+      sel.clear();
+      // Uncheck all individual option checkboxes
+      var wrap2 = document.getElementById('ms_'+fv+'_wrap');
+      if (wrap2) wrap2.querySelectorAll('.ms-chk').forEach(function(cb){
+        if (cb.getAttribute('data-val') !== '_all') cb.checked = false;
+      });
+    }
+    else {
+      if (chk.checked) sel.add(val); else sel.delete(val);
+      // Uncheck 'All' when any individual item is selected
+      var wrap3 = document.getElementById('ms_'+fv+'_wrap');
+      if (wrap3) {
+        var allCb = wrap3.querySelector('.ms-chk[data-val="_all"]');
+        if (allCb) allCb.checked = false;
+      }
+    }
     // Update button label immediately
     var btnId = 'ms_' + fv;
     var wrap = document.getElementById(btnId + '_wrap');
