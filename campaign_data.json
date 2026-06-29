@@ -17148,12 +17148,22 @@
         "_showEligibleOnly": false,
         "maxFollowers": 0
       }
+    },
+    "u2174": {
+      "id": "u2174",
+      "name": "#1999 [AGE20'S] ☀️BREAK THE SUN with AGE20'S☀️ (Meta Partnership Code Submission Required)",
+      "creators": [],
+      "master": [],
+      "state": {},
+      "payType": "Paid",
+      "deadline": "2026-06-28",
+      "period": "2"
     }
   },
-  "activeCampaignId": "u1262",
+  "activeCampaignId": "u2174",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
-  "idc": 2173,
-  "savedAt": "2026-06-29T00:25:55.933Z"
+  "idc": 2174,
+  "savedAt": "2026-06-29T00:26:32.653Z"
 }
