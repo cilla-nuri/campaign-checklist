@@ -1550,7 +1550,7 @@ function renderMasterPanel(){
     '<div id="checklistImportPreview"></div>'+
     '<div class="divider"></div>'+
     '<div id="masterItems">'+(masterDraft.length?masterDraft.map(renderSecBlock).join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">No items yet.</div>')+'</div>';
-  document.getElementById("panelFooter").innerHTML='<button class="smb" onclick="addSec()"><i class="ti ti-plus"></i> Section</button><span class="pf-warn" id="pfWarn"></span><button class="apply-btn" onclick="applyMaster()">Apply to all</button>';
+  document.getElementById("panelFooter").innerHTML='<button class="smb" onclick="addSec()"><i class="ti ti-plus"></i> Section</button><span class="pf-warn" id="pfWarn"></span><button class="apply-btn" onclick="applyMaster()">Apply to all</button><button onclick="copyMasterAsCSV()" style="margin-left:6px;padding:6px 11px;border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;font-size:11px;">&#128203; Copy CSV</button><button onclick="applyMasterToCampaign()" style="margin-left:6px;padding:6px 11px;border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;font-size:11px;">&#8594; Apply to...</button>';
 }
 
 function handleChecklistCSV(file){
@@ -4291,6 +4291,63 @@ function downloadPreSelected() {
   a.download = campName + '_preselected.csv';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+
+/* ============ COPY MASTER AS CSV / APPLY TO CAMPAIGN ============ */
+function copyMasterAsCSV() {
+  if (!masterDraft || !masterDraft.length) { alert('No checklist items to copy.'); return; }
+  var lines = ['section,item'];
+  masterDraft.forEach(function(sec) {
+    sec.items.forEach(function(it) {
+      var s = sec.name.includes(',') ? '"'+sec.name+'"' : sec.name;
+      var i = it.text.includes(',') ? '"'+it.text+'"' : it.text;
+      lines.push(s + ',' + i);
+    });
+  });
+  var csv = lines.join('\n');
+  navigator.clipboard.writeText(csv).then(function() {
+    showSaveIndicator('saved', 'Checklist copied to clipboard!');
+  }).catch(function() {
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = csv; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showSaveIndicator('saved', 'Copied!');
+  });
+}
+
+function applyMasterToCampaign() {
+  if (!masterDraft || !masterDraft.length) { alert('No checklist items.'); return; }
+  var campList = Object.keys(campaigns).filter(function(id){ return !campaigns[id].archived; });
+  if (campList.length < 2) { alert('No other campaigns to apply to.'); return; }
+  
+  var options = campList.map(function(id){
+    return { id: id, name: campaigns[id].name };
+  }).filter(function(c){ return c.id !== activeCampaignId; });
+
+  if (!options.length) { alert('No other campaigns available.'); return; }
+
+  // Build select prompt
+  var sel = options.map(function(c, i){ return (i+1) + '. ' + c.name; }).join('\n');
+  var choice = prompt('Apply checklist to which campaign?\n\n' + sel + '\n\nEnter number:');
+  if (!choice) return;
+  var idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= options.length) { alert('Invalid choice.'); return; }
+  
+  var targetId = options[idx].id;
+  var target = campaigns[targetId];
+  if (!confirm('Apply current checklist to "' + target.name + '"?\n\nThis will overwrite their existing master.')) return;
+
+  // Deep copy masterDraft to target
+  target.master = JSON.parse(JSON.stringify(masterDraft));
+  // Apply to all creators in target
+  Object.keys(target.state).forEach(function(crId) {
+    if (!target.state[crId].checks) target.state[crId].checks = {};
+  });
+  saveToLocalStorage();
+  markChanged();
+  alert('Applied to "' + target.name + '"!');
 }
 
 </script>
