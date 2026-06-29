@@ -18070,7 +18070,21 @@
         },
         "u2210": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": true,
+            "u1696": true,
+            "u1697": true,
+            "u1699": true,
+            "u1703": true,
+            "u1706": true,
+            "u1708": true,
+            "u1709": true,
+            "u1710": true,
+            "u1711": true,
+            "u1712": true,
+            "u1732": true,
+            "u1784": true
+          },
           "savedAt": null
         },
         "u2211": {
@@ -18298,5 +18312,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2224,
-  "savedAt": "2026-06-29T05:29:40.364Z"
+  "savedAt": "2026-06-29T05:40:34.980Z"
 }
