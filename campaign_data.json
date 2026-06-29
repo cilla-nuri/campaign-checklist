@@ -17796,7 +17796,13 @@
         },
         "u2192": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": true,
+            "u1696": true,
+            "u1697": true,
+            "u1699": true,
+            "u1703": false
+          },
           "savedAt": null
         },
         "u2193": {
@@ -18346,5 +18352,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2224,
-  "savedAt": "2026-06-29T05:46:08.764Z"
+  "savedAt": "2026-06-29T05:46:39.076Z"
 }
