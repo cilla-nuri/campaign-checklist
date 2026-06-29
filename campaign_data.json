@@ -3454,7 +3454,7 @@
           "savedAt": "2026-06-11 17:07"
         },
         "u1289": {
-          "status": "Revision Requested",
+          "status": "Approved",
           "checks": {
             "u1294": true,
             "u1296": true,
@@ -17155,5 +17155,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2173,
-  "savedAt": "2026-06-29T00:14:24.426Z"
+  "savedAt": "2026-06-29T00:25:55.933Z"
 }
