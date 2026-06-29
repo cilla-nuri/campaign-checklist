@@ -17454,7 +17454,86 @@
           "nick": "TinaGu"
         }
       ],
-      "master": [],
+      "master": [
+        {
+          "id": "u1694",
+          "name": "Format Requirements",
+          "items": [
+            {
+              "id": "u1695",
+              "text": "Video length: minimum 30 seconds"
+            },
+            {
+              "id": "u1696",
+              "text": "Aspect ratio: 9:16"
+            },
+            {
+              "id": "u1697",
+              "text": "English voiceover & subtitle required (other languages will not be accepted)"
+            },
+            {
+              "id": "u1699",
+              "text": "Brand name and product name must be spelled accurately (Exacty AGE20'S , video need to be mirrored so the logo appears correctly)"
+            }
+          ]
+        },
+        {
+          "id": "u1701",
+          "name": "Required Scenes",
+          "items": [
+            {
+              "id": "u1703",
+              "text": "Need to dramatically crack/break the sun-shaped PR package"
+            },
+            {
+              "id": "u1706",
+              "text": "Need to reveal both sunscreen products inside the package"
+            },
+            {
+              "id": "u1708",
+              "text": "Need to show both sunscreens side-by-side: Yellow (UV Defense Hydro Calming) vs Purple (UV Mineral Priming)"
+            },
+            {
+              "id": "u1709",
+              "text": "Need to apply both sunscreens — half-face or texture close-up — showing smooth spreadability"
+            },
+            {
+              "id": "u1710",
+              "text": "Need to show split-face or split-screen comparison of both finishes"
+            },
+            {
+              "id": "u1711",
+              "text": "Need to include a clear Before & After comparison"
+            },
+            {
+              "id": "u1712",
+              "text": "Need to include CTA overlay: Available on Amazon"
+            },
+            {
+              "id": "u1732",
+              "text": "Need to highlight lightweight texture and no white residue / no chalkiness on both sunscreens"
+            }
+          ]
+        },
+        {
+          "id": "u1783",
+          "name": "Tag & Hashtag",
+          "items": [
+            {
+              "id": "u1784",
+              "text": "Need to tag @age20s_global"
+            },
+            {
+              "id": "u1786",
+              "text": "Need to put on required hashtag : #AmazonPrimeDay #BreaktheSunChallenge #AGE20SSunscreen #KSunScreen #SPFMAX"
+            },
+            {
+              "id": "u1787",
+              "text": "Do not tag Nurilounge account"
+            }
+          ]
+        }
+      ],
       "state": {
         "u2175": {
           "status": "Pending Review",
@@ -17712,10 +17791,10 @@
       "period": "2"
     }
   },
-  "activeCampaignId": "u2174",
+  "activeCampaignId": "u1655",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2224,
-  "savedAt": "2026-06-29T00:31:44.772Z"
+  "savedAt": "2026-06-29T00:41:35.091Z"
 }
