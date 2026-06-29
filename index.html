@@ -774,9 +774,14 @@ function renderSidebar(){
 }
 
 function getPct(c,id){
-  if(!c.state[id])return 0;
-  const ch=c.state[id].checks,total=Object.keys(ch).length,done=Object.values(ch).filter(Boolean).length;
-  return total?Math.round(done/total*100):0;
+  if(!c.master||!c.master.length)return 0;
+  var masterIds={};
+  c.master.forEach(function(s){s.items.forEach(function(it){masterIds[it.id]=true;});});
+  var total=Object.keys(masterIds).length;
+  if(!total)return 0;
+  var ch=(c.state[id]||{}).checks||{};
+  var done=Object.keys(ch).filter(function(k){return masterIds[k]&&ch[k];}).length;
+  return Math.round(done/total*100);
 }
 
 function filterCreators(q){
