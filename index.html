@@ -462,7 +462,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
         <i class="ti ti-search"></i>
         <input id="searchInput" type="text" placeholder="Search creator..." oninput="filterCreators(this.value)"/>
       </div>
-      <div class="creator-list" id="creatorList">
+      <div style="display:flex;gap:4px;padding:6px 10px 4px;flex-shrink:0;"><button id="srtTodo" onclick="setSidebarSort('needs-review')" style="flex:1;font-size:9px;padding:3px 4px;border-radius:6px;border:1.5px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;font-weight:600;white-space:nowrap;">🔴 Todo</button><button id="srtAsc" onclick="setSidebarSort('pct-asc')" style="flex:1;font-size:9px;padding:3px 4px;border-radius:6px;border:1.5px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;font-weight:600;">↑ %</button><button id="srtDesc" onclick="setSidebarSort('pct-desc')" style="flex:1;font-size:9px;padding:3px 4px;border-radius:6px;border:1.5px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;font-weight:600;">↓ %</button><button id="srtDef" onclick="setSidebarSort('default')" style="flex:1;font-size:9px;padding:3px 4px;border-radius:6px;border:1.5px solid #534AB7;background:#534AB7;color:#fff;cursor:pointer;font-weight:600;">Default</button></div><div class="creator-list" id="creatorList">
         <div class="empty-msg" id="noCreators">Create or select a campaign first</div>
       </div>
       <div class="empty-msg" id="noSearch" style="display:none;">No creators found</div>
@@ -734,7 +734,22 @@ function initials(n){return n.split(" ").map(function(w){return w[0]||"";}).join
 function renderSidebar(){
   const c=getCampaign();const list=document.getElementById("creatorList");
   if(!c||!c.creators.length){list.innerHTML='<div class="empty-msg" id="noCreators">Import a CSV to load creators</div>';return;}
-  list.innerHTML=c.creators.map(function(cr,i){
+  var sortedCreators=c.creators.slice();
+  if(sidebarSortMode==='needs-review'){
+    sortedCreators.sort(function(a,b){
+      var sA=c.state[a.id]||{},sB=c.state[b.id]||{};
+      var o={'Revision Requested':0,'Pending Review':1,'In Review':2,'Approved':4};
+      var oA=o[sA.status||'']!==undefined?o[sA.status||'']:1;
+      var oB=o[sB.status||'']!==undefined?o[sB.status||'']:1;
+      if(oA!==oB)return oA-oB;
+      return getPct(c,a.id)-getPct(c,b.id);
+    });
+  } else if(sidebarSortMode==='pct-asc'){
+    sortedCreators.sort(function(a,b){return getPct(c,a.id)-getPct(c,b.id);});
+  } else if(sidebarSortMode==='pct-desc'){
+    sortedCreators.sort(function(a,b){return getPct(c,b.id)-getPct(c,a.id);});
+  }
+  list.innerHTML=sortedCreators.map(function(cr,i){
     var g=getCreatorGrade(cr.handle);
     var gbParts=[];
     if(g&&!g.cant_evaluate){
@@ -4357,6 +4372,39 @@ function applyMasterToCampaign() {
     document.body.removeChild(overlay);
     showSaveIndicator('saved', 'Applied to "' + target.name + '"!');
   };
+}
+
+
+/* ======= SIDEBAR SORT ======= */
+function setSidebarSort(mode) {
+  sidebarSortMode = mode;
+  var btns = {
+    'needs-review':'srtTodo','pct-asc':'srtAsc',
+    'pct-desc':'srtDesc','default':'srtDef'
+  };
+  Object.keys(btns).forEach(function(m) {
+    var b = document.getElementById(btns[m]);
+    if (!b) return;
+    var active = m === mode;
+    b.style.background = active ? '#534AB7' : '#fff';
+    b.style.color = active ? '#fff' : '#888';
+    b.style.borderColor = active ? '#534AB7' : '#e0e0e0';
+  });
+  renderSidebar();
+}
+
+/* ======= PRE-LOAD GRADES FOR CHECK TAB ======= */
+function preloadCheckGrades() {
+  var c = getCampaign();
+  if (!c || !c.creators || !c.creators.length) return;
+  var handles = c.creators.map(function(cr){ return cr.handle; });
+  loadCreatorGrades(handles).then(function() {
+    renderSidebar();
+    if (activeCreatorId) {
+      var cr = c.creators.find(function(x){ return x.id === activeCreatorId; });
+      if (cr) renderMainGrades(cr.handle);
+    }
+  });
 }
 
 </script>
