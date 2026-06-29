@@ -18136,8 +18136,8 @@
           "checks": {
             "u1696": true,
             "u1695": true,
-            "u1697": false,
-            "u1699": false
+            "u1697": true,
+            "u1699": true
           },
           "savedAt": null
         },
@@ -18319,5 +18319,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2224,
-  "savedAt": "2026-06-29T05:42:03.258Z"
+  "savedAt": "2026-06-29T05:42:10.616Z"
 }
