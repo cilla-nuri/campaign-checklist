@@ -2105,7 +2105,7 @@ function buildSjTable(rows){
       +'<td>'+r._applyNum+'</td>'
       
       +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+(bl?"[BL] ":"")+r.username+'</td>'
-      +'<td style="min-width:110px;max-width:180px;overflow:hidden;text-overflow:ellipsis;">'+(r.nickname||"")+'</td>'
+      +'<td style="min-width:110px;white-space:nowrap;">'+(r.nickname||"")+'</td>'
       +'<td>'+(r.grade?'<span class="grade-pill '+gc+'">'+r.grade+'</span>':'-')+'</td>'
       +'<td>'+(sjGradeSel('_vr',r.username,g.video_quality||'',['','V1','V2','V3','V4','V5'],'v-sel'))+'</td>'
       +'<td>'+(sjGradeSel('_er',r.username,g.manager_evaluation||'',['','E1','E2','E3','E4','E5'],'e-sel'))+'</td>'
@@ -2128,7 +2128,7 @@ function buildSjTable(rows){
       
       +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+';cursor:text;">'+
       (bl?"[BL] ":"")+r.username+'<button onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.username+'\')" title="Copy" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ti ti-copy"></i></button></td>'
-      +'<td style="min-width:110px;max-width:180px;overflow:hidden;text-overflow:ellipsis;">'+(r.nickname||"")+'</td>'
+      +'<td style="min-width:110px;white-space:nowrap;">'+(r.nickname||"")+'</td>'
       +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td style="white-space:nowrap;">'+sjSnsLinks(r)+'</td>'
       +'<td>'+(r.grade?'<span class="grade-pill '+gc+'">'+r.grade+'</span>':'-')+'</td>'
