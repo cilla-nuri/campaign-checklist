@@ -1517,7 +1517,7 @@
             "u957": true,
             "u959": true,
             "u960": true,
-            "u961": false,
+            "u961": true,
             "u965": true,
             "u966": true,
             "u967": true
@@ -19588,10 +19588,10 @@
       "period": "1"
     }
   },
-  "activeCampaignId": "u2226",
+  "activeCampaignId": "u891",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:10:11.297Z"
+  "savedAt": "2026-06-30T07:12:18.873Z"
 }
