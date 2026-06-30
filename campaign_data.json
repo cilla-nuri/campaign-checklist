@@ -15100,7 +15100,7 @@
           "savedAt": null
         },
         "u1734": {
-          "status": "Revision Requested",
+          "status": "Approved",
           "checks": {
             "u1695": true,
             "u1696": true,
@@ -15115,7 +15115,7 @@
             "u1712": true,
             "u1732": true,
             "u1784": true,
-            "u1786": false,
+            "u1786": true,
             "u1787": true
           },
           "savedAt": null
@@ -18444,5 +18444,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2225,
-  "savedAt": "2026-06-30T01:33:24.218Z"
+  "savedAt": "2026-06-30T01:33:40.164Z"
 }
