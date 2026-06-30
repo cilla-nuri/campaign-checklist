@@ -19101,11 +19101,11 @@
             "u2231": true,
             "u2233": true,
             "u2258": true,
-            "u2259": false,
-            "u2260": false,
-            "u2261": false,
-            "u2264": false,
-            "u2266": false
+            "u2259": true,
+            "u2260": true,
+            "u2261": true,
+            "u2264": true,
+            "u2266": true
           },
           "savedAt": null
         },
@@ -19540,5 +19540,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2325,
-  "savedAt": "2026-06-30T02:49:11.243Z"
+  "savedAt": "2026-06-30T02:49:18.414Z"
 }
