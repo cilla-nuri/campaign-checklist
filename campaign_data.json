@@ -18442,7 +18442,70 @@
       "id": "u2226",
       "name": "#1995 [PR KIT] Hydrate, Lift & Brighten! Meet the signiq Magic Wand Eye Cream Trio ✨ (Meta Code Required!)",
       "creators": [],
-      "master": [],
+      "master": [
+        {
+          "id": "u2227",
+          "name": "Format Requirements",
+          "items": [
+            {
+              "id": "u2228",
+              "text": "Brand name need to be spelled correctly: signiq (all lowercase)"
+            },
+            {
+              "id": "u2231",
+              "text": "All subtitles in English"
+            },
+            {
+              "id": "u2233",
+              "text": "Product name on packaging must not be mirrored or flipped on camera"
+            }
+          ]
+        },
+        {
+          "id": "u2257",
+          "name": "Video Flow",
+          "items": [
+            {
+              "id": "u2258",
+              "text": "Hook: Showcase Magic Wand applicator → playful \"\"Magic Spark!\"\" gesture → instantly transition to dramatic After result"
+            },
+            {
+              "id": "u2259",
+              "text": "Main: Unbox the PR kit → introduce Energy Orb / Magic Wand detachment → switch cap to Gua Sha massager"
+            },
+            {
+              "id": "u2260",
+              "text": "Main: Show Before concerns → apply product → perform Gua Sha rolling massage following the eye massage guide"
+            },
+            {
+              "id": "u2261",
+              "text": "Close/Outro: Show clear Before & After side-by-side comparison with visible results"
+            }
+          ]
+        },
+        {
+          "id": "u2262",
+          "name": "Caption & Tags",
+          "items": [
+            {
+              "id": "u2263",
+              "text": "Need to tag on TikTok: @signiq_global"
+            },
+            {
+              "id": "u2264",
+              "text": "Need to tag on Instagram: @signiq_global"
+            },
+            {
+              "id": "u2265",
+              "text": "Need to include Amazon Store Page link"
+            },
+            {
+              "id": "u2266",
+              "text": "hashtags: #signiq #AmazonPrimeDay #KoreanSkincare #signiqEyeCream #signiqEyeWorkout"
+            }
+          ]
+        }
+      ],
       "state": {},
       "payType": "Paid",
       "deadline": "2026-06-27",
@@ -18453,6 +18516,6 @@
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
-  "idc": 2226,
-  "savedAt": "2026-06-30T02:07:18.393Z"
+  "idc": 2276,
+  "savedAt": "2026-06-30T02:10:03.311Z"
 }
