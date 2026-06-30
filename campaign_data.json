@@ -17473,7 +17473,7 @@
             },
             {
               "id": "u1699",
-              "text": "Brand name and product name must be spelled accurately (Exacty AGE20'S , video need to be mirrored so the logo appears correctly)"
+              "text": "Brand name and product name must be spelled accurately (Exacty AGE20'S)"
             }
           ]
         },
@@ -17537,7 +17537,23 @@
       "state": {
         "u2175": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2176": {
@@ -17566,8 +17582,8 @@
           "checks": {
             "u1695": true,
             "u1696": true,
-            "u1699": true,
             "u1697": true,
+            "u1699": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -17585,13 +17601,13 @@
         "u2178": {
           "status": "Approved",
           "checks": {
-            "u1697": true,
             "u1695": true,
             "u1696": true,
+            "u1697": true,
             "u1699": true,
             "u1703": true,
-            "u1708": true,
             "u1706": true,
+            "u1708": true,
             "u1709": true,
             "u1710": true,
             "u1711": true,
@@ -17616,11 +17632,11 @@
             "u1709": true,
             "u1710": true,
             "u1711": true,
+            "u1712": true,
             "u1732": true,
             "u1784": true,
             "u1786": true,
-            "u1787": true,
-            "u1712": true
+            "u1787": true
           },
           "savedAt": null
         },
@@ -17629,8 +17645,8 @@
           "checks": {
             "u1695": true,
             "u1696": true,
-            "u1699": true,
             "u1697": true,
+            "u1699": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -17639,9 +17655,9 @@
             "u1711": true,
             "u1712": true,
             "u1732": true,
+            "u1784": true,
             "u1786": true,
-            "u1787": true,
-            "u1784": true
+            "u1787": true
           },
           "savedAt": null
         },
@@ -17691,16 +17707,16 @@
           "status": "Pending Review",
           "checks": {
             "u1695": true,
-            "u1697": true,
             "u1696": true,
+            "u1697": true,
             "u1699": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
-            "u1712": true,
             "u1711": true,
+            "u1712": true,
             "u1732": true,
             "u1784": false,
             "u1786": true,
@@ -17713,18 +17729,19 @@
           "checks": {
             "u1695": true,
             "u1696": true,
-            "u1784": true,
-            "u1786": true,
             "u1697": true,
             "u1699": false,
             "u1703": true,
-            "u1708": true,
-            "u1710": true,
-            "u1709": true,
             "u1706": true,
+            "u1708": true,
+            "u1709": true,
+            "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1732": true
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": false
           },
           "savedAt": null
         },
@@ -17735,9 +17752,6 @@
             "u1696": true,
             "u1697": true,
             "u1699": true,
-            "u1784": true,
-            "u1786": true,
-            "u1787": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -17745,23 +17759,74 @@
             "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1732": true
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
         "u2186": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2187": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2188": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2189": {
@@ -17771,17 +17836,17 @@
             "u1696": true,
             "u1697": true,
             "u1699": true,
-            "u1784": true,
-            "u1786": true,
-            "u1787": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
             "u1711": true,
+            "u1712": true,
             "u1732": true,
-            "u1712": true
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
@@ -17813,6 +17878,7 @@
             "u1696": true,
             "u1697": true,
             "u1699": true,
+            "u1703": false,
             "u1706": true,
             "u1708": true,
             "u1709": true,
@@ -17835,9 +17901,9 @@
             "u1699": true,
             "u1703": true,
             "u1706": true,
+            "u1708": true,
             "u1709": true,
             "u1710": true,
-            "u1708": true,
             "u1711": true,
             "u1712": true,
             "u1732": true,
@@ -17874,6 +17940,7 @@
             "u1695": true,
             "u1696": true,
             "u1697": true,
+            "u1699": false,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -17897,26 +17964,58 @@
             "u1699": true,
             "u1703": true,
             "u1706": true,
-            "u1786": true,
-            "u1784": true,
-            "u1787": true,
-            "u1712": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
             "u1711": true,
-            "u1732": true
+            "u1712": true,
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
         "u2196": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2197": {
           "status": "Revision Requested",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2198": {
@@ -17925,6 +18024,7 @@
             "u1695": true,
             "u1696": true,
             "u1697": true,
+            "u1699": false,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -17941,15 +18041,31 @@
         },
         "u2199": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2200": {
           "status": "Revision Requested",
           "checks": {
             "u1695": true,
-            "u1697": true,
             "u1696": true,
+            "u1697": true,
             "u1699": true,
             "u1703": true,
             "u1706": true,
@@ -17992,9 +18108,6 @@
             "u1695": true,
             "u1696": true,
             "u1697": true,
-            "u1784": true,
-            "u1786": true,
-            "u1787": true,
             "u1699": true,
             "u1703": true,
             "u1706": true,
@@ -18003,7 +18116,10 @@
             "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1732": true
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
@@ -18013,18 +18129,18 @@
             "u1695": true,
             "u1696": true,
             "u1697": true,
-            "u1784": true,
-            "u1786": true,
-            "u1787": true,
-            "u1732": true,
+            "u1699": true,
             "u1703": true,
             "u1706": true,
-            "u1712": true,
-            "u1699": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
-            "u1711": true
+            "u1711": true,
+            "u1712": true,
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
@@ -18055,6 +18171,7 @@
             "u1695": true,
             "u1696": true,
             "u1697": false,
+            "u1699": false,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -18063,6 +18180,8 @@
             "u1711": true,
             "u1712": true,
             "u1732": true,
+            "u1784": false,
+            "u1786": false,
             "u1787": true
           },
           "savedAt": null
@@ -18072,11 +18191,11 @@
           "checks": {
             "u1695": true,
             "u1696": true,
+            "u1697": true,
+            "u1699": false,
             "u1703": true,
             "u1706": true,
             "u1708": true,
-            "u1697": true,
-            "u1699": false,
             "u1709": true,
             "u1710": true,
             "u1711": true,
@@ -18092,20 +18211,20 @@
           "status": "Revision Requested",
           "checks": {
             "u1695": true,
-            "u1697": true,
             "u1696": true,
+            "u1697": true,
+            "u1699": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
             "u1711": true,
-            "u1732": true,
-            "u1787": true,
-            "u1699": true,
             "u1712": true,
+            "u1732": true,
             "u1784": true,
-            "u1786": true
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
@@ -18119,8 +18238,8 @@
             "u1703": true,
             "u1706": true,
             "u1708": true,
-            "u1710": true,
             "u1709": true,
+            "u1710": true,
             "u1711": true,
             "u1712": true,
             "u1732": true,
@@ -18200,38 +18319,38 @@
             "u1696": true,
             "u1697": false,
             "u1699": true,
-            "u1706": true,
-            "u1784": true,
-            "u1786": true,
-            "u1787": true,
             "u1703": true,
+            "u1706": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1732": true
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
         "u2213": {
           "status": "Approved",
           "checks": {
-            "u1696": true,
             "u1695": true,
+            "u1696": true,
             "u1697": true,
             "u1699": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
-            "u1786": true,
-            "u1787": true,
-            "u1784": true,
             "u1709": true,
             "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1732": true
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
@@ -18240,9 +18359,6 @@
           "checks": {
             "u1695": true,
             "u1696": true,
-            "u1786": true,
-            "u1784": true,
-            "u1787": true,
             "u1697": true,
             "u1699": true,
             "u1703": true,
@@ -18252,7 +18368,10 @@
             "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1732": true
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
@@ -18286,29 +18405,45 @@
             "u1699": false,
             "u1703": true,
             "u1706": true,
-            "u1784": true,
-            "u1786": true,
-            "u1787": true,
-            "u1712": true,
-            "u1732": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
-            "u1711": true
+            "u1711": true,
+            "u1712": true,
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
         "u2217": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2218": {
           "status": "Approved",
           "checks": {
             "u1695": true,
-            "u1697": true,
             "u1696": true,
+            "u1697": true,
             "u1699": true,
             "u1703": true,
             "u1706": true,
@@ -18326,7 +18461,23 @@
         },
         "u2219": {
           "status": "Pending Review",
-          "checks": {},
+          "checks": {
+            "u1695": false,
+            "u1696": false,
+            "u1697": false,
+            "u1699": false,
+            "u1703": false,
+            "u1706": false,
+            "u1708": false,
+            "u1709": false,
+            "u1710": false,
+            "u1711": false,
+            "u1712": false,
+            "u1732": false,
+            "u1784": false,
+            "u1786": false,
+            "u1787": false
+          },
           "savedAt": null
         },
         "u2220": {
@@ -18336,9 +18487,6 @@
             "u1696": true,
             "u1697": true,
             "u1699": false,
-            "u1784": true,
-            "u1786": true,
-            "u1787": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -18346,7 +18494,10 @@
             "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1732": true
+            "u1732": true,
+            "u1784": true,
+            "u1786": true,
+            "u1787": true
           },
           "savedAt": null
         },
@@ -18356,6 +18507,7 @@
             "u1695": true,
             "u1696": true,
             "u1697": true,
+            "u1699": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -18363,11 +18515,10 @@
             "u1710": true,
             "u1711": true,
             "u1712": true,
-            "u1699": true,
+            "u1732": true,
             "u1784": true,
             "u1786": true,
-            "u1787": true,
-            "u1732": true
+            "u1787": true
           },
           "savedAt": null
         },
@@ -18399,8 +18550,8 @@
             "u1696": true,
             "u1697": false,
             "u1699": true,
-            "u1706": true,
             "u1703": true,
+            "u1706": true,
             "u1708": true,
             "u1709": true,
             "u1710": true,
@@ -19608,5 +19759,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T08:54:33.711Z"
+  "savedAt": "2026-06-30T08:55:22.145Z"
 }
