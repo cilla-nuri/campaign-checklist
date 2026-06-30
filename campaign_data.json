@@ -17870,7 +17870,11 @@
         },
         "u2194": {
           "status": "Revision Requested",
-          "checks": {},
+          "checks": {
+            "u1695": true,
+            "u1696": true,
+            "u1697": true
+          },
           "savedAt": null
         },
         "u2195": {
@@ -19593,5 +19597,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T08:54:11.274Z"
+  "savedAt": "2026-06-30T08:54:22.991Z"
 }
