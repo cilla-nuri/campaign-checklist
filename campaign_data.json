@@ -18437,12 +18437,22 @@
         "minFollowers": 0,
         "snsType": "both"
       }
+    },
+    "u2226": {
+      "id": "u2226",
+      "name": "#1995 [PR KIT] Hydrate, Lift & Brighten! Meet the signiq Magic Wand Eye Cream Trio ✨ (Meta Code Required!)",
+      "creators": [],
+      "master": [],
+      "state": {},
+      "payType": "Paid",
+      "deadline": "2026-06-27",
+      "period": "1"
     }
   },
-  "activeCampaignId": "u1655",
+  "activeCampaignId": "u2226",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
-  "idc": 2225,
-  "savedAt": "2026-06-30T01:33:40.164Z"
+  "idc": 2226,
+  "savedAt": "2026-06-30T02:07:18.393Z"
 }
