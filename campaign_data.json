@@ -19009,7 +19009,7 @@
         "u2290": {
           "status": "Pending Review",
           "checks": {
-            "u2228": true,
+            "u2228": false,
             "u2231": true,
             "u2233": true,
             "u2258": true,
@@ -19593,5 +19593,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:20:47.065Z"
+  "savedAt": "2026-06-30T07:20:54.995Z"
 }
