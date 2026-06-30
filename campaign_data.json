@@ -18975,7 +18975,7 @@
           "savedAt": null
         },
         "u2288": {
-          "status": "In Review",
+          "status": "Revision Requested",
           "checks": {
             "u2228": true,
             "u2231": true,
@@ -19593,5 +19593,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:23:53.742Z"
+  "savedAt": "2026-06-30T07:24:29.708Z"
 }
