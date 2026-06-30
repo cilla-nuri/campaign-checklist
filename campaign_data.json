@@ -17869,7 +17869,7 @@
           "savedAt": null
         },
         "u2194": {
-          "status": "Pending Review",
+          "status": "Revision Requested",
           "checks": {},
           "savedAt": null
         },
@@ -19588,10 +19588,10 @@
       "period": "1"
     }
   },
-  "activeCampaignId": "u2226",
+  "activeCampaignId": "u2174",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:56:22.101Z"
+  "savedAt": "2026-06-30T08:54:11.274Z"
 }
