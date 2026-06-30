@@ -18789,6 +18789,10 @@
             {
               "id": "u2266",
               "text": "hashtags: #signiq #AmazonPrimeDay #KoreanSkincare #signiqEyeCream #signiqEyeWorkout"
+            },
+            {
+              "id": "u2326",
+              "text": "Need to add Amazon link"
             }
           ]
         }
@@ -18805,7 +18809,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18820,7 +18825,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18835,7 +18841,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18850,7 +18857,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18865,7 +18873,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18880,7 +18889,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18895,7 +18905,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18910,7 +18921,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18925,7 +18937,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18940,7 +18953,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18955,7 +18969,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18970,7 +18985,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -18985,7 +19001,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19000,7 +19017,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19015,7 +19033,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19030,7 +19049,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19045,7 +19065,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19060,7 +19081,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19075,7 +19097,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19090,7 +19113,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19105,7 +19129,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19120,7 +19145,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19135,7 +19161,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19150,7 +19177,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19165,7 +19193,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19180,7 +19209,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19195,7 +19225,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19210,7 +19241,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19225,7 +19257,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19240,7 +19273,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19255,7 +19289,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19270,7 +19305,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19285,7 +19321,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19300,7 +19337,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19315,7 +19353,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19330,7 +19369,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19345,7 +19385,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19360,7 +19401,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19375,7 +19417,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19390,7 +19433,8 @@
             "u2260": false,
             "u2261": false,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19405,7 +19449,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19420,7 +19465,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19435,7 +19481,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19450,7 +19497,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19465,7 +19513,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19480,7 +19529,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19495,7 +19545,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": false,
-            "u2266": false
+            "u2266": false,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19510,7 +19561,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         },
@@ -19525,7 +19577,8 @@
             "u2260": true,
             "u2261": true,
             "u2264": true,
-            "u2266": true
+            "u2266": true,
+            "u2326": false
           },
           "savedAt": null
         }
@@ -19539,6 +19592,6 @@
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
-  "idc": 2325,
-  "savedAt": "2026-06-30T07:08:00.841Z"
+  "idc": 2326,
+  "savedAt": "2026-06-30T07:08:59.060Z"
 }
