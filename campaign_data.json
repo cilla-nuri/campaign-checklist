@@ -1395,12 +1395,12 @@
             "u943": true,
             "u944": true,
             "u945": true,
-            "u947": false,
-            "u952": false,
-            "u953": false,
-            "u954": false,
-            "u957": false,
-            "u959": false,
+            "u947": true,
+            "u952": true,
+            "u953": true,
+            "u954": true,
+            "u957": true,
+            "u959": true,
             "u960": false,
             "u961": false,
             "u965": false,
@@ -19593,5 +19593,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:13:42.315Z"
+  "savedAt": "2026-06-30T07:14:07.981Z"
 }
