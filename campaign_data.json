@@ -1391,7 +1391,7 @@
           "checks": {
             "u940": false,
             "u941": false,
-            "u942": false,
+            "u942": true,
             "u943": false,
             "u944": false,
             "u945": false,
@@ -19593,5 +19593,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:12:37.031Z"
+  "savedAt": "2026-06-30T07:13:22.438Z"
 }
