@@ -1401,11 +1401,11 @@
             "u954": true,
             "u957": true,
             "u959": true,
-            "u960": false,
-            "u961": false,
-            "u965": false,
-            "u966": false,
-            "u967": false
+            "u960": true,
+            "u961": true,
+            "u965": true,
+            "u966": true,
+            "u967": true
           },
           "savedAt": null
         },
@@ -19593,5 +19593,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:14:07.981Z"
+  "savedAt": "2026-06-30T07:14:17.341Z"
 }
