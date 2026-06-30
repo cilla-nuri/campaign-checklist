@@ -19409,16 +19409,16 @@
         "u2315": {
           "status": "Pending Review",
           "checks": {
-            "u2228": false,
-            "u2231": false,
-            "u2233": false,
+            "u2228": true,
+            "u2231": true,
+            "u2233": true,
             "u2258": false,
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2264": false,
-            "u2266": false,
-            "u2326": false
+            "u2264": true,
+            "u2266": true,
+            "u2326": true
           },
           "savedAt": null
         },
@@ -19588,10 +19588,10 @@
       "period": "1"
     }
   },
-  "activeCampaignId": "u891",
+  "activeCampaignId": "u2226",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:14:17.341Z"
+  "savedAt": "2026-06-30T07:18:49.513Z"
 }
