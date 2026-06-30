@@ -18784,7 +18784,7 @@
           "items": [
             {
               "id": "u2264",
-              "text": "Need to tag on Instagram: @signiq_global"
+              "text": "Need to tag as \"Tag Person\" on Instagram: @signiq_global"
             },
             {
               "id": "u2266",
@@ -19540,5 +19540,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2325,
-  "savedAt": "2026-06-30T02:54:09.264Z"
+  "savedAt": "2026-06-30T02:54:26.430Z"
 }
