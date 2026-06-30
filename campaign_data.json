@@ -15102,7 +15102,7 @@
         "u1734": {
           "status": "Revision Requested",
           "checks": {
-            "u1695": false,
+            "u1695": true,
             "u1696": true,
             "u1697": true,
             "u1699": true,
@@ -15110,7 +15110,7 @@
             "u1706": true,
             "u1708": true,
             "u1709": true,
-            "u1710": false,
+            "u1710": true,
             "u1711": false,
             "u1712": true,
             "u1732": true,
@@ -18423,12 +18423,26 @@
       "payType": "Paid",
       "deadline": "2026-06-28",
       "period": "2"
+    },
+    "u2225": {
+      "id": "u2225",
+      "name": "#2057 [UGC] Clear Skin Starts Here ✨｜3-in-1 Rice Duo🌾",
+      "creators": [],
+      "master": [],
+      "state": {},
+      "payType": "",
+      "deadline": "",
+      "period": "",
+      "sjSettings": {
+        "minFollowers": 0,
+        "snsType": "both"
+      }
     }
   },
-  "activeCampaignId": "u2174",
+  "activeCampaignId": "u1655",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
-  "idc": 2224,
-  "savedAt": "2026-06-29T06:14:49.570Z"
+  "idc": 2225,
+  "savedAt": "2026-06-30T01:31:51.862Z"
 }
