@@ -1389,12 +1389,12 @@
         "u896": {
           "status": "Pending Review",
           "checks": {
-            "u940": false,
-            "u941": false,
+            "u940": true,
+            "u941": true,
             "u942": true,
-            "u943": false,
-            "u944": false,
-            "u945": false,
+            "u943": true,
+            "u944": true,
+            "u945": true,
             "u947": false,
             "u952": false,
             "u953": false,
@@ -19593,5 +19593,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2326,
-  "savedAt": "2026-06-30T07:13:22.438Z"
+  "savedAt": "2026-06-30T07:13:42.315Z"
 }
