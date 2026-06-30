@@ -18783,10 +18783,6 @@
           "name": "Caption & Tags",
           "items": [
             {
-              "id": "u2263",
-              "text": "Need to tag on TikTok: @signiq_global"
-            },
-            {
               "id": "u2264",
               "text": "Need to tag on Instagram: @signiq_global"
             },
@@ -18812,7 +18808,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18829,7 +18824,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18846,7 +18840,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18863,7 +18856,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18880,7 +18872,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18897,7 +18888,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18914,7 +18904,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18931,7 +18920,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18948,7 +18936,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18965,7 +18952,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18982,7 +18968,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -18999,7 +18984,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19016,7 +19000,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19033,7 +19016,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19050,7 +19032,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19067,7 +19048,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19084,7 +19064,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19101,7 +19080,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19118,7 +19096,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19135,9 +19112,8 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
-            "u2264": false,
-            "u2265": false,
+            "u2264": true,
+            "u2265": true,
             "u2266": false
           },
           "savedAt": null
@@ -19152,7 +19128,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19169,7 +19144,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19186,7 +19160,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19203,7 +19176,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19220,7 +19192,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19237,7 +19208,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19254,7 +19224,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19271,7 +19240,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19288,7 +19256,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19305,7 +19272,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19322,7 +19288,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19339,7 +19304,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19356,7 +19320,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19373,7 +19336,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19390,7 +19352,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19407,7 +19368,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19424,7 +19384,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19441,7 +19400,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19458,7 +19416,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19475,7 +19432,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19492,7 +19448,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19509,7 +19464,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19526,7 +19480,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19543,7 +19496,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19560,7 +19512,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19577,7 +19528,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19594,7 +19544,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19611,7 +19560,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19628,7 +19576,6 @@
             "u2259": false,
             "u2260": false,
             "u2261": false,
-            "u2263": false,
             "u2264": false,
             "u2265": false,
             "u2266": false
@@ -19646,5 +19593,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2325,
-  "savedAt": "2026-06-30T02:10:23.431Z"
+  "savedAt": "2026-06-30T02:15:51.050Z"
 }
