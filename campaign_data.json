@@ -7180,13 +7180,13 @@
           "status": "Pending Review",
           "checks": {
             "u1856": false,
-            "u1858": false,
-            "u1860": false,
-            "u1865": false,
-            "u1866": false,
-            "u1867": false,
-            "u1868": false,
-            "u1869": false,
+            "u1858": true,
+            "u1860": true,
+            "u1865": true,
+            "u1866": true,
+            "u1867": true,
+            "u1868": true,
+            "u1869": true,
             "u1872": false,
             "u1873": false,
             "u1881": false,
@@ -19765,5 +19765,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-01T10:23:58.572Z"
+  "savedAt": "2026-07-01T10:24:35.907Z"
 }
