@@ -5879,8 +5879,8 @@
         "u1404": {
           "status": "Pending Review",
           "checks": {
-            "u1856": false,
-            "u1858": false,
+            "u1856": true,
+            "u1858": true,
             "u1860": false,
             "u1865": false,
             "u1866": false,
@@ -19748,12 +19748,22 @@
       "payType": "",
       "deadline": "",
       "period": ""
+    },
+    "u2530": {
+      "id": "u2530",
+      "name": "#3065 [UGC PAID💸] 30-Second Body Peel, Don't Scrub🤫",
+      "creators": [],
+      "master": [],
+      "state": {},
+      "payType": "",
+      "deadline": "",
+      "period": ""
     }
   },
-  "activeCampaignId": "u968",
+  "activeCampaignId": "u1377",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
-  "idc": 2529,
-  "savedAt": "2026-07-01T02:12:10.661Z"
+  "idc": 2530,
+  "savedAt": "2026-07-01T09:09:52.787Z"
 }
