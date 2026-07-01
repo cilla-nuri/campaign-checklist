@@ -9360,7 +9360,7 @@
           "status": "Revision Requested",
           "checks": {
             "u1856": true,
-            "u1858": false,
+            "u1858": true,
             "u1860": true,
             "u1865": false,
             "u1866": true,
@@ -19765,5 +19765,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-01T09:11:13.712Z"
+  "savedAt": "2026-07-01T09:11:18.894Z"
 }
