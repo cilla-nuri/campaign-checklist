@@ -1723,10 +1723,10 @@
             "u2117": true,
             "u2118": true,
             "u2119": true,
-            "u2120": false,
-            "u2121": false,
-            "u2122": false,
-            "u2123": false,
+            "u2120": true,
+            "u2121": true,
+            "u2122": true,
+            "u2123": true,
             "u2125": true,
             "u2126": true,
             "u2127": true,
@@ -19755,5 +19755,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2529,
-  "savedAt": "2026-07-01T02:02:17.188Z"
+  "savedAt": "2026-07-01T02:02:22.764Z"
 }
