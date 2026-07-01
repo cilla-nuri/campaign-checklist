@@ -5881,18 +5881,18 @@
           "checks": {
             "u1856": true,
             "u1858": true,
-            "u1860": false,
-            "u1865": false,
-            "u1866": false,
-            "u1867": false,
-            "u1868": false,
-            "u1869": false,
-            "u1872": false,
-            "u1873": false,
-            "u1881": false,
-            "u1882": false,
-            "u1883": false,
-            "u2039": false
+            "u1860": true,
+            "u1865": true,
+            "u1866": true,
+            "u1867": true,
+            "u1868": true,
+            "u1869": true,
+            "u1872": true,
+            "u1873": true,
+            "u1881": true,
+            "u1882": true,
+            "u1883": true,
+            "u2039": true
           },
           "savedAt": "2026-06-18"
         },
@@ -19765,5 +19765,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-01T09:09:52.787Z"
+  "savedAt": "2026-07-01T09:10:17.634Z"
 }
