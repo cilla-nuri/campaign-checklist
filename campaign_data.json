@@ -6709,9 +6709,9 @@
             "u1869": true,
             "u1872": true,
             "u1873": true,
-            "u1881": false,
+            "u1881": true,
             "u1882": false,
-            "u1883": false,
+            "u1883": true,
             "u2039": false
           },
           "savedAt": "2026-06-18"
@@ -19765,5 +19765,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-01T09:14:28.457Z"
+  "savedAt": "2026-07-01T09:14:45.767Z"
 }
