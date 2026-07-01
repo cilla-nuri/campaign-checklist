@@ -7342,13 +7342,13 @@
             "u1856": false,
             "u1858": false,
             "u1860": false,
-            "u1865": false,
+            "u1865": true,
             "u1866": false,
             "u1867": false,
             "u1868": false,
             "u1869": false,
-            "u1872": false,
-            "u1873": false,
+            "u1872": true,
+            "u1873": true,
             "u1881": false,
             "u1882": false,
             "u1883": false,
@@ -19765,5 +19765,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-01T09:12:56.353Z"
+  "savedAt": "2026-07-01T09:13:22.232Z"
 }
