@@ -1815,9 +1815,9 @@
           "checks": {
             "u2113": true,
             "u2114": true,
-            "u2116": true,
-            "u2117": true,
-            "u2118": true,
+            "u2116": false,
+            "u2117": false,
+            "u2118": false,
             "u2119": false,
             "u2120": false,
             "u2121": false,
@@ -19755,5 +19755,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2529,
-  "savedAt": "2026-07-01T02:06:37.386Z"
+  "savedAt": "2026-07-01T02:07:13.778Z"
 }
