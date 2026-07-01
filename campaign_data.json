@@ -5579,8 +5579,8 @@
         "u1389": {
           "status": "Pending Review",
           "checks": {
-            "u1856": false,
-            "u1858": false,
+            "u1856": true,
+            "u1858": true,
             "u1860": false,
             "u1865": false,
             "u1866": false,
@@ -19765,5 +19765,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-01T10:23:15.572Z"
+  "savedAt": "2026-07-01T10:23:47.498Z"
 }
