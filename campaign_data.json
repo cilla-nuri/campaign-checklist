@@ -1837,8 +1837,8 @@
         "u2107": {
           "status": "Pending Review",
           "checks": {
-            "u2113": false,
-            "u2114": false,
+            "u2113": true,
+            "u2114": true,
             "u2116": true,
             "u2117": true,
             "u2118": true,
@@ -19755,5 +19755,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2529,
-  "savedAt": "2026-07-01T02:04:45.802Z"
+  "savedAt": "2026-07-01T02:04:50.794Z"
 }
