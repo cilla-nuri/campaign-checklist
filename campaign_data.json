@@ -3352,17 +3352,17 @@
             "u1298": true,
             "u1301": true,
             "u1302": true,
-            "u1303": false,
+            "u1303": true,
             "u1304": true,
             "u1305": true,
             "u1308": true,
             "u1309": true,
             "u1310": true,
-            "u1311": false,
+            "u1311": true,
             "u1312": true,
-            "u1314": false,
+            "u1314": true,
             "u1315": true,
-            "u1316": false,
+            "u1316": true,
             "u1318": true,
             "u1319": true,
             "u1320": true,
@@ -3370,7 +3370,7 @@
             "u1322": true,
             "u1323": true,
             "u1324": true,
-            "u1329": false,
+            "u1329": true,
             "u1328": true
           },
           "savedAt": null
@@ -19760,10 +19760,10 @@
       "period": ""
     }
   },
-  "activeCampaignId": "u1377",
+  "activeCampaignId": "u1262",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-01T10:27:03.599Z"
+  "savedAt": "2026-07-02T03:02:25.700Z"
 }
