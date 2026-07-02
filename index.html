@@ -3192,11 +3192,14 @@ function renderHomePage() {
     }
     var pct = total && c.creators.length ? Math.round(checked/(total*c.creators.length)*100) : 0;
     var isArch = c.archived;
-    return '<div class="campaign-card'+(isArch?' archived':'')+'" onclick="selectCampaignFromHome(\''+id+'\')">'+
-      '<div class="cc-actions">'+'<button class="cc-action-btn" onclick="event.stopPropagation();renameCampaign(\''+id+'\')" title="Rename"><i class="ti ti-pencil"></i></button>'+'<button class="cc-action-btn" onclick="event.stopPropagation();toggleArchive(\''+id+'\')" title="'+(isArch?'Unarchive':'Archive')+'"><i class="ti ti-'+(isArch?'archive-off':'archive')+'"></i></button>'+'</div>'+
+    var asgName = (typeof assigneeName==='function') ? assigneeName(id) : null;
+    var mine = (typeof assignedToMe==='function') && assignedToMe(id);
+    return '<div class="campaign-card'+(isArch?' archived':'')+'" onclick="selectCampaignFromHome(\''+id+'\')" style="'+(mine?'border:1.5px solid #534AB7;':'')+'">'+
+      '<div class="cc-actions">'+'<button class="cc-action-btn" onclick="event.stopPropagation();openAssignModal(\''+id+'\')" title="Assign / handover"><i class="ti ti-user-plus"></i></button>'+'<button class="cc-action-btn" onclick="event.stopPropagation();renameCampaign(\''+id+'\')" title="Rename"><i class="ti ti-pencil"></i></button>'+'<button class="cc-action-btn" onclick="event.stopPropagation();toggleArchive(\''+id+'\')" title="'+(isArch?'Unarchive':'Archive')+'"><i class="ti ti-'+(isArch?'archive-off':'archive')+'"></i></button>'+'</div>'+
       '<div class="cc-name">'+c.name+(isArch?'<span class="cc-archived-badge"><i class="ti ti-archive" style="font-size:8px;"></i> Archived</span>':'')+'</div>'+
       '<div class="cc-meta">'+
         '<span><i class="ti ti-users" style="font-size:10px;"></i> '+c.creators.length+' creators</span>'+
+        (asgName?'<span style="color:'+(mine?'#534AB7':'#888')+';font-weight:600;"><i class="ti ti-user-check" style="font-size:10px;"></i> '+asgName+'</span>':'')+
         '<span><i class="ti ti-checklist" style="font-size:10px;"></i> '+total+' items</span>'+
         (pct>0?'<span style="color:#534AB7;font-weight:600;">'+pct+'%</span>':'')
       +'</div>'+
@@ -4463,6 +4466,16 @@ async function loadAllFromSupabase(){
     sbFetchAll("creator_checks?select=*&order=updated_at.asc")
   ]);
   var camps=results[0], masters=results[1], checks=results[2];
+  /* team profiles + assignments (tolerate missing tables so app never hard-fails) */
+  __profiles={}; __assignByUuid={};
+  try{
+    var profs = await sbFetchAll("profiles?select=id,email,full_name,avatar_url");
+    profs.forEach(function(p){ __profiles[p.id]={name:p.full_name||p.email||"?", email:p.email||"", avatar:p.avatar_url||""}; });
+  }catch(e){ console.warn("profiles table not ready", e); }
+  try{
+    var asg = await sbFetchAll("campaign_assignments?select=campaign_id,assigned_to,assigned_by,assigned_at");
+    asg.forEach(function(a){ __assignByUuid[a.campaign_id]=a; });
+  }catch(e){ console.warn("assignments not ready", e); }
   var byUuid={};
   campaigns={}; __campUuid={};
   camps.forEach(function(r){
@@ -4549,6 +4562,82 @@ async function deleteCreatorRowFromSupabase(cid, handle){
     await sbFetch("creator_checks?campaign_id=eq."+cu+"&creator_handle=eq."+encodeURIComponent(String(handle||"").replace(/^@/,"")),
       {method:"DELETE", prefer:"return=minimal"});
   }catch(e){ console.warn("supabase creator delete failed", e); }
+}
+
+/* ============ ASSIGNMENT & HANDOVER ============ */
+var __profiles = {};      /* userId -> {name,email,avatar} */
+var __assignByUuid = {};  /* campaign uuid -> assignment row */
+
+function getAssignment(cid){
+  var cu = __campUuid[cid];
+  return cu ? (__assignByUuid[cu] || null) : null;
+}
+function assigneeName(cid){
+  var a = getAssignment(cid);
+  if(!a) return null;
+  var p = __profiles[a.assigned_to];
+  return p ? p.name : "Unknown";
+}
+function assignedToMe(cid){
+  var a = getAssignment(cid);
+  return !!(a && window.currentUser && a.assigned_to === window.currentUser.id);
+}
+
+async function assignCampaignTo(cid, userId){
+  var cu = __campUuid[cid];
+  if(!cu){ await saveCampaignToSupabase(cid); cu = __campUuid[cid]; }
+  if(userId){
+    var row = {campaign_id:cu, assigned_to:userId, assigned_by:__userId(), assigned_at:new Date().toISOString()};
+    await sbFetch("campaign_assignments?on_conflict=campaign_id",
+      {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify([row])});
+    __assignByUuid[cu] = row;
+  }else{
+    await sbFetch("campaign_assignments?campaign_id=eq."+cu, {method:"DELETE", prefer:"return=minimal"});
+    delete __assignByUuid[cu];
+  }
+}
+
+function openAssignModal(cid){
+  closeAssignModal();
+  var c = campaigns[cid]; if(!c) return;
+  var cur = getAssignment(cid);
+  var ids = Object.keys(__profiles);
+  var listHtml = ids.length ? ids.map(function(uid){
+    var p = __profiles[uid];
+    var isCur = cur && cur.assigned_to === uid;
+    var isMe = window.currentUser && uid === window.currentUser.id;
+    return '<div onclick="pickAssignee(\''+cid+'\',\''+uid+'\')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;cursor:pointer;border:1.5px solid '+(isCur?'#534AB7':'#f0f0f0')+';background:'+(isCur?'#f0efff':'#fff')+';margin-bottom:6px;">'+
+      (p.avatar ? '<img src="'+p.avatar+'" referrerpolicy="no-referrer" style="width:26px;height:26px;border-radius:50%;"/>' : '<div style="width:26px;height:26px;border-radius:50%;background:#534AB7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">'+(p.name||"?").charAt(0).toUpperCase()+'</div>')+
+      '<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;color:#333;">'+p.name+(isMe?' <span style="color:#999;font-weight:400;">(you)</span>':'')+'</div><div style="font-size:10px;color:#aaa;overflow:hidden;text-overflow:ellipsis;">'+p.email+'</div></div>'+
+      (isCur?'<i class="ti ti-check" style="color:#534AB7;"></i>':'')+
+    '</div>';
+  }).join('') : '<div style="font-size:11px;color:#999;padding:8px;">No team members yet. Ask them to log in once, or run setup_profiles.sql.</div>';
+  var wrap = document.createElement('div');
+  wrap.id = 'assignModal';
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;';
+  wrap.onclick = function(e){ if(e.target===wrap) closeAssignModal(); };
+  wrap.innerHTML = '<div style="background:#fff;border-radius:20px;padding:22px;width:320px;max-height:70vh;overflow:auto;box-shadow:0 8px 40px rgba(0,0,0,0.15);">'+
+    '<div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px;">Assign campaign</div>'+
+    '<div style="font-size:11px;color:#999;margin-bottom:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.name+'</div>'+
+    listHtml+
+    (cur?'<div onclick="pickAssignee(\''+cid+'\',null)" style="text-align:center;padding:8px;font-size:11px;color:#e24b4a;cursor:pointer;font-weight:600;margin-top:4px;">Remove assignment</div>':'')+
+  '</div>';
+  document.body.appendChild(wrap);
+}
+function closeAssignModal(){
+  var m = document.getElementById('assignModal');
+  if(m) m.remove();
+}
+async function pickAssignee(cid, userId){
+  closeAssignModal();
+  try{
+    await assignCampaignTo(cid, userId);
+    showSaveIndicator('saved', userId ? 'Assigned \u2713' : 'Assignment removed');
+  }catch(e){
+    showSaveIndicator('error', 'Assign failed');
+    alert('Could not save assignment: '+(e.message||e));
+  }
+  if(typeof renderHomePage === 'function') renderHomePage();
 }
 
 /* ---- boot after login (called by auth module) ---- */
