@@ -3021,6 +3021,7 @@ async function doAutoSave() {
       showSaveIndicator('saved', 'Saved');
     }
     _lastSaveTime = Date.now();
+    if(window.__rtDirty){ window.__rtDirty = false; __rtScheduleReload(); }
   } catch(e) {
     _pendingSave = true; // retry next time
     showSaveIndicator('error', 'Save failed');
@@ -4535,6 +4536,7 @@ async function saveCampaignToSupabase(cid){
       {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify(rows.slice(i,i+200))});
   }
   /* remove rows for creators no longer in the roster */
+  __rtMuteUntil = Date.now() + 4000;
   var existing = await sbFetchAll("creator_checks?campaign_id=eq."+cu+"&select=creator_handle");
   var keep = {}; rows.forEach(function(r){ keep[r.creator_handle]=1; });
   var gone = existing.map(function(r){return r.creator_handle;}).filter(function(h){return !keep[h];});
@@ -4591,6 +4593,7 @@ async function assignCampaignTo(cid, userId){
     await sbFetch("campaign_assignments?on_conflict=campaign_id",
       {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify([row])});
     __assignByUuid[cu] = row;
+    __rtMuteUntil = Date.now() + 4000;
   }else{
     await sbFetch("campaign_assignments?campaign_id=eq."+cu, {method:"DELETE", prefer:"return=minimal"});
     delete __assignByUuid[cu];
@@ -4640,6 +4643,57 @@ async function pickAssignee(cid, userId){
   if(typeof renderHomePage === 'function') renderHomePage();
 }
 
+/* ============ REALTIME SYNC ============ */
+var __rtDirty = false;
+var __rtTimer = null;
+var __rtMuteUntil = 0;
+var __rtChannel = null;
+
+function __rtScheduleReload(){
+  clearTimeout(__rtTimer);
+  __rtTimer = setTimeout(__rtReload, 1500);
+}
+
+async function __rtReload(){
+  if(_pendingSave){ __rtDirty = true; return; } /* don't stomp local unsaved edits */
+  try{
+    await loadAllFromSupabase();
+  }catch(e){ console.warn("realtime reload failed", e); return; }
+  refreshCampaignSelect();
+  var hp = document.getElementById('homePage');
+  var homeVisible = hp && hp.style.display !== 'none' && hp.offsetParent !== null;
+  if(homeVisible && typeof renderHomePage === 'function') renderHomePage();
+  if(activeCampaignId && campaigns[activeCampaignId]){
+    renderSidebar();
+    if(activeCreatorId) renderChecklist();
+    updateAllPills();
+  }else if(activeCampaignId && !campaigns[activeCampaignId]){
+    /* campaign was deleted by another user */
+    activeCampaignId = null; activeCreatorId = null; resetUI();
+  }
+  showSaveIndicator('saved', 'Synced \u2713');
+}
+
+function __rtOnChange(payload){
+  if(Date.now() < __rtMuteUntil) return; /* our own recent save */
+  var row = payload && (payload.new || payload.old) || {};
+  if(row.updated_by && window.currentUser && row.updated_by === window.currentUser.id) return;
+  if(row.assigned_by && window.currentUser && row.assigned_by === window.currentUser.id) return;
+  __rtScheduleReload();
+}
+
+function startRealtime(){
+  if(__rtChannel || !window.sbClient) return;
+  try{
+    sbClient.realtime.setAuth(window.__sbAccessToken || SB_KEY);
+    __rtChannel = sbClient.channel('app-sync');
+    ['campaigns','campaign_master','creator_checks','campaign_assignments','profiles'].forEach(function(t){
+      __rtChannel.on('postgres_changes', {event:'*', schema:'public', table:t}, __rtOnChange);
+    });
+    __rtChannel.subscribe();
+  }catch(e){ console.warn("realtime not available", e); }
+}
+
 /* ---- boot after login (called by auth module) ---- */
 window.__bootAfterLogin = async function(){
   if(window.__booted) return;
@@ -4667,11 +4721,13 @@ window.__bootAfterLogin = async function(){
   }
   updateSaveButtons();
   showSaveIndicator("saved","Data loaded from Supabase \u2713");
+  startRealtime();
 };
 </script>
 <script>
 /* ============ AUTH (Supabase Google login) ============ */
 var sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+window.sbClient = sbClient;
 window.__sbAccessToken = null;
 window.currentUser = null;
 
@@ -4684,6 +4740,7 @@ function _applySession(session){
   if(session && session.user){
     window.__sbAccessToken = session.access_token;
     window.currentUser = session.user;
+    try{ if(sbClient.realtime) sbClient.realtime.setAuth(session.access_token); }catch(e){}
     var m = session.user.user_metadata || {};
     var chip = document.getElementById("userChip");
     if(chip){
