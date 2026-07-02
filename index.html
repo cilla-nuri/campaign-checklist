@@ -419,6 +419,18 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#f8f8f8;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #efefef;border-radius:24px;padding:44px 48px;text-align:center;box-shadow:0 8px 40px rgba(83,74,183,0.08);max-width:360px;">
+    <div style="font-size:40px;margin-bottom:10px;">&#10024;</div>
+    <div style="font-size:19px;font-weight:600;color:#1a1a1a;margin-bottom:6px;">Campaign Checklist</div>
+    <div style="font-size:12px;color:#999;margin-bottom:26px;">Sign in with your Nurihaus Google account</div>
+    <button onclick="loginWithGoogle()" style="display:inline-flex;align-items:center;gap:10px;padding:10px 26px;border-radius:20px;border:1.5px solid #534AB7;background:#534AB7;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+      <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      Continue with Google
+    </button>
+    <div id="loginError" style="display:none;margin-top:14px;font-size:11px;color:#e24b4a;"></div>
+  </div>
+</div>
 <div class="app">
   <div class="campaign-bar">
     <span class="campaign-bar-label" onclick="showHomePage()" style="cursor:pointer;" title="View all campaigns"><i class="ti ti-layout-grid" style="font-size:11px;margin-right:3px;"></i>Campaign</span>
@@ -439,6 +451,11 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
     <button class="bar-btn" onclick="openPanel('backup')" style="border-color:#534AB755;color:#534AB7;background:#f0efff;"><i class="ti ti-database-export"></i> Backup</button>
     <button class="bar-btn" id="saveAllBtn" onclick="triggerSaveAll()" style="background:#534AB7;color:#fff;font-weight:600;border-color:#534AB7;"><i class="ti ti-device-floppy"></i> Save all</button>
     <button class="bar-btn" onclick="openPanel('savesetup')"><i class="ti ti-settings"></i> Save settings</button>
+    <div id="userChip" style="display:none;align-items:center;gap:7px;padding:3px 10px 3px 4px;border:1.5px solid #e8e8e8;border-radius:20px;background:#fafafa;cursor:default;">
+      <img id="userChipAvatar" src="" style="width:22px;height:22px;border-radius:50%;background:#eee;" referrerpolicy="no-referrer"/>
+      <span id="userChipName" style="font-size:11px;font-weight:600;color:#444;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <i class="ti ti-logout" onclick="logoutUser()" title="Sign out" style="font-size:13px;color:#999;cursor:pointer;"></i>
+    </div>
     <div class="bar-btn danger" onclick="deleteCampaign()" id="delCampaignBtn" style="display:none"><i class="ti ti-trash"></i></div>
   </div>
 
@@ -1868,7 +1885,7 @@ async function sbFetch(path,opts){
   opts=opts||{};
   var res=await fetch(SB_URL+"/rest/v1/"+path,{
     method:opts.method||"GET",
-    headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":opts.prefer||"return=representation"},
+    headers:{"apikey":SB_KEY,"Authorization":"Bearer "+(window.__sbAccessToken||SB_KEY),"Content-Type":"application/json","Prefer":opts.prefer||"return=representation"},
     body:opts.body||undefined
   });
   var txt=await res.text();
@@ -4441,6 +4458,65 @@ function preloadCheckGrades() {
   });
 }
 
+</script>
+<script>
+/* ============ AUTH (Supabase Google login) ============ */
+var sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+window.__sbAccessToken = null;
+window.currentUser = null;
+
+function _showLogin(show){
+  var ov = document.getElementById("loginOverlay");
+  if(ov) ov.style.display = show ? "flex" : "none";
+}
+
+function _applySession(session){
+  if(session && session.user){
+    window.__sbAccessToken = session.access_token;
+    window.currentUser = session.user;
+    var m = session.user.user_metadata || {};
+    var chip = document.getElementById("userChip");
+    if(chip){
+      chip.style.display = "flex";
+      var av = document.getElementById("userChipAvatar");
+      if(m.avatar_url){ av.src = m.avatar_url; av.style.display = "block"; } else { av.style.display = "none"; }
+      document.getElementById("userChipName").textContent = m.full_name || session.user.email || "";
+      chip.title = session.user.email || "";
+    }
+    _showLogin(false);
+  }else{
+    window.__sbAccessToken = null;
+    window.currentUser = null;
+    var chip2 = document.getElementById("userChip");
+    if(chip2) chip2.style.display = "none";
+    _showLogin(true);
+  }
+}
+
+async function loginWithGoogle(){
+  try{
+    var redirect = location.origin + location.pathname;
+    var r = await sbClient.auth.signInWithOAuth({provider:"google", options:{redirectTo: redirect}});
+    if(r.error) throw r.error;
+  }catch(e){
+    var el = document.getElementById("loginError");
+    if(el){ el.style.display = "block"; el.textContent = "Login failed: " + (e.message || e); }
+  }
+}
+
+async function logoutUser(){
+  try{ await sbClient.auth.signOut(); }catch(e){}
+  _applySession(null);
+}
+
+sbClient.auth.onAuthStateChange(function(_event, session){ _applySession(session); });
+
+(async function(){
+  try{
+    var r = await sbClient.auth.getSession();
+    _applySession(r && r.data ? r.data.session : null);
+  }catch(e){ _applySession(null); }
+})();
 </script>
 </body>
 </html>
