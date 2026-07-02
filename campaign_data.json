@@ -17527,9 +17527,9 @@
         "u2175": {
           "status": "Pending Review",
           "checks": {
-            "u1695": false,
-            "u1696": false,
-            "u1697": false,
+            "u1695": true,
+            "u1696": true,
+            "u1697": true,
             "u1699": false,
             "u1703": false,
             "u1706": false,
@@ -19763,10 +19763,10 @@
       "period": ""
     }
   },
-  "activeCampaignId": null,
+  "activeCampaignId": "u2174",
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-02T04:41:03.703Z"
+  "savedAt": "2026-07-02T06:35:34.020Z"
 }
