@@ -3567,7 +3567,8 @@
           },
           "savedAt": null
         }
-      }
+      },
+      "archived": true
     },
     "u1330": {
       "id": "u1330",
@@ -19760,10 +19761,10 @@
       "period": ""
     }
   },
-  "activeCampaignId": "u1262",
+  "activeCampaignId": null,
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-02T03:02:25.700Z"
+  "savedAt": "2026-07-02T04:40:55.984Z"
 }
