@@ -2,43 +2,27 @@ Campaign: #1999 [AGE20'S] ☀️BREAK THE SUN with AGE20'S☀️ (Meta Partnersh
 Creator: musesgalaxy (@musesgalaxy)
 Apply #: 763338
 Status: Revision Requested
-Progress: 0/15 (0%)
-Saved: 2026-07-02 18:20
+Progress: 15/15 (100%)
+Saved: 2026-07-02 18:29
 
 == Format Requirements ==
-[ ] Video length: minimum 30 seconds
-[ ] Aspect ratio: 9:16
-[ ] English voiceover & subtitle required (other languages will not be accepted)
-[ ] Brand name and product name must be spelled accurately (Exacty AGE20'S)
+[x] Video length: minimum 30 seconds
+[x] Aspect ratio: 9:16
+[x] English voiceover & subtitle required (other languages will not be accepted)
+[x] Brand name and product name must be spelled accurately (Exacty AGE20'S)
 
 == Required Scenes ==
-[ ] Need to dramatically crack/break the sun-shaped PR package
-[ ] Need to reveal both sunscreen products inside the package
-[ ] Need to show both sunscreens side-by-side: Yellow (UV Defense Hydro Calming) vs Purple (UV Mineral Priming)
-[ ] Need to apply both sunscreens — half-face or texture close-up — showing smooth spreadability
-[ ] Need to show split-face or split-screen comparison of both finishes
-[ ] Need to include a clear Before & After comparison
-[ ] Need to include CTA overlay: Available on Amazon
-[ ] Need to highlight lightweight texture and no white residue / no chalkiness on both sunscreens
+[x] Need to dramatically crack/break the sun-shaped PR package
+[x] Need to reveal both sunscreen products inside the package
+[x] Need to show both sunscreens side-by-side: Yellow (UV Defense Hydro Calming) vs Purple (UV Mineral Priming)
+[x] Need to apply both sunscreens — half-face or texture close-up — showing smooth spreadability
+[x] Need to show split-face or split-screen comparison of both finishes
+[x] Need to include a clear Before & After comparison
+[x] Need to include CTA overlay: Available on Amazon
+[x] Need to highlight lightweight texture and no white residue / no chalkiness on both sunscreens
 
 == Tag & Hashtag ==
-[ ] Need to tag @age20s_global as Tag Person
-[ ] Need to put on required hashtag : #AmazonPrimeDay #BreaktheSunChallenge #AGE20SSunscreen #KSunScreen #SPFMAX
-[ ] Do not tag Nurilounge account
+[x] Need to tag @age20s_global as Tag Person
+[x] Need to put on required hashtag : #AmazonPrimeDay #BreaktheSunChallenge #AGE20SSunscreen #KSunScreen #SPFMAX
+[x] Do not tag Nurilounge account
 
-== Missing (15) ==
-1. Video length: minimum 30 seconds
-2. Aspect ratio: 9:16
-3. English voiceover & subtitle required (other languages will not be accepted)
-4. Brand name and product name must be spelled accurately (Exacty AGE20'S)
-5. Need to dramatically crack/break the sun-shaped PR package
-6. Need to reveal both sunscreen products inside the package
-7. Need to show both sunscreens side-by-side: Yellow (UV Defense Hydro Calming) vs Purple (UV Mineral Priming)
-8. Need to apply both sunscreens — half-face or texture close-up — showing smooth spreadability
-9. Need to show split-face or split-screen comparison of both finishes
-10. Need to include a clear Before & After comparison
-11. Need to include CTA overlay: Available on Amazon
-12. Need to highlight lightweight texture and no white residue / no chalkiness on both sunscreens
-13. Need to tag @age20s_global as Tag Person
-14. Need to put on required hashtag : #AmazonPrimeDay #BreaktheSunChallenge #AGE20SSunscreen #KSunScreen #SPFMAX
-15. Do not tag Nurilounge account
