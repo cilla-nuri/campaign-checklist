@@ -561,15 +561,14 @@ const LS_KEY="campaignChecklist_v1";
 
 function saveToLocalStorage(){
   try{
+    /* Multi-user mode: campaign data lives in Supabase. Only UI prefs here. */
     const data={
-      campaigns:campaigns,
       activeCampaignId:activeCampaignId,
       ghToken:ghToken,
       ghRepo:ghRepo,
       sheetsId:sheetsId,
       sheetsApiKey:sheetsApiKey,
       appsScriptUrl:appsScriptUrl,
-      idc:idc,
       savedAt:new Date().toISOString()
     };
     localStorage.setItem(LS_KEY,JSON.stringify(data));
@@ -583,14 +582,13 @@ function loadFromLocalStorage(){
     const raw=localStorage.getItem(LS_KEY);
     if(!raw)return false;
     const data=JSON.parse(raw);
-    if(data.campaigns)campaigns=data.campaigns;
+    /* campaigns intentionally NOT restored from localStorage (Supabase is source of truth) */
     if(data.activeCampaignId)activeCampaignId=data.activeCampaignId;
     if(data.ghToken)ghToken=data.ghToken;
     if(data.ghRepo)ghRepo=data.ghRepo;
     if(data.sheetsId)sheetsId=data.sheetsId;
     if(data.sheetsApiKey)sheetsApiKey=data.sheetsApiKey;
     if(data.appsScriptUrl)appsScriptUrl=data.appsScriptUrl;
-    if(data.idc)idc=data.idc;
     return true;
   }catch(e){return false;}
 }
@@ -628,29 +626,7 @@ window.addEventListener("beforeunload",function(e){
   }
 });
 
-/* ---- Init on load ---- */
-window.addEventListener("DOMContentLoaded",function(){
-  const restored=loadFromLocalStorage();
-  if(restored){
-    refreshCampaignSelect();
-    if(activeCampaignId&&campaigns[activeCampaignId]){
-      document.getElementById("delCampaignBtn").style.display="flex";
-      renderSidebar();resetMainPanel();
-      document.getElementById("mainTabs").style.display="flex";
-  hideHomePage();
-      var _c=getCampaign();
-      if(_c&&_c.creators.length){loadCreatorGrades(_c.creators.map(function(cr){return cr.handle;})).then(function(){renderSidebar();});}
-    }else{
-      activeCampaignId=null;resetUI();
-    }
-    updateSaveButtons();
-    if(Object.keys(campaigns).length>0){
-      showLocalSaveToast();
-      const t=document.getElementById("lsToast");
-      if(t)t.textContent="Session restored!";
-    }
-  }
-});
+/* ---- Init on load: handled by __bootAfterLogin() after Supabase Auth session (see data layer + auth module) ---- */
 
 function nowStr(){
   const d=new Date();
@@ -691,7 +667,9 @@ function switchCampaign(id){
 function deleteCampaign(){
   if(!activeCampaignId)return;
   if(!confirm('Delete "'+campaigns[activeCampaignId].name+'"?'))return;
+  var _delId=activeCampaignId;
   delete campaigns[activeCampaignId];activeCampaignId=null;activeCreatorId=null;
+  deleteCampaignFromSupabase(_delId);
   document.getElementById("delCampaignBtn").style.display="none";
   saveToLocalStorage();
   refreshCampaignSelect();resetUI();
@@ -3035,17 +3013,12 @@ async function doAutoSave() {
   _pendingSave = false;
   showSaveIndicator('saving', 'Saving...');
   try {
-    // 1. Save checklist to localStorage (always)
-    saveToLocalStorage();
-    // 2. Save to GitHub if configured (guard: skip if master is empty)
-    var data = JSON.parse(localStorage.getItem('campaignChecklist_v1') || '{}');
-    var c = getCampaign();
-    var masterHasItems = c && c.master && c.master.some(function(s){return s.items && s.items.length > 0;});
-    if (data.ghToken && data.ghRepo) {
-      await saveAllDataToGitHub();
+    saveToLocalStorage(); /* UI prefs only */
+    if (activeCampaignId && campaigns[activeCampaignId]) {
+      await saveCampaignToSupabase(activeCampaignId);
       showSaveIndicator('saved', 'Auto-saved ✓');
     } else {
-      showSaveIndicator('saved', 'Saved locally');
+      showSaveIndicator('saved', 'Saved');
     }
     _lastSaveTime = Date.now();
   } catch(e) {
@@ -4219,6 +4192,7 @@ function removeCreatorFromList(creatorId) {
   if (!confirm('Remove ' + (cr.nick||cr.handle) + ' from this campaign list?')) return;
   c.creators = c.creators.filter(function(x){ return x.id !== creatorId; });
   delete c.state[creatorId];
+  deleteCreatorRowFromSupabase(activeCampaignId, cr.handle);
   if (activeCreatorId === creatorId) {
     activeCreatorId = null;
     resetMainPanel();
@@ -4295,9 +4269,9 @@ async function triggerSaveAll() {
   if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
   try {
     saveToLocalStorage();
-    await saveAllDataToGitHub();
+    await saveAllToSupabase();
     if (btn) { btn.innerHTML = '<i class="ti ti-check"></i> Saved!'; setTimeout(function(){ btn.innerHTML = '<i class="ti ti-device-floppy"></i> Save'; btn.disabled = false; }, 2000); }
-    showSaveIndicator('saved', 'Saved to GitHub ✓');
+    showSaveIndicator('saved', 'Saved to Supabase ✓');
   } catch(e) {
     if (btn) { btn.innerHTML = '<i class="ti ti-device-floppy"></i> Save'; btn.disabled = false; }
     alert('Save failed: ' + e.message + '\n\nMake sure GitHub token & repo are set in Backup settings.');
@@ -4460,6 +4434,153 @@ function preloadCheckGrades() {
 
 </script>
 <script>
+/* ============ SUPABASE DATA LAYER (multi-user) ============ */
+var __campUuid = {};   /* legacyId -> uuid */
+
+function __uuid(){
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c==="x"?r:(r&0x3|0x8);return v.toString(16);});
+}
+function __validDate(s){ return (typeof s==="string" && /^\d{4}-\d{2}-\d{2}$/.test(s)) ? s : null; }
+function __userId(){ return (window.currentUser && window.currentUser.id) || null; }
+
+async function sbFetchAll(path){
+  var out=[], limit=1000, offset=0;
+  for(;;){
+    var sep = path.indexOf("?")>=0 ? "&" : "?";
+    var page = await sbFetch(path+sep+"limit="+limit+"&offset="+offset);
+    out = out.concat(page||[]);
+    if(!page || page.length < limit) break;
+    offset += limit;
+  }
+  return out;
+}
+
+async function loadAllFromSupabase(){
+  var results = await Promise.all([
+    sbFetchAll("campaigns?select=*&order=created_at.asc"),
+    sbFetchAll("campaign_master?select=campaign_id,sections"),
+    sbFetchAll("creator_checks?select=*&order=updated_at.asc")
+  ]);
+  var camps=results[0], masters=results[1], checks=results[2];
+  var byUuid={};
+  campaigns={}; __campUuid={};
+  camps.forEach(function(r){
+    var lid = r.legacy_id || r.id;
+    __campUuid[lid] = r.id; byUuid[r.id] = lid;
+    var s = r.settings || {};
+    var c = {id:lid, name:r.name||lid, creators:[], master:[], state:{}};
+    if(r.pay_type) c.payType = r.pay_type;
+    if(r.deadline) c.deadline = r.deadline;
+    if(r.period) c.period = r.period;
+    if(r.archived) c.archived = true;
+    if(s.sjSettings) c.sjSettings = s.sjSettings;
+    if(s.feedbackTemplates) c.feedbackTemplates = s.feedbackTemplates;
+    campaigns[lid] = c;
+  });
+  masters.forEach(function(r){
+    var lid = byUuid[r.campaign_id];
+    if(campaigns[lid]) campaigns[lid].master = r.sections || [];
+  });
+  checks.forEach(function(r){
+    var lid = byUuid[r.campaign_id]; var c = campaigns[lid]; if(!c) return;
+    var crid = r.legacy_creator_id || ("h_"+r.creator_handle);
+    c.creators.push({id:crid, handle:"@"+r.creator_handle, nick:r.nick||r.creator_handle, applyNum:r.apply_num||""});
+    if((r.checks && Object.keys(r.checks).length) || r.status){
+      c.state[crid] = {status:r.status||undefined, checks:r.checks||{}, savedAt:(r.updated_at||"").slice(0,10)};
+    }
+  });
+  /* recompute id counter to avoid collisions with loaded legacy ids */
+  var mx = idc;
+  JSON.stringify(campaigns).replace(/"u(\d+)"/g, function(m,n){ var v=parseInt(n,10); if(v>mx)mx=v; return m; });
+  idc = mx;
+}
+
+async function saveCampaignToSupabase(cid){
+  var c = campaigns[cid]; if(!c) return;
+  var cu = __campUuid[cid]; var isNew = !cu;
+  if(isNew){ cu = __uuid(); __campUuid[cid] = cu; }
+  var settings = {};
+  if(c.sjSettings) settings.sjSettings = c.sjSettings;
+  if(c.feedbackTemplates) settings.feedbackTemplates = c.feedbackTemplates;
+  var row = {id:cu, legacy_id:cid, name:c.name, pay_type:c.payType||null, deadline:__validDate(c.deadline),
+             period:c.period||null, archived:!!c.archived, settings:settings};
+  if(isNew) row.owner_id = __userId();
+  await sbFetch("campaigns?on_conflict=id", {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify([row])});
+  await sbFetch("campaign_master?on_conflict=campaign_id", {method:"POST", prefer:"resolution=merge-duplicates,return=minimal",
+    body:JSON.stringify([{campaign_id:cu, sections:c.master||[], updated_by:__userId()}])});
+  var nowIso = new Date().toISOString();
+  var rows = (c.creators||[]).map(function(cr){
+    var st = (c.state||{})[cr.id] || {};
+    return {campaign_id:cu, creator_handle:String(cr.handle||"").replace(/^@/,""), checks:st.checks||{},
+            status:st.status||null, legacy_creator_id:cr.id||null,
+            apply_num:cr.applyNum?String(cr.applyNum):null, nick:cr.nick||null,
+            updated_by:__userId(), updated_at:nowIso};
+  }).filter(function(r){ return r.creator_handle; });
+  for(var i=0;i<rows.length;i+=200){
+    await sbFetch("creator_checks?on_conflict=campaign_id,creator_handle",
+      {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify(rows.slice(i,i+200))});
+  }
+  /* remove rows for creators no longer in the roster */
+  var existing = await sbFetchAll("creator_checks?campaign_id=eq."+cu+"&select=creator_handle");
+  var keep = {}; rows.forEach(function(r){ keep[r.creator_handle]=1; });
+  var gone = existing.map(function(r){return r.creator_handle;}).filter(function(h){return !keep[h];});
+  for(var g=0;g<gone.length;g+=100){
+    var list = gone.slice(g,g+100).map(function(h){return '"'+h.replace(/"/g,'')+'"';}).join(",");
+    await sbFetch("creator_checks?campaign_id=eq."+cu+"&creator_handle=in.("+encodeURIComponent(list)+")",
+      {method:"DELETE", prefer:"return=minimal"});
+  }
+}
+
+async function saveAllToSupabase(){
+  var ids = Object.keys(campaigns);
+  for(var i=0;i<ids.length;i++) await saveCampaignToSupabase(ids[i]);
+}
+
+async function deleteCampaignFromSupabase(cid){
+  var cu = __campUuid[cid];
+  if(cu){ try{ await sbFetch("campaigns?id=eq."+cu, {method:"DELETE", prefer:"return=minimal"}); }catch(e){ console.warn("supabase delete failed", e); } }
+  delete __campUuid[cid];
+}
+
+async function deleteCreatorRowFromSupabase(cid, handle){
+  var cu = __campUuid[cid]; if(!cu) return;
+  try{
+    await sbFetch("creator_checks?campaign_id=eq."+cu+"&creator_handle=eq."+encodeURIComponent(String(handle||"").replace(/^@/,"")),
+      {method:"DELETE", prefer:"return=minimal"});
+  }catch(e){ console.warn("supabase creator delete failed", e); }
+}
+
+/* ---- boot after login (called by auth module) ---- */
+window.__bootAfterLogin = async function(){
+  if(window.__booted) return;
+  window.__booted = true;
+  loadFromLocalStorage(); /* UI prefs + last active campaign only */
+  showSaveIndicator("saving","Loading data...");
+  try{
+    await loadAllFromSupabase();
+  }catch(e){
+    window.__booted = false;
+    showSaveIndicator("error","Load failed");
+    alert("Could not load data from Supabase: "+(e.message||e));
+    return;
+  }
+  refreshCampaignSelect();
+  if(activeCampaignId && campaigns[activeCampaignId]){
+    document.getElementById("delCampaignBtn").style.display="flex";
+    renderSidebar(); resetMainPanel();
+    document.getElementById("mainTabs").style.display="flex";
+    hideHomePage();
+    var _c = getCampaign();
+    if(_c && _c.creators.length){ loadCreatorGrades(_c.creators.map(function(cr){return cr.handle;})).then(function(){renderSidebar();}); }
+  }else{
+    activeCampaignId = null; resetUI();
+  }
+  updateSaveButtons();
+  showSaveIndicator("saved","Data loaded from Supabase \u2713");
+};
+</script>
+<script>
 /* ============ AUTH (Supabase Google login) ============ */
 var sbClient = window.supabase.createClient(SB_URL, SB_KEY);
 window.__sbAccessToken = null;
@@ -4484,6 +4605,7 @@ function _applySession(session){
       chip.title = session.user.email || "";
     }
     _showLogin(false);
+    if(window.__bootAfterLogin) window.__bootAfterLogin();
   }else{
     window.__sbAccessToken = null;
     window.currentUser = null;
