@@ -17719,7 +17719,7 @@
             "u1695": true,
             "u1696": true,
             "u1697": true,
-            "u1699": false,
+            "u1699": true,
             "u1703": true,
             "u1706": true,
             "u1708": true,
@@ -17730,7 +17730,7 @@
             "u1732": true,
             "u1784": true,
             "u1786": true,
-            "u1787": false
+            "u1787": true
           },
           "savedAt": null
         },
@@ -19755,9 +19755,111 @@
     "u2530": {
       "id": "u2530",
       "name": "#3065 [UGC PAID💸] 30-Second Body Peel, Don't Scrub🤫",
-      "creators": [],
+      "creators": [
+        {
+          "id": "u2531",
+          "applyNum": "775939",
+          "handle": "@oliason",
+          "nick": "Olia Son"
+        },
+        {
+          "id": "u2532",
+          "applyNum": "775332",
+          "handle": "@michie07",
+          "nick": "Michie"
+        },
+        {
+          "id": "u2533",
+          "applyNum": "775224",
+          "handle": "@marakim0003",
+          "nick": "MaraKimma"
+        },
+        {
+          "id": "u2534",
+          "applyNum": "775187",
+          "handle": "@lifeofines",
+          "nick": "LuckyThorn6710"
+        },
+        {
+          "id": "u2535",
+          "applyNum": "775169",
+          "handle": "@hanykimmy0808",
+          "nick": "Hany Kimmy"
+        },
+        {
+          "id": "u2536",
+          "applyNum": "774905",
+          "handle": "@melis.kr",
+          "nick": "melis demir"
+        },
+        {
+          "id": "u2537",
+          "applyNum": "774685",
+          "handle": "@Fede",
+          "nick": "Fede"
+        },
+        {
+          "id": "u2538",
+          "applyNum": "774623",
+          "handle": "@olyalinda",
+          "nick": "Olya"
+        },
+        {
+          "id": "u2539",
+          "applyNum": "774588",
+          "handle": "@minjina",
+          "nick": "minjin"
+        },
+        {
+          "id": "u2540",
+          "applyNum": "774490",
+          "handle": "@linneth",
+          "nick": "chance"
+        }
+      ],
       "master": [],
-      "state": {},
+      "state": {
+        "u2531": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2532": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2533": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2534": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2535": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2536": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2537": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2538": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2539": {
+          "checks": {},
+          "status": "Pending Review"
+        },
+        "u2540": {
+          "checks": {},
+          "status": "Pending Review"
+        }
+      },
       "payType": "",
       "deadline": "",
       "period": ""
@@ -19767,6 +19869,6 @@
   "sheetsId": "",
   "sheetsApiKey": "",
   "appsScriptUrl": "",
-  "idc": 2530,
-  "savedAt": "2026-07-02T06:38:17.651Z"
+  "idc": 2540,
+  "savedAt": "2026-07-02T09:10:40.459Z"
 }
