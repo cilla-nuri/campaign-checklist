@@ -17510,7 +17510,7 @@
           "items": [
             {
               "id": "u1784",
-              "text": "Need to tag @age20s_global"
+              "text": "Need to tag @age20s_global as Tag Person"
             },
             {
               "id": "u1786",
@@ -19768,5 +19768,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-02T06:36:31.060Z"
+  "savedAt": "2026-07-02T06:36:42.145Z"
 }
