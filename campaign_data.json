@@ -444,7 +444,8 @@
           },
           "savedAt": "2026-05-28 16:34"
         }
-      }
+      },
+      "archived": true
     },
     "u596": {
       "id": "u596",
@@ -1132,7 +1133,8 @@
           },
           "savedAt": null
         }
-      }
+      },
+      "archived": true
     },
     "u891": {
       "id": "u891",
@@ -19766,5 +19768,5 @@
   "sheetsApiKey": "",
   "appsScriptUrl": "",
   "idc": 2530,
-  "savedAt": "2026-07-02T04:40:55.984Z"
+  "savedAt": "2026-07-02T04:41:03.703Z"
 }
