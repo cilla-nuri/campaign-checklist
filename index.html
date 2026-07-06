@@ -495,7 +495,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
         <div id="creatorNoteBar" style="display:none;font-size:11px;color:#f59e0b;background:#fff8e1;padding:3px 8px;border-radius:6px;margin-top:3px;max-width:600px;"></div>
         </div>
         <div class="main-header-right">
-          <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openPanel('feedback')"><i class="ti ti-message-2"></i> Feedback</button>
+          <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openFeedbackAndSetRevision()"><i class="ti ti-message-2"></i> Feedback</button>
           <div class="sbadge" id="sbadge" style="display:none" onclick="cycleStatus()"></div>
         </div>
       </div>
@@ -842,14 +842,14 @@ function renderChecklist(){
 function toggle(creatorId,iid){
   const c=getCampaign();if(!c)return;
   c.state[creatorId].checks[iid]=!c.state[creatorId].checks[iid];
-  // Auto-approve when all items checked
-  if(getPct(c,creatorId)===100){
-    if(c.state[creatorId].status!=='Approved'){
-      c.state[creatorId].status='Approved';
-      // Update status button UI
-      var sBtn=document.getElementById('statusBtn');
-      if(sBtn){sBtn.textContent='Approved';sBtn.className=sBtn.className.replace(/status-\S+/,'')+'status-approved';}
-    }
+  var pct=getPct(c,creatorId);
+  var cur=c.state[creatorId].status||'';
+  if(pct===100){
+    c.state[creatorId].status='Approved';
+  } else if(pct>0 && cur==='Pending Review'){
+    c.state[creatorId].status='In Review';
+  } else if(pct===0 && cur==='In Review'){
+    c.state[creatorId].status='Pending Review';
   }
   renderChecklist();updatePill(creatorId);markChanged();
 }
@@ -4795,6 +4795,22 @@ sbClient.auth.onAuthStateChange(function(_event, session){ _applySession(session
     _applySession(r && r.data ? r.data.session : null);
   }catch(e){ _applySession(null); }
 })();
+</script>
+
+<script>
+function openFeedbackAndSetRevision(){
+  var c=getCampaign();
+  if(!c||!activeCreatorId){openPanel('feedback');return;}
+  if(getPct(c,activeCreatorId)<100){
+    var cur=c.state[activeCreatorId].status||'';
+    if(cur!=='Revision Requested'&&cur!=='Approved'){
+      c.state[activeCreatorId].status='Revision Requested';
+      updatePill(activeCreatorId);
+      markChanged();
+    }
+  }
+  openPanel('feedback');
+}
 </script>
 </body>
 </html>
