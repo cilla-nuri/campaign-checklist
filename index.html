@@ -2348,7 +2348,7 @@ function downloadSjSelected(fmt){
     var g=getCreatorGrade(r.username)||{};
     var ttUrl=r._tt_url||g.tiktok_url||"";
     var igUrl=r._ig_url||g.instagram_url||"";
-    return[r._applyNum,r.username,r.nickname,"accepted",ttUrl,r.tiktok_followers,igUrl,r.instagram_followers];
+    return[r._applyNum,r.username.replace(/^@/,''),r.nickname,"accepted",ttUrl,r.tiktok_followers,igUrl,r.instagram_followers];
   });
   var csv=[hdrs].concat(rows).map(function(row){
     return row.map(function(v){var s=String(v);return s.indexOf(",")>=0?'"'+s+'"':s;}).join(",");
