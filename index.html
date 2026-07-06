@@ -447,7 +447,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
     <button class="bar-btn new" onclick="openPanel('newcampaign')"><i class="ti ti-plus"></i> New</button>
     <div class="bar-spacer"></div>
     <button class="bar-btn" onclick="openPanel('creators')"><i class="ti ti-users"></i> Creators</button>
-    <button class="bar-btn" onclick="openPanel('howto')"><i class="ti ti-help-circle"></i> How to use</button>
+    <div style="display:flex;border-radius:8px;border:1.5px solid #e0e0e0;overflow:hidden;margin-right:2px;flex-shrink:0;"><button id="langEN" onclick="setLang('en')" style="padding:4px 10px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#534AB7;color:#fff;">EN</button><button id="langKR" onclick="setLang('kr')" style="padding:4px 10px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#fff;color:#888;">KR</button></div><button class="bar-btn" onclick="openPanel('howto')"><i class="ti ti-help-circle"></i> How to use</button>
     <button class="bar-btn" onclick="openPanel('backup')" style="border-color:#534AB755;color:#534AB7;background:#f0efff;"><i class="ti ti-database-export"></i> Backup</button>
     <button class="bar-btn" id="saveAllBtn" onclick="triggerSaveAll()" style="background:#534AB7;color:#fff;font-weight:600;border-color:#534AB7;"><i class="ti ti-device-floppy"></i> Save all</button>
     <button class="bar-btn" onclick="openPanel('savesetup')"><i class="ti ti-settings"></i> Save settings</button>
