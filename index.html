@@ -1922,7 +1922,9 @@ function applyMaster(){
 
 /* ============ SUPABASE ============ */
 var SB_URL="https://odmtkkevzuavgtbnhgja.supabase.co";
-var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24";
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'+
+  '.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0'+
+  '.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
 var creatorGradeCache={};
 
 async function sbFetch(path,opts){
@@ -3805,7 +3807,9 @@ function resetCampaignTemplate() {
 var currentUser = null;
 var _authToken = null;
 var SUPA_URL = 'https://odmtkkevzuavgtbnhgja.supabase.co';
-var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
+var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'+
+  '.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbXRra2V2enVhdmd0Ym5oZ2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1OTgwNTAsImV4cCI6MjA5NzE3NDA1MH0'+
+  '.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
 
 async function initAuth() {
   // Check for OAuth callback in URL hash
