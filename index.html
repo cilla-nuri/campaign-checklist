@@ -542,6 +542,71 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 
 <script>
 var sidebarSortMode="default";
+var appLang = (localStorage.getItem('appLang') || 'en');
+var T = {
+  en: {
+    'Pending Review': 'Pending Review',
+    'In Review': 'In Review',
+    'Revision Requested': 'Revision Requested',
+    'Approved': 'Approved',
+    'status_btn': 'Status',
+    'feedback_btn': 'Feedback',
+    'edit_grade': 'Edit grade',
+    'profile': 'Profile',
+    'import': 'Import',
+    'master': 'Master',
+    'load': 'Load',
+    'creators': 'Creators',
+    'how_to_use': 'How to use',
+    'backup': 'Backup',
+    'save_all': 'Save all',
+    'new_campaign': '+ New',
+    'search_creator': 'Search creator...',
+    'upload_csv': 'Upload CSV',
+    'select_tab': '줄 선정',
+    'check_tab': '☑ Check'
+  },
+  kr: {
+    'Pending Review': '검토 대기',
+    'In Review': '검토 중',
+    'Revision Requested': '수정 요청',
+    'Approved': '승인',
+    'status_btn': '상태',
+    'feedback_btn': '피드백',
+    'edit_grade': '등급 수정',
+    'profile': '프로필',
+    'import': '가져오기',
+    'master': '마스터',
+    'load': '불러오기',
+    'creators': '크리에이터',
+    'how_to_use': '사용법',
+    'backup': '백업',
+    'save_all': '전체 저장',
+    'new_campaign': '+ 새 캠페인',
+    'search_creator': '크리에이터 검색...',
+    'upload_csv': 'CSV 업로드',
+    'select_tab': '줄 선정',
+    'check_tab': '☑ 체크'
+  }
+};
+function t(key) { return (T[appLang] && T[appLang][key]) || (T['en'][key]) || key; }
+function setLang(lang) {
+  appLang = lang;
+  localStorage.setItem('appLang', lang);
+  applyLang();
+}
+function applyLang() {
+  // Update toggle buttons
+  var enBtn = document.getElementById('langBtnEN');
+  var krBtn = document.getElementById('langBtnKR');
+  if (enBtn) { enBtn.style.background = appLang==='en'?'#534AB7':''; enBtn.style.color = appLang==='en'?'#fff':''; }
+  if (krBtn) { krBtn.style.background = appLang==='kr'?'#534AB7':''; krBtn.style.color = appLang==='kr'?'#fff':''; }
+  // Update static labels
+  var els = document.querySelectorAll('[data-t]');
+  els.forEach(function(el) { el.textContent = t(el.getAttribute('data-t')); });
+  // Re-render sidebar status pills
+  if (typeof renderSidebar === 'function') renderSidebar();
+}
 const AVC=["#e8e6ff","#d1f5e8","#fde8d8","#fce4ef","#daeaf8","#e5f5ce","#fff3d6","#fde8f0"];
 const AVT=["#534AB7","#085041","#712B13","#72243E","#0C447C","#27500A","#7a5200","#7a1a3a"];
 const STATUSES=["Pending Review","In Review","Revision Requested","Approved"];
@@ -815,7 +880,7 @@ function selectCreator(id){
 function renderBadge(){
   const c=getCampaign();if(!c||!activeCreatorId)return;
   const s=c.state[activeCreatorId].status,b=document.getElementById("sbadge");
-  b.textContent=s;b.style.color=SCOL[s];b.style.borderColor=SCOL[s]+"55";b.style.background=SCOL[s]+"18";
+  b.textContent=t(s);b.style.color=SCOL[s];b.style.borderColor=SCOL[s]+"55";b.style.background=SCOL[s]+"18";
 }
 
 function cycleStatus(){
@@ -1427,35 +1492,27 @@ function openPanel(type){
 
 
 function renderHowToPanel(){
-  document.getElementById("panelBody").innerHTML=
-    '<div class="how-to"><div class="how-to-title"><i class="ti ti-rocket" style="font-size:13px;"></i> Each new campaign</div>'+
-    '<div class="how-step"><div class="step-num">1</div><div class="step-text"><strong>Send guideline to Claude</strong> (same project) - get checklist CSV back</div></div>'+
-    '<div class="how-step"><div class="step-num">2</div><div class="step-text"><strong>+ New</strong> - name the campaign</div></div>'+
-    '<div class="how-step"><div class="step-num">3</div><div class="step-text"><strong>Master</strong> - import checklist CSV from Claude</div></div>'+
-    '<div class="how-step"><div class="step-num">4</div><div class="step-text"><strong>Import</strong> - upload creator CSV (apply number, ID, nickname)</div></div>'+
-    '<div class="how-step"><div class="step-num">5</div><div class="step-text">Select creator - check off items - click <strong>Feedback</strong> to copy message</div></div>'+
-    '<div class="how-step"><div class="step-num">6</div><div class="step-text">Click <strong>Save</strong> (GitHub) to save everything to repo</div></div>'+
-    '</div>'+
-    '<div class="divider"></div>'+
-    '<div class="how-to"><div class="how-to-title"><i class="ti ti-brand-github" style="font-size:13px;"></i> Open on a new browser / device</div>'+
-    '<div class="how-step"><div class="step-num">1</div><div class="step-text">Click <strong>Backup</strong> (top bar) - <strong>Scan repo for campaigns</strong></div></div>'+
-    '<div class="how-step"><div class="step-num">2</div><div class="step-text">All campaigns appear in dropdown with their real names</div></div>'+
-    '<div class="how-step"><div class="step-num">3</div><div class="step-text">Select campaign - click <strong>Load</strong> (sidebar) - everything restores: creators, checklist, progress</div></div>'+
-    '</div>'+
-    '<div class="divider"></div>'+
-    '<div class="how-to"><div class="how-to-title"><i class="ti ti-message-2" style="font-size:13px;"></i> Feedback message (all items checked)</div>'+
-    '<div class="how-step"><div class="step-num">→</div><div class="step-text">Choose <strong>Payment type</strong>: Payment / Jelly only</div></div>'+
-    '<div class="how-step"><div class="step-num">→</div><div class="step-text">Choose <strong>Tone</strong>: All good / Warning / Strong</div></div>'+
-    '<div class="how-step"><div class="step-num">→</div><div class="step-text">Switch EN / Korean - edit if needed - <strong>Copy</strong></div></div>'+
-    '</div>'+
-    '<div class="divider"></div>'+
-    '<div class="how-to"><div class="how-to-title"><i class="ti ti-device-floppy" style="font-size:13px;"></i> Save options</div>'+
-    '<div class="how-step"><div class="step-num" style="background:#1a1a1a15;color:#1a1a1a;"><i class="ti ti-brand-github" style="font-size:10px;"></i></div><div class="step-text"><strong>Save (black)</strong> - saves review + creators + checklist to GitHub repo</div></div>'+
-    '<div class="how-step"><div class="step-num" style="background:#1D9E7515;color:#1D9E75;"><i class="ti ti-table" style="font-size:10px;"></i></div><div class="step-text"><strong>Save (green)</strong> - appends row to Google Sheets (for team)</div></div>'+
-    '<div class="how-step"><div class="step-num" style="background:#e8e6ff;color:#534AB7;">S</div><div class="step-text"><strong>Save locally</strong> - saves to browser localStorage (instant)</div></div>'+
-    '<div class="how-step"><div class="step-num" style="background:#e5f5ce;color:#27500A;">↓</div><div class="step-text"><strong>Export</strong> - download CSV or text for Notion upload</div></div>'+
-    '</div>';
-  document.getElementById("panelFooter").innerHTML='<span class="pf-warn"></span><button class="apply-btn" onclick="closePanel()">Got it</button>';
+  var isKR = appLang === 'kr';
+  document.getElementById('panelTitle').textContent = isKR ? '사용법' : 'How to use';
+  document.getElementById('panelBody').innerHTML = isKR ? `
+    <div class="how-to">
+      <div class="how-to-title"><i class="ti ti-rocket" style="font-size:18px;"></i> 캠페인 체크리스트 앱</div>
+      <div class="how-to-section"><div class="how-to-step">1</div><div><b>새 캠페인 만들기</b><br>상단의 + New 버튼으로 캠페인을 만드세요.</div></div>
+      <div class="how-to-section"><div class="how-to-step">2</div><div><b>마스터 체크리스트 설정</b><br>Master 버튼 → CSV 업로드 또는 직접 추가 → Apply to all</div></div>
+      <div class="how-to-section"><div class="how-to-step">3</div><div><b>선정 탭: 크리에이터 불러오기</b><br>Quest CSV 업로드 → 상태 설정 (pre-selected/selected)</div></div>
+      <div class="how-to-section"><div class="how-to-step">4</div><div><b>체크 탭: 콘텐츠 검토</b><br>사이드바에서 크리에이터 선택 → 체크리스트 항목 체크 → 피드백 작성</div></div>
+      <div class="how-to-section"><div class="how-to-step">5</div><div><b>자동 상태 변경</b><br>항목 체크 시 → 검토 중 / 피드백 클릭 시 → 수정 요청 / 100% 완료 → 승인</div></div>
+      <div class="how-to-section"><div class="how-to-step">6</div><div><b>저장</b><br>Save all 버튼으로 GitHub에 전체 저장</div></div>
+    </div>` : `
+    <div class="how-to">
+      <div class="how-to-title"><i class="ti ti-rocket" style="font-size:18px;"></i> Campaign Checklist App</div>
+      <div class="how-to-section"><div class="how-to-step">1</div><div><b>Create a campaign</b><br>Click + New in the top bar to create a new campaign.</div></div>
+      <div class="how-to-section"><div class="how-to-step">2</div><div><b>Set up master checklist</b><br>Click Master → upload CSV or add items manually → Apply to all</div></div>
+      <div class="how-to-section"><div class="how-to-step">3</div><div><b>선정 tab: Import creators</b><br>Upload Quest CSV → set status (pre-selected / selected)</div></div>
+      <div class="how-to-section"><div class="how-to-step">4</div><div><b>Check tab: Review content</b><br>Select creator in sidebar → check items → write feedback</div></div>
+      <div class="how-to-section"><div class="how-to-step">5</div><div><b>Auto status</b><br>Check item → In Review / Click Feedback → Revision Requested / 100% → Approved</div></div>
+      <div class="how-to-section"><div class="how-to-step">6</div><div><b>Save</b><br>Click Save all to save everything to GitHub</div></div>
+    </div>`;
 }
 
 function renderNewCampaignPanel(){
