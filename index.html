@@ -842,6 +842,15 @@ function renderChecklist(){
 function toggle(creatorId,iid){
   const c=getCampaign();if(!c)return;
   c.state[creatorId].checks[iid]=!c.state[creatorId].checks[iid];
+  // Auto-approve when all items checked
+  if(getPct(c,creatorId)===100){
+    if(c.state[creatorId].status!=='Approved'){
+      c.state[creatorId].status='Approved';
+      // Update status button UI
+      var sBtn=document.getElementById('statusBtn');
+      if(sBtn){sBtn.textContent='Approved';sBtn.className=sBtn.className.replace(/status-\S+/,'')+'status-approved';}
+    }
+  }
   renderChecklist();updatePill(creatorId);markChanged();
 }
 
