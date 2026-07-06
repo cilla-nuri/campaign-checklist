@@ -3677,6 +3677,7 @@ function applyPlaceholders(template, nick, missing) {
   var missingList = missing.map(function(m, i){ return (i+1) + '. ' + m; }).join('\n');
   return template
     .replace(/\{creator\}/g, nick || '')
+    .replace(/\{nickname\}/g, nick || '')
     .replace(/\{brand\}/g, brand)
     .replace(/\{product\}/g, brand)
     .replace(/\{missing\}/g, missingList)
