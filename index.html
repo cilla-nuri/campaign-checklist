@@ -1581,7 +1581,7 @@ function handleCreatorCSV(file){
     const header=lines[0].split(",").map(function(h){return h.trim().toLowerCase().replace(/['"]/g,"");});
     const applyIdx=header.findIndex(function(h){return h.includes("apply")||h==="no"||h==="#"||h.includes("number");});
     const idIdx=header.findIndex(function(h){return h==="id"||h.includes("username")||h.includes("handle");});
-    const nickIdx=header.findIndex(function(h){return h.includes("nick")||h.includes("name");});
+    const nickIdx=header.findIndex(function(h){return h.includes("nick")||(h.includes("name")&&!h.includes("username")&&!h.includes("handle")&&h!=="apply number");});
     if(applyIdx<0||idIdx<0||nickIdx<0){document.getElementById("pfWarn").textContent="Could not detect columns.";return;}
     parsedCreators=[];var preview=[];
     for(var i=1;i<lines.length;i++){
