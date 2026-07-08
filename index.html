@@ -464,6 +464,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
       <div class="sidebar-header">
         <div class="header-actions">
           <button class="hbtn" onclick="openPanel('csv')"><i class="ti ti-upload"></i> Import</button>
+          <button class="hbtn" onclick="openPanel('addcreator')"><i class="ti ti-user-plus"></i> Add</button>
           <button class="hbtn" onclick="openPanel('master')"><i class="ti ti-adjustments-horizontal"></i> Master</button>
           <button class="hbtn" style="border-color:#1a1a1a33;color:#1a1a1a;" onclick="openPanel('loadgithub')"><i class="ti ti-brand-github"></i> Load</button>
         </div>
@@ -1483,6 +1484,7 @@ function openPanel(type){
   else if(type==="export")renderExportPanel();
   else if(type==="feedbacktemplate")renderFeedbackTemplatePanel();
   else if(type==="editcampmeta")renderEditCampMetaPanel();
+  else if(type==="addcreator")renderAddCreatorPanel();
   else if(type==="editcreator"){document.getElementById('panelTitle').textContent='Edit creator';document.getElementById('panelSub').textContent='Update handle, nickname, or display name';}
   else if(type==="loadgithub")renderLoadGitHubPanel();
   else if(type==="backup")renderBackupPanel();
@@ -4871,6 +4873,74 @@ function openFeedbackAndSetRevision(){
     }
   }
   openPanel('feedback');
+}
+</script>
+<script>
+/* ============ ADD CREATOR MANUALLY ============ */
+function renderAddCreatorPanel() {
+  if (!activeCampaignId) {
+    document.getElementById('panelBody').innerHTML = '<p class="hint" style="color:#e24b4a;">Please select a campaign first.</p>';
+    document.getElementById('panelFooter').innerHTML = '';
+    return;
+  }
+  document.getElementById('panelTitle').textContent = 'Add creator';
+  document.getElementById('panelSub').textContent = 'Manually add to Check list';
+  document.getElementById('panelBody').innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">'
+    + '<div><label class="field-label">USERNAME (ID) <span style="color:#e24b4a;">*</span></label>'
+    + '<input id="acUsername" type="text" placeholder="e.g. sydneyreyes" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0e0e0;font-size:13px;outline:none;"/></div>'
+    + '<div><label class="field-label">NICKNAME</label>'
+    + '<input id="acNick" type="text" placeholder="e.g. Sydney" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0e0e0;font-size:13px;outline:none;"/></div>'
+    + '<div><label class="field-label">APPLY NUMBER <span style="font-weight:400;color:#bbb;">(optional)</span></label>'
+    + '<input id="acApply" type="text" placeholder="e.g. 774801" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid #e0e0e0;font-size:13px;outline:none;"/></div>'
+    + '</div>';
+  document.getElementById('panelFooter').innerHTML =
+    '<span class="pf-warn" id="acWarn"></span>'
+    + '<button class="apply-btn" onclick="addCreatorManually()">Add to Check list</button>';
+}
+
+function addCreatorManually() {
+  var c = getCampaign();
+  if (!c) return;
+  var username = (document.getElementById('acUsername').value || '').trim();
+  var nick = (document.getElementById('acNick').value || '').trim();
+  var apply = (document.getElementById('acApply').value || '').trim();
+  var warn = document.getElementById('acWarn');
+
+  if (!username) { if (warn) warn.textContent = 'Username is required.'; return; }
+  
+  // Clean username (remove @ if present)
+  var cleanHandle = username.startsWith('@') ? username : '@' + username;
+
+  // Check duplicate
+  var exists = c.creators.find(function(x) {
+    return x.handle.replace(/^@/, '').toLowerCase() === cleanHandle.replace(/^@/, '').toLowerCase();
+  });
+  if (exists) { if (warn) warn.textContent = 'Creator already in list.'; return; }
+
+  // Generate apply number if not provided
+  var applyNum = apply || ('M' + Date.now().toString().slice(-6));
+
+  var newCr = {
+    id: uid(),
+    applyNum: applyNum,
+    handle: cleanHandle,
+    nick: nick || username,
+    displayName: nick || null
+  };
+  c.creators.push(newCr);
+  c.state[newCr.id] = { checks: {}, status: 'Pending Review' };
+  c.master.forEach(function(s) {
+    s.items.forEach(function(it) { c.state[newCr.id].checks[it.id] = false; });
+  });
+
+  saveToLocalStorage();
+  markChanged();
+  renderSidebar();
+  closePanel();
+  // Switch to the new creator
+  activeCreatorId = newCr.id;
+  setTimeout(function() { renderSidebar(); }, 50);
 }
 </script>
 </body>
