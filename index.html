@@ -62,7 +62,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .main-title{font-size:15px;font-weight:600;color:#111;}
 .main-sub{font-size:12px;color:#bbb;margin-top:2px;}
 .main-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.sbadge{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;border:1.5px solid;cursor:pointer;white-space:nowrap;}
+.sbadge{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;border:1.5px solid;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;}
+.sbadge::after{content:"▾";font-size:9px;opacity:.6;}
+.status-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid #eee;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;z-index:300;min-width:170px;}
+.status-menu.open{display:block;}
+.status-menu-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;}
+.status-menu-item:hover{background:#f6f5ff;}
+.status-menu-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-menu-item.active{background:#f0efff;font-weight:600;}
 .feedback-btn{font-size:11px;padding:5px 12px;border-radius:8px;border:none;color:#378ADD;background:#378ADD12;cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:500;}
 .feedback-btn:hover{background:#378ADD22;}
 
@@ -497,7 +504,10 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
         </div>
         <div class="main-header-right">
           <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openFeedbackAndSetRevision()"><i class="ti ti-message-2"></i> Feedback</button>
-          <div class="sbadge" id="sbadge" style="display:none" onclick="cycleStatus()"></div>
+          <div style="position:relative;">
+            <div class="sbadge" id="sbadge" style="display:none" onclick="toggleStatusMenu(event)"></div>
+            <div class="status-menu" id="statusMenu"></div>
+          </div>
         </div>
       </div>
       <div class="main-tabs" id="mainTabs" style="display:none">
@@ -550,6 +560,7 @@ var T = {
     'In Review': 'In Review',
     'Revision Requested': 'Revision Requested',
     'Approved': 'Approved',
+    'Dropped': 'Dropped',
     'status_btn': 'Status',
     'feedback_btn': 'Feedback',
     'edit_grade': 'Edit grade',
@@ -572,6 +583,7 @@ var T = {
     'In Review': '검토 중',
     'Revision Requested': '수정 요청',
     'Approved': '승인',
+    'Dropped': '드롭',
     'status_btn': '상태',
     'feedback_btn': '피드백',
     'edit_grade': '등급 수정',
@@ -610,8 +622,8 @@ function applyLang() {
 }
 const AVC=["#e8e6ff","#d1f5e8","#fde8d8","#fce4ef","#daeaf8","#e5f5ce","#fff3d6","#fde8f0"];
 const AVT=["#534AB7","#085041","#712B13","#72243E","#0C447C","#27500A","#7a5200","#7a1a3a"];
-const STATUSES=["Pending Review","In Review","Revision Requested","Approved"];
-const SCOL={"Pending Review":"#888","In Review":"#378ADD","Revision Requested":"#EF9F27","Approved":"#1D9E75"};
+const STATUSES=["Pending Review","In Review","Revision Requested","Approved","Dropped"];
+const SCOL={"Pending Review":"#888","In Review":"#378ADD","Revision Requested":"#EF9F27","Approved":"#1D9E75","Dropped":"#e24b4a"};
 
 let campaigns={},activeCampaignId=null,activeCreatorId=null;
 let ghToken="",ghRepo="cilla-nuri/campaign-checklist";
@@ -793,7 +805,7 @@ function renderSidebar(){
   if(sidebarSortMode==='needs-review'){
     sortedCreators.sort(function(a,b){
       var sA=c.state[a.id]||{},sB=c.state[b.id]||{};
-      var o={'Revision Requested':0,'Pending Review':1,'In Review':2,'Approved':4};
+      var o={'Revision Requested':0,'Pending Review':1,'In Review':2,'Approved':4,'Dropped':5};
       var oA=o[sA.status||'']!==undefined?o[sA.status||'']:1;
       var oB=o[sB.status||'']!==undefined?o[sB.status||'']:1;
       if(oA!==oB)return oA-oB;
@@ -884,11 +896,30 @@ function renderBadge(){
   b.textContent=t(s);b.style.color=SCOL[s];b.style.borderColor=SCOL[s]+"55";b.style.background=SCOL[s]+"18";
 }
 
-function cycleStatus(){
+function toggleStatusMenu(e){
+  if(e)e.stopPropagation();
   const c=getCampaign();if(!c||!activeCreatorId)return;
-  c.state[activeCreatorId].status=STATUSES[(STATUSES.indexOf(c.state[activeCreatorId].status)+1)%STATUSES.length];
-  renderBadge();markChanged();
+  const menu=document.getElementById("statusMenu");
+  if(menu.classList.contains("open")){menu.classList.remove("open");return;}
+  const cur=c.state[activeCreatorId].status;
+  menu.innerHTML=STATUSES.map(function(s){
+    return '<div class="status-menu-item'+(s===cur?' active':'')+'" onclick="setStatus(\''+s+'\')">'+
+      '<span class="dot" style="background:'+SCOL[s]+'"></span>'+t(s)+'</div>';
+  }).join('');
+  menu.classList.add("open");
 }
+function setStatus(s){
+  const c=getCampaign();if(!c||!activeCreatorId)return;
+  c.state[activeCreatorId].status=s;
+  document.getElementById("statusMenu").classList.remove("open");
+  renderBadge();updatePill(activeCreatorId);markChanged();
+}
+document.addEventListener("click",function(e){
+  const menu=document.getElementById("statusMenu");
+  if(menu&&menu.classList.contains("open")&&!e.target.closest("#statusMenu")&&!e.target.closest("#sbadge")){
+    menu.classList.remove("open");
+  }
+});
 
 function renderChecklist(){
   const c=getCampaign();if(!c||!activeCreatorId)return;
@@ -910,7 +941,9 @@ function toggle(creatorId,iid){
   c.state[creatorId].checks[iid]=!c.state[creatorId].checks[iid];
   var pct=getPct(c,creatorId);
   var cur=c.state[creatorId].status||'';
-  if(pct===100){
+  if(cur==='Dropped'){
+    // Dropped is manual-only: never auto-change
+  } else if(pct===100){
     c.state[creatorId].status='Approved';
   } else if(pct>0 && cur==='Pending Review'){
     c.state[creatorId].status='In Review';
@@ -931,6 +964,9 @@ function updateFooter(){
 function updatePill(id){
   const c=getCampaign();if(!c)return;
   const pct=getPct(c,id);const p=document.getElementById("pp-"+id);if(!p)return;
+  if(c.state[id]&&c.state[id].status==='Dropped'){
+    p.textContent="Drop";p.style.background="#fde8e8";p.style.color="#e24b4a";return;
+  }
   p.textContent=pct+"%";
   if(pct===100){p.style.background="#1D9E7520";p.style.color="#1D9E75";}
   else if(pct>0){p.style.background="#378ADD20";p.style.color="#378ADD";}
@@ -959,7 +995,15 @@ var CLOSE_TEMPLATES={
   }
 };
 
+var DROP_TEMPLATE="Hello,\nBy joining a Nurilounge campaign, you agree to meet posting and event requirements professionally and on time. We noticed your content was not posted or you missed the guideline. Non-compliance disrupts our partners and community.\nRepeated violations may result in removal from campaigns and a permanent block.\nThis is a formal warning, and we hope for your cooperation moving forward.";
+
 function generateFeedback(lang,missing,nick,payType,tone){
+  // Dropped creator → formal warning message (always English)
+  var _c=getCampaign();
+  if(_c&&activeCreatorId&&_c.state[activeCreatorId]&&_c.state[activeCreatorId].status==='Dropped'){
+    var dtmpl=getCampaignTemplates().drop||DROP_TEMPLATE;
+    return applyPlaceholders(dtmpl,nick,missing);
+  }
   if(missing.length){
     var tmpl=getCampaignTemplates()[lang==='en'?'revision_en':'revision_kr'];
     if(tmpl)return applyPlaceholders(tmpl,nick,missing);
@@ -1658,14 +1702,17 @@ function renderFeedbackPanel(){
   const c=getCampaign();if(!c||!activeCreatorId)return;
   const cr=c.creators.find(function(x){return x.id===activeCreatorId;});
   const missing=getMissingItems();
+  const isDropped=c.state[activeCreatorId]&&c.state[activeCreatorId].status==='Dropped';
   document.getElementById("panel").classList.add("wide");
 
-  var missingHtml=missing.length
+  var missingHtml=isDropped
+    ?'<div style="background:#fde8e8;color:#c0392b;border-radius:10px;padding:12px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;"><i class="ti ti-alert-octagon" style="font-size:16px;"></i>Creator dropped — formal warning message below</div>'
+    :missing.length
     ?'<div class="missing-list"><div class="missing-title"><i class="ti ti-alert-triangle" style="font-size:13px;"></i> '+missing.length+' item'+(missing.length>1?"s":"")+'</div>'+missing.map(function(m,i){return '<div class="missing-item"><span class="missing-num">'+(i+1)+'.</span><span>'+m+'</span></div>';}).join('')+'</div>'
     :'<div class="all-good"><i class="ti ti-circle-check" style="font-size:20px;display:block;margin-bottom:6px;"></i>All items checked!</div>';
 
   var closeOptions='';
-  if(!missing.length){
+  if(!missing.length&&!isDropped){
     closeOptions=
       '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">'+
       '<div>'+
@@ -4866,7 +4913,7 @@ function openFeedbackAndSetRevision(){
   if(!c||!activeCreatorId){openPanel('feedback');return;}
   if(getPct(c,activeCreatorId)<100){
     var cur=c.state[activeCreatorId].status||'';
-    if(cur!=='Revision Requested'&&cur!=='Approved'){
+    if(cur!=='Revision Requested'&&cur!=='Approved'&&cur!=='Dropped'){
       c.state[activeCreatorId].status='Revision Requested';
       updatePill(activeCreatorId);
       markChanged();
