@@ -2706,7 +2706,8 @@ function buildCpRow(cr) {
         '</select>';
     }
     return '<tr data-handle="'+cr.handle+'" data-nick="'+(cr.nick||'')+'">' +
-      '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+'</td>' +
+      '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+
+      '<label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#e24b4a;font-weight:600;margin-top:4px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="cpe_bl"'+(bl?' checked':'')+' style="accent-color:#e24b4a;margin:0;"/> Blacklist</label></td>' +
       '<td>'+mkSel('vq',g.video_quality||'',['V1','V2','V3','V4','V5'])+'</td>' +
       '<td>'+mkSel('me',g.manager_evaluation||'',['E1','E2','E3','E4','E5'])+'</td>' +
       '<td>'+mkSel('sk',g.skintone||'',['Light','Fair','Medium','Tan','Deep'])+'</td>' +
@@ -2740,7 +2741,7 @@ function buildCpRow(cr) {
     '<td>'+igLink+'</td>' +
     '<td>'+ttLink+'</td>' +
     '<td>'+camps+'</td>' +
-    '<td onclick="event.stopPropagation()"><button class="cp-edit-btn" onclick="cpEditingHandle=\''+cr.handle+'\';refreshCpTable()">Edit</button><button class="cp-edit-btn" style="background:#f0efff;color:#534AB7;">Profile</button></td>' +
+    '<td onclick="event.stopPropagation()"><button class="cp-edit-btn" onclick="cpEditingHandle=\''+cr.handle+'\';refreshCpTable()">Edit</button><button class="cp-edit-btn" style="background:#f0efff;color:#534AB7;" onclick="var tr=this.closest(\'tr\');openCreatorProfile(tr.dataset.handle, tr.dataset.nick)">Profile</button></td>' +
     '</tr>';
 }
 
@@ -2790,7 +2791,8 @@ async function cpSaveRow(handle) {
     skintone: document.getElementById('cpe_sk').value || null,
     english_proficiency: document.getElementById('cpe_en').value || null,
     instagram_url: document.getElementById('cpe_ig').value || null,
-    tiktok_url: document.getElementById('cpe_tt').value || null
+    tiktok_url: document.getElementById('cpe_tt').value || null,
+    blacklist: document.getElementById('cpe_bl') ? document.getElementById('cpe_bl').checked : false
   };
   var btn = document.querySelector('.cp-save-btn');
   if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
@@ -4240,11 +4242,17 @@ function saveCreatorEdit(id) {
 /* ============================================================
    CREATOR PROFILE
    ============================================================ */
-async function openCreatorProfile() {
-  var c = getCampaign();
-  if (!c || !activeCreatorId) return;
-  var cr = c.creators.find(function(x){ return x.id === activeCreatorId; });
-  if (!cr) return;
+async function openCreatorProfile(handle, nick) {
+  var cr, fromDb = false;
+  if (handle) {
+    fromDb = true;
+    cr = { handle: handle, nick: nick || handle.replace(/^@/, '') };
+  } else {
+    var c = getCampaign();
+    if (!c || !activeCreatorId) return;
+    cr = c.creators.find(function(x){ return x.id === activeCreatorId; });
+    if (!cr) return;
+  }
   var g = getCreatorGrade(cr.handle) || {};
   var cleanHandle = cr.handle.replace(/^@/, '');
 
@@ -4303,8 +4311,9 @@ async function openCreatorProfile() {
     +'<div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;">CAMPAIGN HISTORY ('+data.length+')</div>'
     +campHtml;
 
-  document.getElementById('panelFooter').innerHTML =
-    '<button onclick="editCreatorHandle(\''+activeCreatorId+'\')" class="apply-btn" style="background:#f3f4f6;color:#555;">&#9998; Edit creator</button>';
+  document.getElementById('panelFooter').innerHTML = fromDb
+    ? ''
+    : '<button onclick="editCreatorHandle(\''+activeCreatorId+'\')" class="apply-btn" style="background:#f3f4f6;color:#555;">&#9998; Edit creator</button>';
 }
 
 
