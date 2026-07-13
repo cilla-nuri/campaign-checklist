@@ -626,6 +626,7 @@ const STATUSES=["Pending Review","In Review","Revision Requested","Approved","Dr
 const SCOL={"Pending Review":"#888","In Review":"#378ADD","Revision Requested":"#EF9F27","Approved":"#1D9E75","Dropped":"#e24b4a"};
 
 let campaigns={},activeCampaignId=null,activeCreatorId=null;
+var __dirtyCampaigns={},__dirtyCreators={};
 let ghToken="",ghRepo="cilla-nuri/campaign-checklist";
 let sheetsId="",sheetsApiKey="",appsScriptUrl="";
 let idc=500;
@@ -674,7 +675,46 @@ function loadFromLocalStorage(){
 function markChanged(){
   hasUnsavedChanges=true;
   _pendingSave=true;
+  var c=getCampaign();
+  if(c&&activeCampaignId){
+    c.lastEditedAt=new Date().toISOString();
+    c.lastEditedBy=(window.currentUser&&window.currentUser.id)||null;
+    __dirtyCampaigns[activeCampaignId]=true;
+  }
   scheduleAutoSave();
+}
+
+function timeAgo(iso){
+  if(!iso)return"";
+  var s=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+  if(s<0)s=0;
+  if(s<60)return"just now";
+  if(s<3600)return Math.floor(s/60)+"m ago";
+  if(s<86400)return Math.floor(s/3600)+"h ago";
+  if(s<604800)return Math.floor(s/86400)+"d ago";
+  return new Date(iso).toLocaleDateString();
+}
+function editorName(uid){
+  if(!uid)return"";
+  if(window.__profiles&&__profiles[uid])return __profiles[uid].name.split(" ")[0]||__profiles[uid].name;
+  if(window.currentUser&&currentUser.id===uid)return(currentUser.email||"me").split("@")[0];
+  return"teammate";
+}
+function stampCreatorEdit(creatorId){
+  var c=getCampaign();if(!c||!creatorId)return;
+  if(!c.state[creatorId])c.state[creatorId]={status:"Pending Review",checks:{}};
+  c.state[creatorId]._editedAt=new Date().toISOString();
+  c.state[creatorId]._editedBy=(window.currentUser&&window.currentUser.id)||null;
+  __dirtyCreators[creatorId]=true;
+  if(creatorId===activeCreatorId)renderLastEdited();
+}
+function renderLastEdited(){
+  var c=getCampaign();if(!c||!activeCreatorId)return;
+  var el=document.getElementById("saveStatus");if(!el)return;
+  var st=c.state[activeCreatorId]||{};
+  if(st._editedAt){el.textContent="Edited "+timeAgo(st._editedAt)+(st._editedBy?" by "+editorName(st._editedBy):"");}
+  else if(st.savedAt){el.textContent="Saved: "+st.savedAt;}
+  else el.textContent="";
 }
 
 function showLocalSaveToast(){
@@ -885,8 +925,7 @@ function selectCreator(id){
   document.getElementById("sbadge").style.display="block";document.getElementById("feedbackBtn").style.display="flex";
   // Show grade pills in header
   renderMainGrades(cr.handle);
-  const saved=c.state[id]&&c.state[id].savedAt;
-  document.getElementById("saveStatus").textContent=saved?"Saved: "+saved:"";
+  renderLastEdited();
   renderBadge();renderChecklist();updateSaveButtons();
 }
 
@@ -912,7 +951,7 @@ function setStatus(s){
   const c=getCampaign();if(!c||!activeCreatorId)return;
   c.state[activeCreatorId].status=s;
   document.getElementById("statusMenu").classList.remove("open");
-  renderBadge();updatePill(activeCreatorId);markChanged();
+  renderBadge();updatePill(activeCreatorId);stampCreatorEdit(activeCreatorId);markChanged();
 }
 document.addEventListener("click",function(e){
   const menu=document.getElementById("statusMenu");
@@ -950,7 +989,7 @@ function toggle(creatorId,iid){
   } else if(pct===0 && cur==='In Review'){
     c.state[creatorId].status='Pending Review';
   }
-  renderChecklist();updatePill(creatorId);markChanged();
+  renderChecklist();updatePill(creatorId);stampCreatorEdit(creatorId);markChanged();
 }
 
 function updateFooter(){
@@ -3124,7 +3163,7 @@ var _origMarkChanged = markChanged;
 
 function scheduleAutoSave() {
   clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(doAutoSave, 4000); // 4 seconds debounce
+  _autoSaveTimer = setTimeout(doAutoSave, 2500); // 2.5 seconds debounce
 }
 
 async function doAutoSave() {
@@ -3324,6 +3363,7 @@ function renderHomePage() {
         (pct>0?'<span style="color:#534AB7;font-weight:600;">'+pct+'%</span>':'')
       +'</div>'+
       '<div class="cc-progress"><div class="cc-progress-fill" style="width:'+pct+'%"></div></div>'+
+      (c.lastEditedAt?'<div style="font-size:10px;color:#aaa;margin-top:6px;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:10px;"></i>Edited '+timeAgo(c.lastEditedAt)+(c.lastEditedBy?' by '+editorName(c.lastEditedBy):'')+'</div>':'')+
     '</div>';
   }
 
@@ -4619,6 +4659,7 @@ async function loadAllFromSupabase(){
     if(r.archived) c.archived = true;
     if(s.sjSettings) c.sjSettings = s.sjSettings;
     if(s.feedbackTemplates) c.feedbackTemplates = s.feedbackTemplates;
+    if(r.last_edited_at){ c.lastEditedAt = r.last_edited_at; c.lastEditedBy = r.last_edited_by || null; }
     campaigns[lid] = c;
   });
   masters.forEach(function(r){
@@ -4630,7 +4671,8 @@ async function loadAllFromSupabase(){
     var crid = r.legacy_creator_id || ("h_"+r.creator_handle);
     c.creators.push({id:crid, handle:"@"+r.creator_handle, nick:r.nick||r.creator_handle, applyNum:r.apply_num||""});
     if((r.checks && Object.keys(r.checks).length) || r.status){
-      c.state[crid] = {status:r.status||undefined, checks:r.checks||{}, savedAt:(r.updated_at||"").slice(0,10)};
+      c.state[crid] = {status:r.status||undefined, checks:r.checks||{}, savedAt:(r.updated_at||"").slice(0,10),
+                       _editedAt:r.updated_at||null, _editedBy:r.updated_by||null};
     }
   });
   /* recompute id counter to avoid collisions with loaded legacy ids */
@@ -4649,25 +4691,41 @@ async function saveCampaignToSupabase(cid){
   var row = {id:cu, legacy_id:cid, name:c.name, pay_type:c.payType||null, deadline:__validDate(c.deadline),
              period:c.period||null, archived:!!c.archived, settings:settings};
   if(isNew) row.owner_id = __userId();
+  if(__dirtyCampaigns[cid]&&c.lastEditedAt){ row.last_edited_at=c.lastEditedAt; row.last_edited_by=c.lastEditedBy||__userId(); }
   await sbFetch("campaigns?on_conflict=id", {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify([row])});
   await sbFetch("campaign_master?on_conflict=campaign_id", {method:"POST", prefer:"resolution=merge-duplicates,return=minimal",
     body:JSON.stringify([{campaign_id:cu, sections:c.master||[], updated_by:__userId()}])});
   var nowIso = new Date().toISOString();
-  var rows = (c.creators||[]).map(function(cr){
+  var dirtyRows=[], cleanRows=[];
+  (c.creators||[]).forEach(function(cr){
     var st = (c.state||{})[cr.id] || {};
-    return {campaign_id:cu, creator_handle:String(cr.handle||"").replace(/^@/,""), checks:st.checks||{},
+    var base = {campaign_id:cu, creator_handle:String(cr.handle||"").replace(/^@/,""), checks:st.checks||{},
             status:st.status||null, legacy_creator_id:cr.id||null,
-            apply_num:cr.applyNum?String(cr.applyNum):null, nick:cr.nick||null,
-            updated_by:__userId(), updated_at:nowIso};
-  }).filter(function(r){ return r.creator_handle; });
-  for(var i=0;i<rows.length;i+=200){
+            apply_num:cr.applyNum?String(cr.applyNum):null, nick:cr.nick||null};
+    if(!base.creator_handle) return;
+    if(__dirtyCreators[cr.id]){
+      base.updated_by=(st._editedBy||__userId());
+      base.updated_at=st._editedAt||nowIso;
+      dirtyRows.push(base);
+    } else {
+      cleanRows.push(base);
+    }
+  });
+  for(var i=0;i<dirtyRows.length;i+=200){
     await sbFetch("creator_checks?on_conflict=campaign_id,creator_handle",
-      {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify(rows.slice(i,i+200))});
+      {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify(dirtyRows.slice(i,i+200))});
   }
+  for(var j=0;j<cleanRows.length;j+=200){
+    await sbFetch("creator_checks?on_conflict=campaign_id,creator_handle",
+      {method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:JSON.stringify(cleanRows.slice(j,j+200))});
+  }
+  /* clear dirty flags for this campaign after successful push */
+  delete __dirtyCampaigns[cid];
+  (c.creators||[]).forEach(function(cr){ delete __dirtyCreators[cr.id]; });
   /* remove rows for creators no longer in the roster */
   __rtMuteUntil = Date.now() + 4000;
   var existing = await sbFetchAll("creator_checks?campaign_id=eq."+cu+"&select=creator_handle");
-  var keep = {}; rows.forEach(function(r){ keep[r.creator_handle]=1; });
+  var keep = {}; dirtyRows.concat(cleanRows).forEach(function(r){ keep[r.creator_handle]=1; });
   var gone = existing.map(function(r){return r.creator_handle;}).filter(function(h){return !keep[h];});
   for(var g=0;g<gone.length;g+=100){
     var list = gone.slice(g,g+100).map(function(h){return '"'+h.replace(/"/g,'')+'"';}).join(",");
@@ -4925,6 +4983,7 @@ function openFeedbackAndSetRevision(){
     if(cur!=='Revision Requested'&&cur!=='Approved'&&cur!=='Dropped'){
       c.state[activeCreatorId].status='Revision Requested';
       updatePill(activeCreatorId);
+      stampCreatorEdit(activeCreatorId);
       markChanged();
     }
   }
