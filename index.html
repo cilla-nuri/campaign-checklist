@@ -622,7 +622,11 @@ function applyLang() {
   els.forEach(function(el) { el.textContent = t(el.getAttribute('data-t')); });
   // Re-render sidebar status pills
   if (typeof renderSidebar === 'function') renderSidebar();
+  // Re-render checklist in selected language (KR shows item_kr when available)
+  if (typeof renderChecklist === 'function' && activeCreatorId) renderChecklist();
 }
+/* Display label for a checklist item: KR if app is in KR and translation exists; outputs always use it.text (EN) */
+function itemLabel(it){ return (appLang==='kr' && it.textKr) ? it.textKr : it.text; }
 const AVC=["#e8e6ff","#d1f5e8","#fde8d8","#fce4ef","#daeaf8","#e5f5ce","#fff3d6","#fde8f0"];
 const AVT=["#534AB7","#085041","#712B13","#72243E","#0C447C","#27500A","#7a5200","#7a1a3a"];
 const STATUSES=["Pending Review","In Review","Revision Requested","Approved","Dropped"];
@@ -971,7 +975,7 @@ function renderChecklist(){
     html+='<div class="sec-label">'+s.name+'</div>';
     s.items.forEach(function(it){
       const done=checks[it.id];
-      html+='<div class="chk-item" onclick="toggle(\''+activeCreatorId+'\',\''+it.id+'\')"><div class="chk-box'+(done?" on":"")+'"><i class="ti ti-check chk-ic"></i></div><span class="chk-lbl'+(done?" done":"")+'">'+it.text+(it.optional?'<span class="opt-pill">OPTIONAL</span>':'')+'</span></div>';
+      html+='<div class="chk-item" onclick="toggle(\''+activeCreatorId+'\',\''+it.id+'\')"><div class="chk-box'+(done?" on":"")+'"><i class="ti ti-check chk-ic"></i></div><span class="chk-lbl'+(done?" done":"")+'">'+itemLabel(it)+(it.optional?'<span class="opt-pill">OPTIONAL</span>':'')+'</span></div>';
     });
   });
   if(!html)html='<div style="color:#aaa;font-size:12px;margin-top:40px;text-align:center;">No checklist items -- import via Master.</div>';
@@ -1122,8 +1126,8 @@ async function saveCampaignMeta(c){
   const creatorLines=["apply_num,handle,nick"].concat(c.creators.map(function(cr){return cr.applyNum+","+cr.handle+","+cr.nick;}));
   await ghPut("reviews/"+campSlug+"/_creators.csv",creatorLines.join("\n"),"Creators: "+c.name);
   // 3. Master checklist
-  const masterLines=["section,item,type"];
-  c.master.forEach(function(sec){sec.items.forEach(function(it){masterLines.push('"'+sec.name+'","'+it.text.replace(/"/g,'""')+'",'+(it.optional?'optional':'required'));});});
+  const masterLines=["section,item,item_kr,type"];
+  c.master.forEach(function(sec){sec.items.forEach(function(it){masterLines.push('"'+sec.name+'","'+it.text.replace(/"/g,'""')+'","'+String(it.textKr||'').replace(/"/g,'""')+'",'+(it.optional?'optional':'required'));});});
   await ghPut("reviews/"+campSlug+"/_master.csv",masterLines.join("\n"),"Master checklist: "+c.name);
 }
 
@@ -1259,13 +1263,17 @@ async function loadFromGitHub(){
         for(var j=1;j<mlines.length;j++){
           const cols=mlines[j].split(",").map(function(v){return v.trim().replace(/^"|"$/g,"");});
           if(cols.length<2)continue;
-          const sec=cols[0];var item=cols[1];
-          var opt=cols[2]?/^(optional|opt)$/i.test(cols[2]):false;
+          const sec=cols[0];var item=cols[1];var kr="",typ="";
+          if(cols.length>=4){kr=cols[2]||"";typ=cols[3]||"";}
+          else if(cols.length===3){
+            if(/^(optional|opt|required|req)$/i.test(cols[2]))typ=cols[2];else kr=cols[2]||"";
+          }
+          var opt=/^(optional|opt)$/i.test(typ);
           if(/\(optional\)\s*$/i.test(item)){opt=true;item=item.replace(/\s*\(optional\)\s*$/i,"");}
           if(!sections[sec]){sections[sec]=[];order.push(sec);}
-          sections[sec].push({text:item,optional:opt});
+          sections[sec].push({text:item,textKr:kr,optional:opt});
         }
-        c.master=order.map(function(sec){return {id:uid(),name:sec,items:sections[sec].map(function(o){return {id:uid(),text:o.text,optional:!!o.optional};})};});
+        c.master=order.map(function(sec){return {id:uid(),name:sec,items:sections[sec].map(function(o){return {id:uid(),text:o.text,textKr:o.textKr||"",optional:!!o.optional};})};});
         loaded.push(c.master.reduce(function(a,s){return a+s.items.length;},0)+" checklist items");
       }
     }
@@ -1730,7 +1738,8 @@ function handleChecklistCSV(file){
     const lines=e.target.result.split(/\r?\n/).filter(function(l){return l.trim();});if(lines.length<2)return;
     const header=lines[0].split(",").map(function(h){return h.trim().toLowerCase().replace(/['"]/g,"");});
     const secIdx=header.findIndex(function(h){return h.includes("section")||h.includes("category")||h.includes("group");});
-    const itemIdx=header.findIndex(function(h){return h.includes("item")||h.includes("check")||h.includes("task")||h.includes("text");});
+    const itemIdx=header.findIndex(function(h){return (h.includes("item")||h.includes("check")||h.includes("task")||h.includes("text"))&&!h.includes("kr")&&!h.includes("korean");});
+    const krIdx=header.findIndex(function(h){return h.includes("kr")||h.includes("korean")||h.includes("한국");});
     const typeIdx=header.findIndex(function(h){return h==="type"||h.includes("optional")||h.includes("required");});
     if(secIdx<0||itemIdx<0){document.getElementById("pfWarn").textContent="Need columns: section, item.";return;}
     const sections={},order=[];
@@ -1740,9 +1749,10 @@ function handleChecklistCSV(file){
       var opt=false;
       if(typeIdx>=0&&cols[typeIdx]){var tv=cols[typeIdx].toLowerCase();opt=(tv==="optional"||tv==="opt"||tv==="no"||tv==="false");}
       if(/\(optional\)\s*$/i.test(item)){opt=true;item=item.replace(/\s*\(optional\)\s*$/i,"");}
-      if(!sections[sec]){sections[sec]=[];order.push(sec);}sections[sec].push({text:item,optional:opt});
+      var kr=(krIdx>=0&&cols[krIdx])?cols[krIdx]:"";
+      if(!sections[sec]){sections[sec]=[];order.push(sec);}sections[sec].push({text:item,textKr:kr,optional:opt});
     }
-    masterDraft=order.map(function(sec){return {id:uid(),name:sec,items:sections[sec].map(function(o){return {id:uid(),text:o.text,optional:!!o.optional};})};});
+    masterDraft=order.map(function(sec){return {id:uid(),name:sec,items:sections[sec].map(function(o){return {id:uid(),text:o.text,textKr:o.textKr||"",optional:!!o.optional};})};});
     const total=masterDraft.reduce(function(a,s){return a+s.items.length;},0);
     setPanelDirty('CSV imported — click Apply to all before closing!');
     document.getElementById("checklistImportPreview").innerHTML='<div style="font-size:11px;color:#1D9E75;padding:6px 0;">'+total+' items across '+masterDraft.length+' sections -- review then Apply.</div>';
@@ -1827,21 +1837,32 @@ function toggleItmOpt(sid,iid,btn){
   btn.classList.toggle('is-opt',!!it.optional);
   setPanelDirty('Master not applied yet. Apply to all first!');
 }
+function itmRowHtml(sid,it,isNew){
+  return '<div class="irow" id="ir-'+it.id+'" data-sid="'+sid+'" data-iid="'+it.id+'" style="flex-wrap:wrap;">'+
+    '<i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;"></i>'+
+    '<input class="itxt" value="'+String(it.text||'').replace(/"/g,'&quot;')+'" oninput="updItm(\''+sid+'\',\''+it.id+'\',this.value)"'+(isNew?' style="background:#f5f5f5;"':'')+'/>'+
+    itmOptBtn(sid,it)+
+    '<button class="dibtn" onclick="delItm(\''+sid+'\',\''+it.id+'\')"'+(isNew?' style="opacity:1"':'')+'><i class="ti ti-x"></i></button>'+
+    '<input class="itxt" value="'+String(it.textKr||'').replace(/"/g,'&quot;')+'" placeholder="&#54620;&#44397;&#50612; (optional)" oninput="updItmKr(\''+sid+'\',\''+it.id+'\',this.value)" style="flex-basis:100%;margin-left:19px;font-size:11px;color:#666;border-style:dashed;"/>'+
+  '</div>';
+}
 function renderSecBlock(s){
   return '<div class="sec-block" id="sb-'+s.id+'" data-sid="'+s.id+'">'+
     '<div class="sec-row"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;margin-right:4px;" title="Drag to reorder section"></i><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
     '<button class="smb" onclick="addItm(\''+s.id+'\')"><i class="ti ti-plus"></i> Item</button>'+
     '<button class="dsbtn" onclick="delSec(\''+s.id+'\')"><i class="ti ti-trash"></i></button></div>'+
-    s.items.map(function(it){return '<div class="irow" id="ir-'+it.id+'" data-sid="'+s.id+'" data-iid="'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+s.id+'\',\''+it.id+'\',this.value)"/>'+itmOptBtn(s.id,it)+'<button class="dibtn" onclick="delItm(\''+s.id+'\',\''+it.id+'\')"><i class="ti ti-x"></i></button></div>';}).join('')+
+    s.items.map(function(it){return itmRowHtml(s.id,it,false);}).join('')+
     '</div>';
 }
+
+function updItmKr(sid,iid,v){const s=masterDraft.find(function(x){return x.id===sid;});if(s){const it=s.items.find(function(x){return x.id===iid;});if(it)it.textKr=v;}}
 
 function updSecName(sid,v){const s=masterDraft.find(function(x){return x.id===sid;});if(s)s.name=v;}
 function updItm(sid,iid,v){const s=masterDraft.find(function(x){return x.id===sid;});if(s){const it=s.items.find(function(x){return x.id===iid;});if(it)it.text=v;}}
 function addItm(sid){
   const s=masterDraft.find(function(x){return x.id===sid;});if(!s)return;
   const it={id:uid(),text:"New item"};s.items.push(it);
-  document.getElementById("sb-"+sid).insertAdjacentHTML("beforeend",'<div class="irow" id="ir-'+it.id+'"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;"></i><input class="itxt" value="'+it.text+'" oninput="updItm(\''+sid+'\',\''+it.id+'\',this.value)" style="background:#f5f5f5;"/>'+itmOptBtn(sid,it)+'<button class="dibtn" onclick="delItm(\''+sid+'\',\''+it.id+'\')" style="opacity:1"><i class="ti ti-x"></i></button></div>');
+  document.getElementById("sb-"+sid).insertAdjacentHTML("beforeend",itmRowHtml(sid,it,true));
   const inp=document.querySelector("#ir-"+it.id+" input");if(inp){inp.focus();inp.select();}
 }
 function delItm(sid,iid){const s=masterDraft.find(function(x){return x.id===sid;});if(s)s.items=s.items.filter(function(x){return x.id!==iid;});const el=document.getElementById("ir-"+iid);if(el)el.remove();}
@@ -4536,12 +4557,13 @@ function downloadPreSelected() {
 /* ============ COPY MASTER AS CSV / APPLY TO CAMPAIGN ============ */
 function copyMasterAsCSV() {
   if (!masterDraft || !masterDraft.length) { alert('No checklist items to copy.'); return; }
-  var lines = ['section,item,type'];
+  var lines = ['section,item,item_kr,type'];
   masterDraft.forEach(function(sec) {
     sec.items.forEach(function(it) {
       var s = sec.name.includes(',') ? '"'+sec.name+'"' : sec.name;
       var i = it.text.includes(',') ? '"'+it.text+'"' : it.text;
-      lines.push(s + ',' + i + ',' + (it.optional?'optional':'required'));
+      var k = String(it.textKr||''); if(k.includes(',')) k='"'+k+'"';
+      lines.push(s + ',' + i + ',' + k + ',' + (it.optional?'optional':'required'));
     });
   });
   var csv = lines.join('\n');
