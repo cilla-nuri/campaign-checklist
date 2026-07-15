@@ -943,7 +943,9 @@ function switchCampaign(id){
 
 function deleteCampaign(){
   if(!activeCampaignId)return;
-  if(!confirm('Delete "'+campaigns[activeCampaignId].name+'"?'))return;
+  var nm=campaigns[activeCampaignId].name;
+  var v=prompt('⚠️ This PERMANENTLY deletes "'+nm+'" for ALL team members —\nchecklist, review progress, statuses, meta codes.\n(선정 applicant data is kept.)\n\nType DELETE to confirm:');
+  if(v===null||v.trim().toUpperCase()!=='DELETE'){return;}
   var _delId=activeCampaignId;
   delete campaigns[activeCampaignId];activeCampaignId=null;activeCreatorId=null;
   deleteCampaignFromSupabase(_delId);
