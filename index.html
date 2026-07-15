@@ -4904,11 +4904,12 @@ function downloadPreSelected(fmt) {
   var g = getCampaign();
   var campName = g ? g.name.replace(/[^a-zA-Z0-9_\-]/g,'_') : 'preselected';
 
-  // Build rows: username(no @), ig_url, ig_followers, tt_url, tt_followers, country
-  var rows = [['username','instagram_url','instagram_followers','tiktok_url','tiktok_followers','country']];
+  // Build rows: apply_number, username(no @), ig_url, ig_followers, tt_url, tt_followers, country
+  var rows = [['apply_number','username','instagram_url','instagram_followers','tiktok_url','tiktok_followers','country']];
   preSelected.forEach(function(r) {
     var gr = getCreatorGrade(r.username) || {};
     rows.push([
+      r._applyNum || '',
       r.username.replace(/^@/, ''),
       gr.instagram_url || r._ig_url || '',
       r.instagram_followers || '',
@@ -4921,7 +4922,7 @@ function downloadPreSelected(fmt) {
   if (fmt === 'xlsx') {
     try {
       var ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [{wch:22},{wch:38},{wch:14},{wch:38},{wch:14},{wch:12}];
+      ws['!cols'] = [{wch:12},{wch:22},{wch:38},{wch:14},{wch:38},{wch:14},{wch:12}];
       var wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Pre-selected');
       XLSX.writeFile(wb, campName + '_preselected.xlsx');
