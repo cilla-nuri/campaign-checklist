@@ -540,7 +540,11 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
           <button class="hbtn" onclick="openPanel('csv')"><i class="ti ti-upload"></i> Import</button>
           <button class="hbtn" onclick="openPanel('addcreator')"><i class="ti ti-user-plus"></i> Add</button>
           <button class="hbtn" id="btnEditChecklist" onclick="openPanel('master')"><i class="ti ti-list-check"></i> <span data-t="master">Edit Checklist</span></button>
-          <button class="hbtn" id="btnExportCodes" style="display:none" onclick="exportMetaCodes()" title="Export all Spark Ads codes as CSV"><i class="ti ti-file-export"></i> Codes</button>
+          <span style="position:relative;display:inline-flex;"><button class="hbtn" id="btnExportCodes" style="display:none" onclick="toggleCodesMenu(event)" title="Export all Spark Ads codes"><i class="ti ti-file-export"></i> Codes <i class="ti ti-chevron-down" style="font-size:9px;"></i></button>
+          <div class="status-menu" id="codesMenu" style="left:0;right:auto;top:calc(100% + 4px);">
+            <div class="status-menu-item" onclick="exportMetaCodes('xlsx')"><i class="ti ti-file-spreadsheet" style="color:#1D9E75;font-size:13px;"></i>Excel (.xlsx)</div>
+            <div class="status-menu-item" onclick="exportMetaCodes('csv')"><i class="ti ti-file-text" style="color:#888;font-size:13px;"></i>CSV</div>
+          </div></span>
           <button class="hbtn" style="border-color:#1a1a1a33;color:#1a1a1a;" onclick="openPanel('loadgithub')"><i class="ti ti-brand-github"></i> Load</button>
         </div>
       </div>
@@ -842,20 +846,43 @@ function copyMetaCode(){
     if(btn){btn.innerHTML='<i class="ti ti-check" style="color:#1D9E75;"></i>';setTimeout(function(){btn.innerHTML='<i class="ti ti-copy"></i>';},1200);}
   });
 }
-function exportMetaCodes(){
+function toggleCodesMenu(e){
+  if(e)e.stopPropagation();
+  var m=document.getElementById('codesMenu');if(!m)return;
+  m.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  var m=document.getElementById('codesMenu');
+  if(m&&m.classList.contains('open')&&!e.target.closest('#codesMenu')&&!e.target.closest('#btnExportCodes'))m.classList.remove('open');
+});
+function exportMetaCodes(fmt){
+  var m=document.getElementById('codesMenu');if(m)m.classList.remove('open');
   var c=getCampaign();if(!c)return;
-  var lines=["handle,nickname,status,meta_code"];var filled=0;
+  var rows=[["handle","nickname","status","meta_code"]];var filled=0;
   (c.creators||[]).forEach(function(cr){
     var st=(c.state||{})[cr.id]||{};
     var code=(st.metaCode||"").trim();
     if(code)filled++;
-    var q=function(s){s=String(s||"");return s.includes(",")?'"'+s.replace(/"/g,'""')+'"':s;};
-    lines.push([q(cr.handle),q(cr.nick||""),q(st.status||""),q(code)].join(","));
+    rows.push([cr.handle,cr.nick||"",st.status||"",code]);
   });
+  var fname=(c.name||"campaign").replace(/[^\w\-가-힣 #\[\]]/g,"").trim()+" - spark ads codes";
+  if(fmt==='xlsx'){
+    try{
+      var ws=XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols']=[{wch:24},{wch:20},{wch:18},{wch:34}];
+      var wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'Spark Ads Codes');
+      XLSX.writeFile(wb,fname+'.xlsx');
+      alert(filled+" / "+(c.creators||[]).length+" creators have codes.\nExcel downloaded.");
+      return;
+    }catch(err){console.error('xlsx export failed, falling back to CSV',err);}
+  }
+  var q=function(s){s=String(s||"");return s.includes(",")?'"'+s.replace(/"/g,'""')+'"':s;};
+  var lines=rows.map(function(r){return r.map(q).join(",");});
   var blob=new Blob(["\uFEFF"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
   var a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download=(c.name||"campaign").replace(/[^\w\-가-힣 #\[\]]/g,"").trim()+" - spark ads codes.csv";
+  a.download=fname+".csv";
   a.click();URL.revokeObjectURL(a.href);
   navigator.clipboard.writeText(lines.join("\n")).catch(function(){});
   alert(filled+" / "+(c.creators||[]).length+" creators have codes.\nCSV downloaded + copied to clipboard.");
