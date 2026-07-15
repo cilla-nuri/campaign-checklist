@@ -2477,7 +2477,33 @@ function sjRowClick(e,id){
   if(e.target.tagName==="INPUT")return; // checkbox handles itself
   sjToggleRow(id);
 }
-function sjToggleRow(id){if(sjSelected.has(id))sjSelected.delete(id);else sjSelected.add(id);renderSjTable();sjSaveSelection(id,sjSelected.has(id));}
+function sjToggleRow(id){
+  id=String(id);
+  if(sjSelected.has(id))sjSelected.delete(id);else sjSelected.add(id);
+  var on=sjSelected.has(id);
+  /* in-place update — instant counter, keeps scroll position */
+  document.querySelectorAll('#sjTableWrap tr[data-apply="'+id.replace(/"/g,'\\"')+'"]').forEach(function(tr){
+    var cb=tr.querySelector('.sj-chk');if(cb)cb.checked=on;
+    tr.classList.toggle('sj-selected',on);
+  });
+  updateSjCount();
+  updateBulkBar();
+  sjSaveSelection(id,on);
+}
+function updateSjCount(){
+  var el=document.querySelector(".sj-count");if(!el)return;
+  var filtered=getSjFiltered();
+  var cnt=0;filtered.forEach(function(r){if(sjSelected.has(String(r._applyNum)))cnt++;});
+  var preN=sjApplicants.filter(function(r){return r._selStatus==="pre-selected";}).length;
+  var selN=sjApplicants.filter(function(r){return r._selStatus==="selected";}).length;
+  var notN=sjApplicants.length-preN-selN;
+  var statusTxt="";
+  if(preN>0)statusTxt+='<span style="color:#f59e0b;font-weight:600;">⭐ '+preN+'</span> ';
+  if(selN>0)statusTxt+='<span style="color:#059669;font-weight:600;">✓ '+selN+'</span> ';
+  statusTxt+='<span style="color:#bbb;">✕ '+notN+'</span>';
+  statusTxt+=' &nbsp;|  '+(cnt>0?'<strong style="color:#534AB7;">'+cnt+'</strong> checked &middot; ':"")+filtered.length+" shown / "+sjApplicants.length+" total";
+  el.innerHTML=statusTxt;
+}
 function sjToggleAll(checked){
   var _f=getSjFiltered();
   if(!checked){
@@ -2485,8 +2511,7 @@ function sjToggleAll(checked){
     document.querySelectorAll('#sjTableWrap .sj-chk').forEach(function(cb){cb.checked=false;});
     document.querySelectorAll('.sj-select-all').forEach(function(cb){cb.checked=false;});
     document.querySelectorAll('#sjTableWrap tr.sj-selected').forEach(function(tr){tr.classList.remove('sj-selected');});
-    var countEl=document.querySelector('.sj-count');
-    if(countEl)countEl.textContent='0 selected / '+_f.length+' shown / '+sjApplicants.length+' total';
+    updateSjCount();
     updateBulkBar();
   } else {
     _f.forEach(function(r){sjSelected.add(String(r._applyNum));});
@@ -2504,19 +2529,7 @@ function renderSjTable(){
       if(e.target.classList.contains('sj-rank-input'))sjUpdateRank(e.target.getAttribute('data-apply'),e.target.value);
     },{once:true});
   }
-  var cnt=0;filtered.forEach(function(r){if(sjSelected.has(String(r._applyNum)))cnt++;});
-  var el=document.querySelector(".sj-count");
-  if(el){
-    var preN=sjApplicants.filter(function(r){return r._selStatus==="pre-selected";}).length;
-    var selN=sjApplicants.filter(function(r){return r._selStatus==="selected";}).length;
-    var notN=sjApplicants.length-preN-selN;
-    var statusTxt="";
-    if(preN>0)statusTxt+='<span style="color:#f59e0b;font-weight:600;">⭐ '+preN+'</span> ';
-    if(selN>0)statusTxt+='<span style="color:#059669;font-weight:600;">✓ '+selN+'</span> ';
-    statusTxt+='<span style="color:#bbb;">✕ '+notN+'</span>';
-    statusTxt+=' &nbsp;|  '+(cnt>0?'<strong>'+cnt+'</strong> checked &middot; ':"")+filtered.length+" shown / "+sjApplicants.length+" total";
-    el.innerHTML=statusTxt;
-  }
+  updateSjCount();
   updateBulkBar();
 }
 
