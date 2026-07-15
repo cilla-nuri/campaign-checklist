@@ -2400,7 +2400,11 @@ function renderSunjeongArea(){
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
     toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'csv\')"><i class="ti ti-file-text"></i> CSV</button>';
     toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'xlsx\')"><i class="ti ti-file-spreadsheet"></i> Excel</button>';
-    toolbar+='<button class="sj-dl-btn" onclick="downloadPreSelected()" style="background:#fff8e1;color:#d97706;border:1px solid #fcd34d;"><i class="ti ti-star"></i> Pre-selected</button>';
+    toolbar+='<span style="position:relative;display:inline-flex;"><button class="sj-dl-btn" onclick="togglePreSelMenu(event)" style="background:#fff8e1;color:#d97706;border:1px solid #fcd34d;"><i class="ti ti-star"></i> Pre-selected <i class="ti ti-chevron-down" style="font-size:9px;"></i></button>'
+      +'<div class="status-menu" id="preSelMenu" style="left:0;right:auto;top:calc(100% + 4px);">'
+      +'<div class="status-menu-item" onclick="downloadPreSelected(\'xlsx\')"><i class="ti ti-file-spreadsheet" style="color:#1D9E75;font-size:13px;"></i>Excel (.xlsx)</div>'
+      +'<div class="status-menu-item" onclick="downloadPreSelected(\'csv\')"><i class="ti ti-file-text" style="color:#888;font-size:13px;"></i>CSV</div>'
+      +'</div></span>';
   }
   toolbar+='</div>';
   var tableHtml=hasData?buildSjTable(filtered)
@@ -4883,14 +4887,24 @@ async function tryRestoreFromGitHub() {
 
 
 /* ============ DOWNLOAD PRE-SELECTED ============ */
-function downloadPreSelected() {
+function togglePreSelMenu(e){
+  if(e)e.stopPropagation();
+  var m=document.getElementById('preSelMenu');if(!m)return;
+  m.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  var m=document.getElementById('preSelMenu');
+  if(m&&m.classList.contains('open')&&!e.target.closest('#preSelMenu'))m.classList.remove('open');
+});
+function downloadPreSelected(fmt) {
+  var m=document.getElementById('preSelMenu');if(m)m.classList.remove('open');
   var preSelected = sjApplicants.filter(function(r){ return r._selStatus === 'pre-selected'; });
   if (!preSelected.length) { alert('No pre-selected creators found.'); return; }
-  
+
   var g = getCampaign();
   var campName = g ? g.name.replace(/[^a-zA-Z0-9_\-]/g,'_') : 'preselected';
-  
-  // Build CSV: username(no @), ig_url, ig_followers, tt_url, tt_followers, country
+
+  // Build rows: username(no @), ig_url, ig_followers, tt_url, tt_followers, country
   var rows = [['username','instagram_url','instagram_followers','tiktok_url','tiktok_followers','country']];
   preSelected.forEach(function(r) {
     var gr = getCreatorGrade(r.username) || {};
@@ -4903,9 +4917,19 @@ function downloadPreSelected() {
       r.nationality || ''
     ]);
   });
-  
+
+  if (fmt === 'xlsx') {
+    try {
+      var ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{wch:22},{wch:38},{wch:14},{wch:38},{wch:14},{wch:12}];
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Pre-selected');
+      XLSX.writeFile(wb, campName + '_preselected.xlsx');
+      return;
+    } catch(err) { console.error('xlsx export failed, falling back to CSV', err); }
+  }
   var csv = rows.map(function(row){ return row.map(function(c){ var s=String(c||''); return s.includes(',')?'"'+s+'"':s; }).join(','); }).join('\n');
-  var blob = new Blob([csv], {type:'text/csv'});
+  var blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
