@@ -425,6 +425,53 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 
 /* ===== STICKY FIRST COLS ===== */
 
+/* ---- Feedback panel layout fix ---- */
+.missing-list{max-height:170px;overflow-y:auto;}
+.msg-textarea{min-height:240px;}
+.feedback-area{display:flex;flex-direction:column;gap:10px;}
+.feedback-area>div:last-child{display:flex;flex-direction:column;flex:1;min-height:0;}
+.feedback-area>div:last-child .msg-textarea{flex:1;}
+
+/* ---- Campaign side-notes ---- */
+.camp-notes{display:flex;align-items:flex-start;gap:6px;font-size:11px;line-height:1.5;padding:5px 9px;border-radius:8px;cursor:pointer;max-width:640px;transition:background .15s;}
+.camp-notes.has-notes{background:#fffbeb;color:#7a5a00;border:1px solid #f5e6b8;}
+.camp-notes.has-notes:hover{background:#fff6d9;}
+.camp-notes.empty{color:#bbb;border:1px dashed #ddd;}
+.camp-notes.empty:hover{color:#888;border-color:#bbb;background:#fafafa;}
+#campNotesInput{width:100%;max-width:640px;min-height:56px;font-size:11px;line-height:1.5;padding:7px 9px;border-radius:8px;border:1.5px solid #534AB7;outline:none;font-family:inherit;resize:vertical;background:#fffdf5;}
+
+/* ---- Interactive tour ---- */
+#tourOverlay{position:fixed;inset:0;z-index:9000;display:none;}
+#tourOverlay.on{display:block;}
+.tour-spot{position:absolute;border-radius:12px;box-shadow:0 0 0 9999px rgba(20,16,50,.55);transition:all .28s ease;pointer-events:none;border:2px solid #8f86ff;}
+.tour-card{position:absolute;width:290px;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:16px;z-index:9001;transition:all .28s ease;}
+.tour-card .tc-step{font-size:10px;font-weight:700;color:#534AB7;letter-spacing:.5px;margin-bottom:5px;}
+.tour-card .tc-title{font-size:14px;font-weight:700;color:#222;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.tour-card .tc-body{font-size:12px;color:#555;line-height:1.55;margin-bottom:12px;}
+.tour-card .tc-row{display:flex;align-items:center;gap:6px;}
+.tour-card .tc-skip{font-size:11px;color:#aaa;cursor:pointer;background:none;border:none;padding:4px;}
+.tour-card .tc-skip:hover{color:#777;}
+.tour-btn{font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;border:none;cursor:pointer;}
+.tour-btn.next{background:#534AB7;color:#fff;}
+.tour-btn.next:hover{background:#463d9e;}
+.tour-btn.back{background:#f0efff;color:#534AB7;}
+.tour-dots{display:flex;gap:4px;margin-right:auto;}
+.tour-dot{width:6px;height:6px;border-radius:50%;background:#e3e0f5;}
+.tour-dot.on{background:#534AB7;}
+
+/* ---- Interface polish (no layout changes) ---- */
+.bar-btn,.hbtn{border-radius:8px;transition:background .15s,color .15s,box-shadow .15s;}
+.bar-btn:hover{box-shadow:0 1px 4px rgba(83,74,183,.15);}
+.chk-item{border-radius:9px;transition:background .12s;}
+.chk-item:hover{background:#f8f7ff;}
+.sec-label{letter-spacing:.4px;}
+.campaign-card{transition:box-shadow .18s,transform .18s;}
+.campaign-card:hover{box-shadow:0 6px 18px rgba(83,74,183,.13);transform:translateY(-1px);}
+.panel{border-radius:16px 0 0 16px;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#dcd9ee;border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:#c5c0e6;}
+::-webkit-scrollbar-track{background:transparent;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -475,7 +522,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
         <div class="header-actions">
           <button class="hbtn" onclick="openPanel('csv')"><i class="ti ti-upload"></i> Import</button>
           <button class="hbtn" onclick="openPanel('addcreator')"><i class="ti ti-user-plus"></i> Add</button>
-          <button class="hbtn" onclick="openPanel('master')"><i class="ti ti-adjustments-horizontal"></i> Master</button>
+          <button class="hbtn" id="btnEditChecklist" onclick="openPanel('master')"><i class="ti ti-list-check"></i> <span data-t="master">Edit Checklist</span></button>
           <button class="hbtn" style="border-color:#1a1a1a33;color:#1a1a1a;" onclick="openPanel('loadgithub')"><i class="ti ti-brand-github"></i> Load</button>
         </div>
       </div>
@@ -503,6 +550,10 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
           <button id="syncSunjeongBtn" onclick="syncCreatorFromSunjeong(activeCreatorId)" style="display:none;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1.5px solid #534AB7;background:#f0efff;color:#534AB7;font-size:11px;font-weight:500;cursor:pointer;"><i class="ti ti-refresh"></i> Sync from 선정</button>
           </div>
           <div class="main-sub" id="mainSub">Create a new campaign to get started</div>
+          <div id="campNotesWrap" style="display:none;margin-top:5px;max-width:640px;">
+            <div id="campNotesView" onclick="editCampNotes()" title="Click to edit campaign notes"></div>
+            <textarea id="campNotesInput" style="display:none;" placeholder="Campaign notes visible to the whole team… (e.g. brand contact, key dates, watch-outs)" onblur="saveCampNotes()" onkeydown="if(event.key==='Escape')this.blur()"></textarea>
+          </div>
         <div id="creatorNoteBar" style="display:none;font-size:11px;color:#f59e0b;background:#fff8e1;padding:3px 8px;border-radius:6px;margin-top:3px;max-width:600px;"></div>
         </div>
         <div class="main-header-right">
@@ -569,7 +620,7 @@ var T = {
     'edit_grade': 'Edit grade',
     'profile': 'Profile',
     'import': 'Import',
-    'master': 'Master',
+    'master': 'Edit Checklist',
     'load': 'Load',
     'creators': 'Creators',
     'how_to_use': 'How to use',
@@ -592,7 +643,7 @@ var T = {
     'edit_grade': '등급 수정',
     'profile': '프로필',
     'import': '가져오기',
-    'master': '마스터',
+    'master': '체크리스트 편집',
     'load': '불러오기',
     'creators': '크리에이터',
     'how_to_use': '사용법',
@@ -724,6 +775,38 @@ function renderLastEdited(){
   else el.textContent="";
 }
 
+/* ---- Campaign side-notes (shared, saved in campaign settings) ---- */
+function escNote(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function renderCampNotes(){
+  var c=getCampaign();
+  var wrap=document.getElementById("campNotesWrap");if(!wrap)return;
+  if(!c){wrap.style.display="none";return;}
+  wrap.style.display="block";
+  var view=document.getElementById("campNotesView"),inp=document.getElementById("campNotesInput");
+  inp.style.display="none";view.style.display="flex";
+  if(c.notes&&c.notes.trim()){
+    view.className="camp-notes has-notes";
+    view.innerHTML='<i class="ti ti-note" style="font-size:12px;flex-shrink:0;margin-top:1px;"></i><span style="white-space:pre-wrap;">'+escNote(c.notes)+'</span><i class="ti ti-pencil" style="font-size:10px;opacity:.45;flex-shrink:0;margin-top:2px;"></i>';
+  }else{
+    view.className="camp-notes empty";
+    view.innerHTML='<i class="ti ti-note" style="font-size:12px;"></i><span>'+(appLang==='kr'?'캠페인 노트 추가…':'Add campaign notes…')+'</span>';
+  }
+}
+function editCampNotes(){
+  var c=getCampaign();if(!c)return;
+  var view=document.getElementById("campNotesView"),inp=document.getElementById("campNotesInput");
+  view.style.display="none";inp.style.display="block";
+  inp.value=c.notes||"";inp.focus();
+}
+function saveCampNotes(){
+  var c=getCampaign();if(!c)return;
+  var inp=document.getElementById("campNotesInput");
+  var v=inp.value.trim();
+  if((c.notes||"")!==v){c.notes=v;markChanged();}
+  renderCampNotes();
+  if(typeof renderHomePage==='function'&&document.getElementById('homePage')&&document.getElementById('homePage').style.display!=='none'){}
+}
+
 function showLocalSaveToast(){
   let toast=document.getElementById("lsToast");
   if(!toast){
@@ -828,7 +911,8 @@ function resetMainPanel(){
     _subEl2.innerHTML=_subTxt2;
   }
   document.getElementById("sbadge").style.display="none";document.getElementById("feedbackBtn").style.display="none";
-  document.getElementById("checklistArea").innerHTML='<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;"><i class="ti ti-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>'+(c&&c.creators.length?"Select a creator from the sidebar":"Import creators via CSV and load checklist via Master")+'</div>';
+  renderCampNotes();
+  document.getElementById("checklistArea").innerHTML='<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;"><i class="ti ti-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>'+(c&&c.creators.length?"Select a creator from the sidebar":"Import creators via CSV and load checklist via Edit Checklist")+'</div>';
   document.getElementById("ftext").textContent="-- / -- items";document.getElementById("pbarFill").style.width="0%";
   document.getElementById("saveStatus").textContent="";updateSaveButtons();
 }
@@ -1050,20 +1134,24 @@ var CLOSE_TEMPLATES={
 var DROP_TEMPLATE="Hello,\nBy joining a Nurilounge campaign, you agree to meet posting and event requirements professionally and on time. We noticed your content was not posted or you missed the guideline. Non-compliance disrupts our partners and community.\nRepeated violations may result in removal from campaigns and a permanent block.\nThis is a formal warning, and we hope for your cooperation moving forward.";
 
 function generateFeedback(lang,missing,nick,payType,tone){
-  // Dropped creator → formal warning message (always English)
-  var _c=getCampaign();
-  if(_c&&activeCreatorId&&_c.state[activeCreatorId]&&_c.state[activeCreatorId].status==='Dropped'){
-    var dtmpl=getCampaignTemplates().drop||DROP_TEMPLATE;
-    return applyPlaceholders(dtmpl,nick,missing);
+  var key=resolveFeedbackTemplateKey(missing);
+  var T=getCampaignTemplates();
+  if(key==='drop'){
+    return applyPlaceholders(T.drop||DROP_TEMPLATE,nick,missing);
   }
-  if(missing.length){
-    var tmpl=getCampaignTemplates()[lang==='en'?'revision_en':'revision_kr'];
+  if(key==='approved'){
+    var atmpl=lang==='en'?(T.approved_en||DEFAULT_TEMPLATES.approved_en):(T.approved_kr||DEFAULT_TEMPLATES.approved_kr);
+    return applyPlaceholders(atmpl,nick,missing);
+  }
+  if(key.indexOf('custom:')===0){
+    var ct=(T.custom||[]).find(function(x){return x.id===key.slice(7);});
+    if(ct){var ctmpl=lang==='en'?(ct.en||ct.kr||''):(ct.kr||ct.en||'');return applyPlaceholders(ctmpl,nick,missing);}
+  }
+  if(key==='revision'){
+    var tmpl=T[lang==='en'?'revision_en':'revision_kr'];
     if(tmpl)return applyPlaceholders(tmpl,nick,missing);
-    const list=missing.map(function(m,i){return (i+1)+". "+m;}).join("\n");
-    return lang==="en"
-      ?"Hi "+nick+"! \uD83D\uDE0A\n\nThank you so much for submitting your content! We really appreciate your effort.\n\nAfter reviewing your video, we noticed a few points that need to be updated before we can approve it:\n\n"+list+"\n\nCould you please revise and resubmit at your earliest convenience?\n\nThank you so much for your understanding \uD83D\uDE4F"
-      :"\uC548\uB155\uD558\uC138\uC694 "+nick+"\uB2D8! \uD83D\uDE0A\n\n\uCF58\uD150\uCE20 \uC81C\uCD9C\uD574 \uC8FC\uC154\uC11C \uC815\uB9D0 \uAC10\uC0AC\uD569\uB2C8\uB2E4!\n\n\uC601\uC0C1\uC744 \uAC80\uD1A0\uD55C \uACB0\uACFC, \uC2B9\uC778 \uC804\uC5D0 \uC218\uC815\uC774 \uD544\uC694\uD55C \uBA87 \uAC00\uC9C0 \uC0AC\uD56D\uC744 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4:\n\n"+list+"\n\n\uAC00\uB2A5\uD558\uC2E0 \uBE60\uB978 \uC2DC\uC77C \uB0B4\uC5D0 \uC218\uC815 \uD6C4 \uC7AC\uC81C\uCD9C \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4. \uAD81\uAE08\uD55C \uC810\uC774 \uC788\uC73C\uC2DC\uBA74 \uC5B8\uC81C\uB4E0\uC9C0 \uD3B8\uD558\uAC8C \uBB38\uC758\uD574 \uC8FC\uC138\uC694!\n\n\uC774\uD574\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F";
   }
+  /* 'close' — classic payment/tone closing messages */
   var pt=payType||"payment",t=tone||"good";
   return CLOSE_TEMPLATES[pt][t];
 }
@@ -1598,11 +1686,12 @@ function openPanel(type){
 function renderHowToPanel(){
   var isKR = appLang === 'kr';
   document.getElementById('panelTitle').textContent = isKR ? '사용법' : 'How to use';
-  document.getElementById('panelBody').innerHTML = isKR ? `
+  var tourBtn='<button onclick="startTour()" style="width:100%;margin-bottom:14px;padding:10px;border-radius:10px;border:none;background:#534AB7;color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;"><i class="ti ti-player-play"></i>'+(isKR?'인터랙티브 투어 시작':'Start interactive tour')+'</button>';
+  document.getElementById('panelBody').innerHTML = tourBtn + (isKR ? `
     <div class="how-to">
       <div class="how-to-title"><i class="ti ti-rocket" style="font-size:18px;"></i> 캠페인 체크리스트 앱</div>
       <div class="how-to-section"><div class="how-to-step">1</div><div><b>새 캠페인 만들기</b><br>상단의 + New 버튼으로 캠페인을 만드세요.</div></div>
-      <div class="how-to-section"><div class="how-to-step">2</div><div><b>마스터 체크리스트 설정</b><br>Master 버튼 → CSV 업로드 또는 직접 추가 → Apply to all</div></div>
+      <div class="how-to-section"><div class="how-to-step">2</div><div><b>가이드라인 체크리스트 설정</b><br>Edit Checklist 버튼 → CSV 업로드 또는 직접 추가 → Apply to all</div></div>
       <div class="how-to-section"><div class="how-to-step">3</div><div><b>선정 탭: 크리에이터 불러오기</b><br>Quest CSV 업로드 → 상태 설정 (pre-selected/selected)</div></div>
       <div class="how-to-section"><div class="how-to-step">4</div><div><b>체크 탭: 콘텐츠 검토</b><br>사이드바에서 크리에이터 선택 → 체크리스트 항목 체크 → 피드백 작성</div></div>
       <div class="how-to-section"><div class="how-to-step">5</div><div><b>자동 상태 변경</b><br>항목 체크 시 → 검토 중 / 피드백 클릭 시 → 수정 요청 / 100% 완료 → 승인</div></div>
@@ -1616,7 +1705,7 @@ function renderHowToPanel(){
       <div class="how-to-section"><div class="how-to-step">4</div><div><b>Check tab: Review content</b><br>Select creator in sidebar → check items → write feedback</div></div>
       <div class="how-to-section"><div class="how-to-step">5</div><div><b>Auto status</b><br>Check item → In Review / Click Feedback → Revision Requested / 100% → Approved</div></div>
       <div class="how-to-section"><div class="how-to-step">6</div><div><b>Save</b><br>Click Save all to save everything to GitHub</div></div>
-    </div>`;
+    </div>`);
 }
 
 function renderNewCampaignPanel(){
@@ -1766,7 +1855,8 @@ function renderFeedbackPanel(){
   const c=getCampaign();if(!c||!activeCreatorId)return;
   const cr=c.creators.find(function(x){return x.id===activeCreatorId;});
   const missing=getMissingItems();
-  const isDropped=c.state[activeCreatorId]&&c.state[activeCreatorId].status==='Dropped';
+  const resolvedKey=resolveFeedbackTemplateKey(missing);
+  const isDropped=resolvedKey==='drop';
   document.getElementById("panel").classList.add("wide");
 
   var missingHtml=isDropped
@@ -1775,8 +1865,17 @@ function renderFeedbackPanel(){
     ?'<div class="missing-list"><div class="missing-title"><i class="ti ti-alert-triangle" style="font-size:13px;"></i> '+missing.length+' item'+(missing.length>1?"s":"")+'</div>'+missing.map(function(m,i){return '<div class="missing-item"><span class="missing-num">'+(i+1)+'.</span><span>'+m+'</span></div>';}).join('')+'</div>'
     :'<div class="all-good"><i class="ti ti-circle-check" style="font-size:20px;display:block;margin-bottom:6px;"></i>All items checked!</div>';
 
+  var tplOpts=feedbackTemplateOptions().map(function(o){
+    return '<option value="'+o.key+'"'+(feedbackTemplateKey===o.key?' selected':'')+'>'+o.label+(o.key==='auto'&&feedbackTemplateKey==='auto'?' → '+(resolvedKey==='drop'?'Drop':resolvedKey==='approved'?'Approved':resolvedKey==='close'?'Closing':resolvedKey.indexOf('custom:')===0?'Custom':'Revision'):'')+'</option>';
+  }).join('');
+  var tplSelector='<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">'+
+    '<span class="fmeta-label">Template:</span>'+
+    '<select onchange="setFeedbackTemplate(this.value)" style="font-size:11px;padding:5px 8px;border-radius:7px;border:1.5px solid #e0e0e0;background:#fff;color:#444;cursor:pointer;max-width:220px;">'+tplOpts+'</select>'+
+    '<button onclick="newCustomTemplate()" style="font-size:11px;padding:4px 9px;border-radius:7px;border:1px dashed #b8b0e8;background:#faf9ff;color:#534AB7;cursor:pointer;">+ New</button>'+
+    '</div>';
+
   var closeOptions='';
-  if(!missing.length&&!isDropped){
+  if(resolvedKey==='close'){
     closeOptions=
       '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">'+
       '<div>'+
@@ -1807,8 +1906,9 @@ function renderFeedbackPanel(){
     '<button class="lang-btn'+(feedbackLang==="en"?" active":"")+'" onclick="switchFeedbackLang(\'en\')">English</button>'+
     '<button class="lang-btn'+(feedbackLang==="kr"?" active":"")+'" onclick="switchFeedbackLang(\'kr\')">Korean</button>'+
     '</div></div>'+
-    '<button onclick="openPanel(\'feedbacktemplate\')" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;display:flex;align-items:center;gap:4px;"><i class="ti ti-template"></i> Template</button>'+
+    '<button onclick="openPanel(\'feedbacktemplate\')" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;display:flex;align-items:center;gap:4px;"><i class="ti ti-template"></i> Edit templates</button>'+
     '</div>'+
+    tplSelector+
     missingHtml+
     closeOptions+
     '<div><div class="msg-label"><span>Message to creator</span><button class="copy-btn" id="copyBtn" onclick="copyMsg()"><i class="ti ti-copy"></i> Copy</button></div>'+
@@ -1816,6 +1916,20 @@ function renderFeedbackPanel(){
   document.getElementById("panelFooter").innerHTML='<span class="pf-warn">Edit if needed before copying.</span>';
 }
 function switchFeedbackLang(lang){feedbackLang=lang;renderFeedbackPanel();}
+function setFeedbackTemplate(key){feedbackTemplateKey=key;renderFeedbackPanel();}
+function newCustomTemplate(){
+  var c=getCampaign();if(!c)return;
+  var name=prompt(appLang==='kr'?'새 템플릿 이름:':'New template name:');
+  if(!name||!name.trim())return;
+  if(!c.feedbackTemplates)c.feedbackTemplates={};
+  if(!c.feedbackTemplates.custom)c.feedbackTemplates.custom=[];
+  var id=uid();
+  c.feedbackTemplates.custom.push({id:id,name:name.trim(),en:'Hi {creator}!\n\n',kr:''});
+  markChanged();saveToLocalStorage();
+  feedbackTemplateKey='custom:'+id;
+  tmplEditKey='custom:'+id;
+  openPanel('feedbacktemplate');
+}
 function switchFeedbackOpt(type,val){if(type==="pay")feedbackPayType=val;else feedbackTone=val;renderFeedbackPanel();}
 function copyMsg(){
   const ta=document.getElementById("msgTextarea");if(!ta)return;
@@ -3215,6 +3329,7 @@ function scheduleAutoSave() {
 
 async function doAutoSave() {
   if (!_pendingSave) return;
+  if (window.__previewMode) { _pendingSave = false; showSaveIndicator('saved', 'Preview — not saved'); return; }
   _pendingSave = false;
   showSaveIndicator('saving', 'Saving...');
   try {
@@ -3402,7 +3517,7 @@ function renderHomePage() {
     var mine = (typeof assignedToMe==='function') && assignedToMe(id);
     return '<div class="campaign-card'+(isArch?' archived':'')+'" onclick="selectCampaignFromHome(\''+id+'\')" style="'+(mine?'border:1.5px solid #534AB7;':'')+'">'+
       '<div class="cc-actions">'+'<button class="cc-action-btn" onclick="event.stopPropagation();openAssignModal(\''+id+'\')" title="Assign / handover"><i class="ti ti-user-plus"></i></button>'+'<button class="cc-action-btn" onclick="event.stopPropagation();renameCampaign(\''+id+'\')" title="Rename"><i class="ti ti-pencil"></i></button>'+'<button class="cc-action-btn" onclick="event.stopPropagation();toggleArchive(\''+id+'\')" title="'+(isArch?'Unarchive':'Archive')+'"><i class="ti ti-'+(isArch?'archive-off':'archive')+'"></i></button>'+'</div>'+
-      '<div class="cc-name">'+c.name+(isArch?'<span class="cc-archived-badge"><i class="ti ti-archive" style="font-size:8px;"></i> Archived</span>':'')+'</div>'+
+      '<div class="cc-name">'+c.name+(c.notes&&c.notes.trim()?'<i class="ti ti-note" style="font-size:11px;color:#b8860b;margin-left:5px;vertical-align:middle;" title="'+escNote(c.notes).replace(/"/g,'&quot;')+'"></i>':'')+(isArch?'<span class="cc-archived-badge"><i class="ti ti-archive" style="font-size:8px;"></i> Archived</span>':'')+'</div>'+
       '<div class="cc-meta">'+
         '<span><i class="ti ti-users" style="font-size:10px;"></i> '+c.creators.length+' creators</span>'+
         (asgName?'<span style="color:'+(mine?'#534AB7':'#888')+';font-weight:600;"><i class="ti ti-user-check" style="font-size:10px;"></i> '+asgName+'</span>':'')+
@@ -3640,6 +3755,7 @@ function closePanel() {
   }
   clearPanelDirty();
   feedbackTone = 'good';
+  feedbackTemplateKey = 'auto';
   document.getElementById("overlay").classList.remove("open");
 }
 
@@ -3868,8 +3984,30 @@ function renameCampaign(id) {
    ============================================================ */
 var DEFAULT_TEMPLATES = {
   revision_en: "Hi {creator}! \uD83D\uDE0A\nThank you so much for submitting your content! We really appreciate your effort.\nAfter reviewing your video, we noticed a few points that need to be updated before we can approve it:\n\n{missing}\n\nCould you please revise and resubmit at your earliest convenience?\nThank you so much for your understanding \uD83D\uDE4F",
-  revision_kr: "\uC548\uB155\uD558\uC138\uC694 {creator}\uB2D8! \uD83D\uDE0A\n\n\uCF58\uD150\uCE20 \uC81C\uCD9C\uD574 \uC8FC\uC154\uC11C \uC815\uB9D0 \uAC10\uC0AC\uD569\uB2C8\uB2E4!\n\n\uC601\uC0C1\uC744 \uAC80\uD1A0\uD55C \uACB0\uACFC, \uC2B9\uC778 \uC804\uC5D0 \uC218\uC815\uC774 \uD544\uC694\uD55C \uBA87 \uAC00\uC9C0 \uC0AC\uD56D\uC744 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4:\n\n{missing}\n\n\uAC00\uB2A5\uD558\uC2E0 \uBE60\uB978 \uC2DC\uC77C \uB0B4\uC5D0 \uC218\uC815 \uD6C4 \uC7AC\uC81C\uCD9C \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4. \uAD81\uAE08\uD55C \uC810\uC774 \uC788\uC73C\uC2DC\uBA74 \uC5B8\uC81C\uB4E0\uC9C0 \uD3B8\uD558\uAC8C \uBB38\uC758\uD574 \uC8FC\uC138\uC694!\n\n\uC774\uD574\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F"
+  revision_kr: "\uC548\uB155\uD558\uC138\uC694 {creator}\uB2D8! \uD83D\uDE0A\n\n\uCF58\uD150\uCE20 \uC81C\uCD9C\uD574 \uC8FC\uC154\uC11C \uC815\uB9D0 \uAC10\uC0AC\uD569\uB2C8\uB2E4!\n\n\uC601\uC0C1\uC744 \uAC80\uD1A0\uD55C \uACB0\uACFC, \uC2B9\uC778 \uC804\uC5D0 \uC218\uC815\uC774 \uD544\uC694\uD55C \uBA87 \uAC00\uC9C0 \uC0AC\uD56D\uC744 \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4:\n\n{missing}\n\n\uAC00\uB2A5\uD558\uC2E0 \uBE60\uB978 \uC2DC\uC77C \uB0B4\uC5D0 \uC218\uC815 \uD6C4 \uC7AC\uC81C\uCD9C \uBD80\uD0C1\uB4DC\uB9BD\uB2C8\uB2E4. \uAD81\uAE08\uD55C \uC810\uC774 \uC788\uC73C\uC2DC\uBA74 \uC5B8\uC81C\uB4E0\uC9C0 \uD3B8\uD558\uAC8C \uBB38\uC758\uD574 \uC8FC\uC138\uC694!\n\n\uC774\uD574\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4 \uD83D\uDE4F",
+  approved_en: "Hi {creator}! \uD83C\uDF89\nGreat news \u2014 your video has been APPROVED! Thank you for following the guidelines so well.\n\nTo complete the campaign, please send us:\n1. The final posted video link\n2. Your video's Spark Ads authorization code (meta code)\n\nPlease make sure the code is valid for at least 60 days.\nThank you for your great work! \uD83D\uDE4F",
+  approved_kr: "\uC548\uB155\uD558\uC138\uC694 {creator}\uB2D8! \uD83C\uDF89\n\uC88B\uC740 \uC18C\uC2DD\uC774\uC5D0\uC694 \u2014 \uC601\uC0C1\uC774 \uC2B9\uC778\uB418\uC5C8\uC2B5\uB2C8\uB2E4! \uAC00\uC774\uB4DC\uB77C\uC778\uC744 \uC798 \uC9C0\uCF1C\uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4.\n\n\uCEA0\uD398\uC778 \uC644\uB8CC\uB97C \uC704\uD574 \uC544\uB798 \uD56D\uBAA9\uC744 \uBCF4\uB0B4\uC8FC\uC138\uC694:\n1. \uCD5C\uC885 \uAC8C\uC2DC\uB41C \uC601\uC0C1 \uB9C1\uD06C\n2. Spark Ads \uC778\uC99D \uCF54\uB4DC (\uBA54\uD0C0 \uCF54\uB4DC)\n\n\uCF54\uB4DC\uB294 \uCD5C\uC18C 60\uC77C \uC774\uC0C1 \uC720\uD6A8\uD574\uC57C \uD569\uB2C8\uB2E4.\n\uC218\uACE0\uD574 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD569\uB2C8\uB2E4! \uD83D\uDE4F"
 };
+var feedbackTemplateKey='auto';
+function resolveFeedbackTemplateKey(missing){
+  if(feedbackTemplateKey!=='auto')return feedbackTemplateKey;
+  var c=getCampaign(),st=c&&activeCreatorId&&c.state[activeCreatorId];
+  if(st&&st.status==='Dropped')return 'drop';
+  if(missing.length)return 'revision';
+  return 'approved';
+}
+function feedbackTemplateOptions(){
+  var T=getCampaignTemplates();
+  var opts=[
+    {key:'auto',label:'Auto (by status)'},
+    {key:'revision',label:'Revision request'},
+    {key:'approved',label:'Approved + Meta code'},
+    {key:'close',label:'Closing (payment / tone)'},
+    {key:'drop',label:'Drop warning'}
+  ];
+  (T.custom||[]).forEach(function(ct){opts.push({key:'custom:'+ct.id,label:ct.name});});
+  return opts;
+}
 
 function getCampaignTemplates() {
   var c = getCampaign();
@@ -3893,48 +4031,97 @@ function applyPlaceholders(template, nick, missing) {
 
 
 
+var tmplEditKey='revision';
 function renderFeedbackTemplatePanel() {
   var c = getCampaign();
   if (!c) return;
-  var tmpls = c.feedbackTemplates || {};
-  var enVal = tmpls.revision_en || DEFAULT_TEMPLATES.revision_en;
-  var krVal = tmpls.revision_kr || DEFAULT_TEMPLATES.revision_kr;
-  var isCustom = !!c.feedbackTemplates;
+  var T = getCampaignTemplates();
+  var customs = T.custom || [];
+  var builtin = [
+    {key:'revision', label:'Revision request'},
+    {key:'approved', label:'Approved + Meta code'},
+    {key:'drop', label:'Drop warning'}
+  ];
+  var selOpts = builtin.map(function(b){return '<option value="'+b.key+'"'+(tmplEditKey===b.key?' selected':'')+'>'+b.label+'</option>';}).join('')+
+    customs.map(function(ct){return '<option value="custom:'+ct.id+'"'+(tmplEditKey==='custom:'+ct.id?' selected':'')+'>'+ct.name+' (custom)</option>';}).join('');
+
+  var enVal='',krVal='',singleLang=false,customObj=null;
+  if(tmplEditKey==='revision'){enVal=T.revision_en||DEFAULT_TEMPLATES.revision_en;krVal=T.revision_kr||DEFAULT_TEMPLATES.revision_kr;}
+  else if(tmplEditKey==='approved'){enVal=T.approved_en||DEFAULT_TEMPLATES.approved_en;krVal=T.approved_kr||DEFAULT_TEMPLATES.approved_kr;}
+  else if(tmplEditKey==='drop'){enVal=T.drop||DROP_TEMPLATE;singleLang=true;}
+  else if(tmplEditKey.indexOf('custom:')===0){
+    customObj=customs.find(function(x){return 'custom:'+x.id===tmplEditKey;});
+    if(!customObj){tmplEditKey='revision';renderFeedbackTemplatePanel();return;}
+    enVal=customObj.en||'';krVal=customObj.kr||'';
+  }
+  var esc=function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');};
 
   document.getElementById('panel').classList.add('wide');
   document.getElementById('panelBody').innerHTML =
-    '<div style="margin-bottom:10px;font-size:12px;color:#888;">Placeholders: <code>{creator}</code> <code>{brand}</code> <code>{product}</code> <code>{missing}</code> <code>{date}</code> <code>{campaign}</code></div>'+
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'+
-      '<div style="font-size:11px;font-weight:600;color:#555;">Revision feedback — English</div>'+
-      (isCustom ? '<button onclick="resetCampaignTemplate()" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid #e0e0e0;background:#fff;color:#e24b4a;cursor:pointer;">↩ Reset to default</button>' : '')+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'+
+      '<span style="font-size:11px;font-weight:600;color:#555;">Template:</span>'+
+      '<select onchange="tmplEditKey=this.value;renderFeedbackTemplatePanel()" style="font-size:11px;padding:5px 8px;border-radius:7px;border:1.5px solid #e0e0e0;background:#fff;cursor:pointer;">'+selOpts+'</select>'+
+      '<button onclick="newCustomTemplate()" style="font-size:11px;padding:4px 9px;border-radius:7px;border:1px dashed #b8b0e8;background:#faf9ff;color:#534AB7;cursor:pointer;">+ New custom</button>'+
+      (customObj?'<button onclick="deleteCustomTemplate(\''+customObj.id+'\')" style="font-size:11px;padding:4px 9px;border-radius:7px;border:1px solid #f3c1c1;background:#fff5f5;color:#e24b4a;cursor:pointer;"><i class="ti ti-trash" style="font-size:10px;"></i> Delete</button>':'')+
     '</div>'+
-    '<textarea id="tmplEnInput" style="width:100%;height:160px;padding:8px;font-size:12px;border-radius:8px;border:1.5px solid #e0e0e0;line-height:1.6;resize:vertical;font-family:inherit;">'+enVal+'</textarea>'+
-    '<div style="font-size:11px;font-weight:600;color:#555;margin:10px 0 6px;">Revision feedback — Korean</div>'+
-    '<textarea id="tmplKrInput" style="width:100%;height:160px;padding:8px;font-size:12px;border-radius:8px;border:1.5px solid #e0e0e0;line-height:1.6;resize:vertical;font-family:inherit;">'+krVal+'</textarea>';
+    '<div style="margin-bottom:10px;font-size:12px;color:#888;">Placeholders: <code>{creator}</code> <code>{brand}</code> <code>{product}</code> <code>{missing}</code> <code>{date}</code> <code>{campaign}</code></div>'+
+    (customObj?'<div style="margin-bottom:8px;"><span style="font-size:11px;font-weight:600;color:#555;">Name: </span><input id="tmplNameInput" value="'+esc(customObj.name)+'" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1.5px solid #e0e0e0;width:200px;"/></div>':'')+
+    '<div style="font-size:11px;font-weight:600;color:#555;margin-bottom:6px;">'+(singleLang?'Message (all languages)':'English')+'</div>'+
+    '<textarea id="tmplEnInput" style="width:100%;height:'+(singleLang?'260px':'150px')+';padding:8px;font-size:12px;border-radius:8px;border:1.5px solid #e0e0e0;line-height:1.6;resize:vertical;font-family:inherit;">'+esc(enVal)+'</textarea>'+
+    (singleLang?'':'<div style="font-size:11px;font-weight:600;color:#555;margin:10px 0 6px;">Korean</div>'+
+    '<textarea id="tmplKrInput" style="width:100%;height:150px;padding:8px;font-size:12px;border-radius:8px;border:1.5px solid #e0e0e0;line-height:1.6;resize:vertical;font-family:inherit;">'+esc(krVal)+'</textarea>');
 
   document.getElementById('panelFooter').innerHTML =
-    '<button class="apply-btn" onclick="saveFeedbackTemplate()">Save template</button>'+
-    '<span style="font-size:11px;color:#bbb;margin-left:8px;">Applies to this campaign only</span>';
+    '<button onclick="resetCampaignTemplate()" style="font-size:11px;padding:6px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#e24b4a;cursor:pointer;">↩ Reset this template</button>'+
+    '<span style="font-size:11px;color:#bbb;margin-left:4px;flex:1;">Applies to this campaign only</span>'+
+    '<button class="apply-btn" onclick="saveFeedbackTemplate()">Save template</button>';
 }
 
 function saveFeedbackTemplate() {
   var c = getCampaign();
   if (!c) return;
+  if (!c.feedbackTemplates) c.feedbackTemplates = {};
+  var ft = c.feedbackTemplates;
   var en = document.getElementById('tmplEnInput').value.trim();
-  var kr = document.getElementById('tmplKrInput').value.trim();
-  if (!en || !kr) { alert('Template cannot be empty.'); return; }
-  c.feedbackTemplates = { revision_en: en, revision_kr: kr };
+  var krEl = document.getElementById('tmplKrInput');
+  var kr = krEl ? krEl.value.trim() : '';
+  if (tmplEditKey==='revision'){ if(!en||!kr){alert('Template cannot be empty.');return;} ft.revision_en=en; ft.revision_kr=kr; }
+  else if (tmplEditKey==='approved'){ if(!en||!kr){alert('Template cannot be empty.');return;} ft.approved_en=en; ft.approved_kr=kr; }
+  else if (tmplEditKey==='drop'){ if(!en){alert('Template cannot be empty.');return;} ft.drop=en; }
+  else if (tmplEditKey.indexOf('custom:')===0){
+    var ct=(ft.custom||[]).find(function(x){return 'custom:'+x.id===tmplEditKey;});
+    if(ct){
+      ct.en=en; ct.kr=kr;
+      var nameEl=document.getElementById('tmplNameInput');
+      if(nameEl&&nameEl.value.trim())ct.name=nameEl.value.trim();
+    }
+  }
   saveToLocalStorage();
   markChanged();
   closePanel();
 }
 
+function deleteCustomTemplate(id){
+  if(!confirm('Delete this custom template?'))return;
+  var c=getCampaign();if(!c||!c.feedbackTemplates||!c.feedbackTemplates.custom)return;
+  c.feedbackTemplates.custom=c.feedbackTemplates.custom.filter(function(x){return x.id!==id;});
+  if(feedbackTemplateKey==='custom:'+id)feedbackTemplateKey='auto';
+  tmplEditKey='revision';
+  saveToLocalStorage();markChanged();
+  renderFeedbackTemplatePanel();
+}
+
 function resetCampaignTemplate() {
-  if (!confirm('Reset to default template for this campaign?')) return;
+  if (!confirm('Reset this template to default for this campaign?')) return;
   var c = getCampaign();
-  if (!c) return;
-  delete c.feedbackTemplates;
+  if (!c || !c.feedbackTemplates) { renderFeedbackTemplatePanel(); return; }
+  var ft=c.feedbackTemplates;
+  if (tmplEditKey==='revision'){ delete ft.revision_en; delete ft.revision_kr; }
+  else if (tmplEditKey==='approved'){ delete ft.approved_en; delete ft.approved_kr; }
+  else if (tmplEditKey==='drop'){ delete ft.drop; }
+  if (!Object.keys(ft).filter(function(k){return k!=='custom'||((ft.custom||[]).length>0);}).length) {}
   saveToLocalStorage();
+  markChanged();
   renderFeedbackTemplatePanel();
 }
 
@@ -3950,6 +4137,8 @@ var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'+
   '.g7vIGM03qdSla4QrFdQRwQCplDVaWrMOpvoGfytHQ24';
 
 async function initAuth() {
+  /* PREVIEW MODE: opened as a local file — bypass login, load demo data, disable sync */
+  if (location.protocol === 'file:') { enterPreviewMode(); return; }
   // Check for OAuth callback in URL hash
   var hash = window.location.hash;
   var search = window.location.search;
@@ -4030,6 +4219,44 @@ function showApp() {
   if (ls) ls.style.display = 'none';
   if (app) app.style.display = '';
   addUserToHeader();
+}
+
+var __previewMode = false;
+function enterPreviewMode() {
+  __previewMode = true;
+  currentUser = { id: 'preview-user', email: 'preview@local', user_metadata: { full_name: 'Preview User' } };
+  window.__profiles = window.__profiles || {};
+  __profiles['preview-user'] = { name: 'Preview User' };
+  /* demo campaign so the UI has something to show */
+  if (!Object.keys(campaigns).length) {
+    var cid = uid();
+    var mk = function(t, kr, opt) { return { id: uid(), text: t, textKr: kr || '', optional: !!opt }; };
+    var sec1 = { id: uid(), name: 'Format Requirements', items: [ mk('Video must be 30-60 seconds', '영상은 30-60초여야 함'), mk('Vertical format (9:16)', '세로 형식 (9:16)'), mk('Add location sticker', '위치 스티커 추가', true) ] };
+    var sec2 = { id: uid(), name: 'Caption & Tags', items: [ mk('Must tag @brand_official', '@brand_official 태그 필수'), mk('Use required hashtags', '필수 해시태그 사용') ] };
+    var c1 = uid(), c2 = uid(), c3 = uid();
+    campaigns[cid] = {
+      id: cid, name: '#0000 [Demo] Preview Campaign ✨', payType: 'Payment', deadline: '2026-08-01',
+      notes: 'This is a demo campaign for preview mode. Brand contact: demo@brand.com — posting window Aug 1-7.',
+      creators: [ {id:c1, handle:'@demo_creator1', nick:'Demo One'}, {id:c2, handle:'@demo_creator2', nick:'Demo Two'}, {id:c3, handle:'@demo_creator3', nick:'Demo Three'} ],
+      master: [sec1, sec2],
+      state: {},
+      lastEditedAt: new Date(Date.now()-360000).toISOString(), lastEditedBy: 'preview-user'
+    };
+    var c = campaigns[cid];
+    c.state[c1] = { status: 'In Review', checks: {}, _editedAt: new Date(Date.now()-360000).toISOString(), _editedBy: 'preview-user' };
+    c.state[c1].checks[sec1.items[0].id] = true;
+    c.state[c2] = { status: 'Approved', checks: {}, _editedAt: new Date(Date.now()-7200000).toISOString(), _editedBy: 'preview-user' };
+    sec1.items.concat(sec2.items).forEach(function(it){ c.state[c2].checks[it.id] = true; });
+    c.state[c3] = { status: 'Dropped', checks: {} };
+    activeCampaignId = cid;
+  }
+  showApp();
+  try { if (typeof renderSidebar === 'function') renderSidebar(); if (typeof resetMainPanel === 'function') resetMainPanel(); if (typeof updateCampSelect === 'function') updateCampSelect(); } catch(e) { console.log('[Preview] render:', e); }
+  /* banner */
+  var b = document.createElement('div');
+  b.style.cssText = 'position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:99998;background:#1a1a2e;color:#fff;font-size:11px;font-weight:600;padding:7px 16px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;gap:7px;';
+  b.innerHTML = '<i class="ti ti-eye"></i> PREVIEW MODE — local file · login & cloud sync disabled · data is demo only';
+  document.body.appendChild(b);
 }
 
 function addUserToHeader() {
@@ -4678,6 +4905,7 @@ async function sbFetchAll(path){
 }
 
 async function loadAllFromSupabase(){
+  if (window.__previewMode) return;
   var results = await Promise.all([
     sbFetchAll("campaigns?select=*&order=created_at.asc"),
     sbFetchAll("campaign_master?select=campaign_id,sections"),
@@ -4706,6 +4934,7 @@ async function loadAllFromSupabase(){
     if(r.period) c.period = r.period;
     if(r.archived) c.archived = true;
     if(s.sjSettings) c.sjSettings = s.sjSettings;
+    if(s.notes) c.notes = s.notes;
     if(s.feedbackTemplates) c.feedbackTemplates = s.feedbackTemplates;
     if(r.last_edited_at){ c.lastEditedAt = r.last_edited_at; c.lastEditedBy = r.last_edited_by || null; }
     campaigns[lid] = c;
@@ -4735,6 +4964,7 @@ async function saveCampaignToSupabase(cid){
   if(isNew){ cu = __uuid(); __campUuid[cid] = cu; }
   var settings = {};
   if(c.sjSettings) settings.sjSettings = c.sjSettings;
+  if(c.notes) settings.notes = c.notes;
   if(c.feedbackTemplates) settings.feedbackTemplates = c.feedbackTemplates;
   var row = {id:cu, legacy_id:cid, name:c.name, pay_type:c.payType||null, deadline:__validDate(c.deadline),
              period:c.period||null, archived:!!c.archived, settings:settings};
@@ -4967,6 +5197,7 @@ window.__sbAccessToken = null;
 window.currentUser = null;
 
 function _showLogin(show){
+  if (show && (window.__previewMode || location.protocol === 'file:')) return; /* preview: never block UI with login */
   var ov = document.getElementById("loginOverlay");
   if(ov) ov.style.display = show ? "flex" : "none";
 }
@@ -5015,6 +5246,7 @@ async function logoutUser(){
 sbClient.auth.onAuthStateChange(function(_event, session){ _applySession(session); });
 
 (async function(){
+  if (location.protocol === 'file:') { try { enterPreviewMode(); } catch(e) { console.log('[Preview]', e); } return; }
   try{
     var r = await sbClient.auth.getSession();
     _applySession(r && r.data ? r.data.session : null);
@@ -5105,6 +5337,82 @@ function addCreatorManually() {
   activeCreatorId = newCr.id;
   setTimeout(function() { renderSidebar(); }, 50);
 }
+
+/* ============ INTERACTIVE TUTORIAL TOUR ============ */
+var __tourSteps=[
+  {sel:'.campaign-bar-label',en:{t:'Home / All campaigns',b:'Click here anytime to see all campaign cards. Each card shows progress, who it\'s assigned to, notes, and when it was last edited.'},kr:{t:'홈 / 전체 캠페인',b:'여기를 클릭하면 모든 캠페인 카드를 볼 수 있어요. 각 카드에는 진행률, 담당자, 노트, 마지막 수정 정보가 표시됩니다.'},icon:'ti-layout-grid'},
+  {sel:'#campSelectBtn',en:{t:'Switch campaigns',b:'Quickly jump between campaigns with this dropdown, or create a new one with the + New button next to it.'},kr:{t:'캠페인 전환',b:'이 드롭다운으로 캠페인을 빠르게 전환하거나, 옆의 + New 버튼으로 새 캠페인을 만드세요.'},icon:'ti-switch-horizontal'},
+  {sel:'#btnEditChecklist',en:{t:'Edit Checklist',b:'Set up the guideline checklist here — import a CSV from Claude (section, item, item_kr, type) or add items manually. Mark items REQ/OPT, add Korean text, then Apply to all.'},kr:{t:'체크리스트 편집',b:'가이드라인 체크리스트를 설정하세요 — CSV 가져오기 또는 직접 추가. 항목별 필수/선택(REQ/OPT), 한국어 번역 입력 후 Apply to all!'},icon:'ti-list-check'},
+  {sel:'.sidebar',en:{t:'Creator roster',b:'All creators in this campaign. The pill shows checklist progress (or a red Drop). Use the sort buttons — 🔴 Todo puts creators needing review on top.'},kr:{t:'크리에이터 목록',b:'이 캠페인의 모든 크리에이터. 알약 표시는 진행률(또는 빨간 Drop)이에요. 🔴 Todo 정렬로 검토가 필요한 크리에이터를 위로!'},icon:'ti-users'},
+  {sel:'#checklistArea',en:{t:'Review content',b:'Select a creator, then tick items as you review their content. Progress only counts REQUIRED items — OPTIONAL ones never block approval. In KR mode, items show in Korean.'},kr:{t:'콘텐츠 검토',b:'크리에이터 선택 후 콘텐츠를 보며 항목을 체크하세요. 진행률은 필수 항목만 계산 — 선택 항목은 승인에 영향 없어요. KR 모드에선 한국어로 표시!'},icon:'ti-checkbox'},
+  {sel:'#sbadge',fallback:'.main-header-right',en:{t:'Status',b:'Status updates automatically (checking → In Review, 100% → Approved), but you can also click the badge to pick any status — including Dropped, which switches the feedback to a formal warning.'},kr:{t:'상태',b:'상태는 자동으로 바뀌지만(체크 → 검토 중, 100% → 승인), 배지를 클릭해 직접 선택할 수도 있어요 — Dropped 선택 시 피드백이 공식 경고문으로 변경!'},icon:'ti-badge'},
+  {sel:'#feedbackBtn',fallback:'.main-header-right',en:{t:'Feedback message',b:'Generates a copy-ready English message listing unchecked required items. Sets status to Revision Requested. Templates are customizable per campaign.'},kr:{t:'피드백 메시지',b:'미체크 필수 항목이 담긴 영어 메시지를 자동 생성해요. 상태는 수정 요청으로 변경. 캠페인별 템플릿 수정 가능!'},icon:'ti-message-2'},
+  {sel:'#campNotesWrap',fallback:'.main-header',en:{t:'Campaign notes',b:'Shared side-notes visible to the whole team — brand contacts, key dates, watch-outs. Click to edit; a 📝 icon also appears on the campaign card.'},kr:{t:'캠페인 노트',b:'팀 전체가 볼 수 있는 공유 노트 — 브랜드 연락처, 주요 일정, 주의사항. 클릭해서 수정하세요. 캠페인 카드에도 📝 아이콘이 표시돼요.'},icon:'ti-note'},
+  {sel:'#saveAllBtn',en:{t:'Auto-save & teamwork',b:'Changes auto-save every few seconds and sync live to teammates — you\'ll see "Edited … by …" everywhere. Save all is there as a manual backup. That\'s it, have fun! 🎉'},kr:{t:'자동 저장 & 협업',b:'변경사항은 몇 초마다 자동 저장되고 팀원에게 실시간 동기화돼요 — "Edited … by …"로 확인 가능. Save all은 수동 백업용. 끝! 화이팅! 🎉'},icon:'ti-device-floppy'}
+];
+var __tourIdx=0;
+function ensureTourDom(){
+  if(document.getElementById('tourOverlay'))return;
+  var d=document.createElement('div');d.id='tourOverlay';
+  d.innerHTML='<div class="tour-spot" id="tourSpot"></div><div class="tour-card" id="tourCard"></div>';
+  document.body.appendChild(d);
+}
+function startTour(){
+  ensureTourDom();__tourIdx=0;
+  if(typeof closePanel==='function')try{closePanel();}catch(e){}
+  document.getElementById('tourOverlay').classList.add('on');
+  showTourStep();
+}
+function endTour(){
+  document.getElementById('tourOverlay').classList.remove('on');
+  localStorage.setItem('tourDone','1');
+}
+function tourNext(){ if(__tourIdx>=__tourSteps.length-1){endTour();return;} __tourIdx++;showTourStep(); }
+function tourBack(){ if(__tourIdx>0){__tourIdx--;showTourStep();} }
+function showTourStep(){
+  var st=__tourSteps[__tourIdx];
+  var el=document.querySelector(st.sel);
+  if(el&&(el.offsetWidth===0&&el.offsetHeight===0))el=null;
+  if(!el&&st.fallback)el=document.querySelector(st.fallback);
+  var spot=document.getElementById('tourSpot'),card=document.getElementById('tourCard');
+  var txt=(appLang==='kr'&&st.kr)?st.kr:st.en;
+  var dots=__tourSteps.map(function(_,i){return '<span class="tour-dot'+(i===__tourIdx?' on':'')+'"></span>';}).join('');
+  card.innerHTML='<div class="tc-step">STEP '+(__tourIdx+1)+' / '+__tourSteps.length+'</div>'+
+    '<div class="tc-title"><i class="ti '+st.icon+'" style="color:#534AB7;"></i>'+txt.t+'</div>'+
+    '<div class="tc-body">'+txt.b+'</div>'+
+    '<div class="tc-row"><div class="tour-dots">'+dots+'</div>'+
+    (__tourIdx>0?'<button class="tour-btn back" onclick="tourBack()">'+(appLang==='kr'?'이전':'Back')+'</button>':'')+
+    '<button class="tour-btn next" onclick="tourNext()">'+(__tourIdx>=__tourSteps.length-1?(appLang==='kr'?'완료':'Done'):(appLang==='kr'?'다음':'Next'))+'</button></div>'+
+    '<div style="text-align:right;margin-top:6px;"><button class="tc-skip" onclick="endTour()">'+(appLang==='kr'?'투어 건너뛰기':'Skip tour')+'</button></div>';
+  if(el){
+    var r=el.getBoundingClientRect(),pad=6;
+    spot.style.display='block';
+    spot.style.left=(r.left-pad)+'px';spot.style.top=(r.top-pad)+'px';
+    spot.style.width=(r.width+pad*2)+'px';spot.style.height=(r.height+pad*2)+'px';
+    var cw=290,ch=card.offsetHeight||190,gap=14;
+    var cx=r.left, cy=r.bottom+gap;
+    if(cy+ch>window.innerHeight-10)cy=Math.max(10,r.top-ch-gap);
+    if(cx+cw>window.innerWidth-10)cx=window.innerWidth-cw-14;
+    if(cx<10)cx=10;
+    if(r.left-cw-gap>10&&(r.width>window.innerWidth*.5)){/* keep below/above for wide targets */}
+    card.style.left=cx+'px';card.style.top=cy+'px';
+  }else{
+    spot.style.display='none';
+    spot.style.boxShadow='0 0 0 9999px rgba(20,16,50,.55)';
+    card.style.left=Math.max(10,(window.innerWidth-290)/2)+'px';
+    card.style.top=(window.innerHeight/2-120)+'px';
+  }
+  if(!el){ /* dim whole screen when no target */ spot.style.display='block';spot.style.width='0px';spot.style.height='0px';spot.style.left='-20px';spot.style.top='-20px'; }
+}
+window.addEventListener('resize',function(){ if(document.getElementById('tourOverlay')&&document.getElementById('tourOverlay').classList.contains('on'))showTourStep(); });
+/* Auto-start for first-time users (after UI settles / login overlay likely dismissed) */
+setTimeout(function(){
+  try{
+    var loginOv=document.getElementById('loginOverlay');
+    var loginVisible=loginOv&&loginOv.style.display!=='none'&&loginOv.offsetParent!==null;
+    if(!localStorage.getItem('tourDone')&&!loginVisible)startTour();
+  }catch(e){}
+},1800);
 </script>
 </body>
 </html>
