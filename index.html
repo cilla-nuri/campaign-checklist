@@ -425,6 +425,16 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 
 /* ===== STICKY FIRST COLS ===== */
 
+/* ---- Creator personal note (선정 tab hover) ---- */
+.cnote-wrap{position:relative;display:inline-flex;align-items:center;margin-left:5px;vertical-align:middle;}
+.cnote-ic{font-size:12px;cursor:pointer;}
+.cnote-ic.has{color:#f59e0b;}
+.cnote-ic.add{color:#d8d8d8;opacity:0;transition:opacity .12s;}
+.sj-table tr:hover .cnote-ic.add{opacity:1;}
+.cnote-ic.add:hover{color:#534AB7;}
+.cnote-tip{display:none;position:absolute;left:18px;top:50%;transform:translateY(-50%);z-index:50;background:#2a2440;color:#fff;font-size:11px;font-weight:400;line-height:1.5;padding:8px 11px;border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:pre-wrap;width:max-content;max-width:260px;pointer-events:none;}
+.cnote-wrap:hover .cnote-tip{display:block;}
+
 /* ---- Feedback panel layout fix ---- */
 .missing-list{max-height:170px;overflow-y:auto;}
 .msg-textarea{min-height:240px;}
@@ -2413,7 +2423,7 @@ function buildSjTable(rows){
       +' onclick="event.stopPropagation();sjToggleRow(\''+r._applyNum+'\')"/></td>'
       +'<td>'+r._applyNum+'</td>'
       
-      +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+(bl?"[BL] ":"")+r.username.replace(/^@/,'')+'</td>'
+      +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+'">'+(bl?"[BL] ":"")+r.username.replace(/^@/,'')+cnoteHtml(r.username)+'</td>'
       +'<td style="min-width:110px;white-space:nowrap;">'+(r.nickname||"")+'</td>'
       +'<td>'+(r.grade?'<span class="grade-pill '+gc+'">'+r.grade+'</span>':'-')+'</td>'
       +'<td>'+(sjGradeSel('_vr',r.username,g.video_quality||'',['','V1','V2','V3','V4','V5'],'v-sel'))+'</td>'
@@ -2436,7 +2446,7 @@ function buildSjTable(rows){
       +'<td>'+r._applyNum+'</td>'
       
       +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+';cursor:text;">'+
-      (bl?"[BL] ":"")+r.username+'<button onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.username+'\')" title="Copy" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ti ti-copy"></i></button></td>'
+      (bl?"[BL] ":"")+r.username+cnoteHtml(r.username)+'<button onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.username+'\')" title="Copy" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ti ti-copy"></i></button></td>'
       +'<td style="min-width:110px;white-space:nowrap;">'+(r.nickname||"")+'</td>'
       +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td style="white-space:nowrap;">'+sjSnsLinks(r)+'</td>'
@@ -3693,6 +3703,32 @@ var sjFilterRegion = new Set();
    INLINE GRADE EDIT IN 선정
    ============================================================ */
 var SJ_GRADE_FIELD = {'_vr':'video_quality','_er':'manager_evaluation','_sk':'skintone','_en':'english_proficiency'};
+
+/* Creator personal note: hover icon next to username in 선정 */
+function cnoteHtml(username){
+  var g=getCreatorGrade(username)||{};
+  var n=g.notes_manager;
+  var uEsc=String(username).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  if(n&&String(n).trim()){
+    var tEsc=String(n).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic has"></i><span class="cnote-tip">'+tEsc+'</span></span>';
+  }
+  return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic add" title="Add creator note"></i></span>';
+}
+function sjEditCreatorNote(username){
+  var clean=String(username).replace(/^@/,'');
+  var g=getCreatorGrade(username)||{};
+  var cur=g.notes_manager||'';
+  var v=prompt((appLang==='kr'?'크리에이터 노트 (@'+clean+'):':'Creator note (@'+clean+'):'),cur);
+  if(v===null)return;
+  v=v.trim();
+  if(!creatorGradeCache[clean])creatorGradeCache[clean]={};
+  creatorGradeCache[clean].notes_manager=v||null;
+  sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
+    body:JSON.stringify([{username:clean,notes_manager:v||null}])})
+    .catch(function(err){console.error('Note save failed:',err);alert('Failed to save note — check connection.');});
+  if(typeof renderSjTable==='function')renderSjTable();
+}
 
 function sjGradeSel(field, username, current, options, cls) {
   var opts = options.map(function(o) {
