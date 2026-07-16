@@ -582,7 +582,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
         </div>
         <div class="main-header-right">
           <div id="metaCodeWrap" style="display:none;align-items:center;gap:4px;">
-            <input id="metaCodeInput" class="meta-code-input" placeholder="Spark Ads code…" onchange="saveMetaCode(this.value)" onclick="unlockMetaCode()"/>
+            <input id="metaCodeInput" class="meta-code-input" placeholder="Spark Ads code…" onblur="saveMetaCode(this.value)" onkeydown="if(event.key==='Enter')this.blur()" onclick="unlockMetaCode()"/>
             <button onclick="copyMetaCode()" title="Copy meta code" class="meta-code-copy"><i class="ti ti-copy"></i></button>
           </div>
           <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openFeedbackAndSetRevision()"><i class="ti ti-message-2"></i> Feedback</button>
@@ -850,16 +850,19 @@ function unlockMetaCode(){
 }
 function saveMetaCode(v){
   var c=getCampaign();if(!c||!activeCreatorId)return;
+  var inp=document.getElementById("metaCodeInput");
+  if(inp&&inp.readOnly)return; /* locked — blur on a locked field does nothing */
   if(!c.state[activeCreatorId])c.state[activeCreatorId]={status:"Pending Review",checks:{}};
   var old=(c.state[activeCreatorId].metaCode||"").trim();
   var nv=v.trim();
+  if(old===nv){renderMetaCodeBar();return;} /* unchanged — just re-lock */
   if(old&&!nv){
     /* clearing a saved code needs its own confirmation */
     var cmsg=appLang==='kr'?'저장된 코드를 삭제하시겠어요?\n\n'+old:'Delete the saved code?\n\n'+old;
     if(!confirm(cmsg)){renderMetaCodeBar();return;}
   }
   c.state[activeCreatorId].metaCode=nv;
-  renderMetaCodeBar();
+  renderMetaCodeBar(); /* re-locks immediately when filled */
   stampCreatorEdit(activeCreatorId);
   markChanged();
 }
