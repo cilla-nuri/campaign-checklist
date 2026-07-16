@@ -2995,10 +2995,27 @@ async function renderCreatorsPage() {
       allMap[key].campaigns.push(c.name);
     });
   });
+  // ALSO fetch the actual creators table (paginated) so DB-only creators
+  // (e.g. graded from 선정 but never imported to a roster) appear too
+  try {
+    var offset = 0;
+    while (true) {
+      var page = await sbFetch("creators?select=*&order=username.asc&limit=1000&offset=" + offset).catch(function(){return null;});
+      if (!page || !page.length) break;
+      page.forEach(function(r) {
+        var key = ('@' + r.username).toLowerCase();
+        creatorGradeCache[r.username.toLowerCase()] = r; // prime cache — grades ready
+        if (!allMap[key]) allMap[key] = {handle: '@' + r.username, nick: r.username, campaigns: []};
+      });
+      if (page.length < 1000) break;
+      offset += 1000;
+    }
+  } catch(e) { console.warn('creators table fetch:', e); }
   cpAllCreators = Object.values(allMap).sort(function(a, b) { return a.handle.localeCompare(b.handle); });
 
-  // Load grades from Supabase
-  await loadCreatorGrades(cpAllCreators.map(function(c) { return c.handle; }));
+  // Load grades only for roster creators not already primed by the full table fetch
+  var _unprimed = cpAllCreators.map(function(c){return c.handle;}).filter(function(h){return !creatorGradeCache[h.replace(/^@/,'').toLowerCase()];});
+  if (_unprimed.length) await loadCreatorGrades(_unprimed);
 
   buildCreatorsPage(el);
 }
