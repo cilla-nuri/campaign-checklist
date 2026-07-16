@@ -2572,7 +2572,7 @@ function buildSjTable(rows){
       +'<td>'+r._applyNum+'</td>'
       
       +'<td style="font-weight:500;'+(bl?"color:#e24b4a;":"")+';cursor:text;">'+
-      (bl?"[BL] ":"")+r.username+cnoteHtml(r.username)+'<button onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.username+'\')" title="Copy" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ti ti-copy"></i></button></td>'
+      (bl?"[BL] ":"")+r.username.replace(/^@/,'')+cnoteHtml(r.username)+'<button onclick="event.stopPropagation();navigator.clipboard.writeText(\''+r.username.replace(/^@/,'')+'\')" title="Copy" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 3px;margin-left:2px;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="ti ti-copy"></i></button></td>'
       +'<td style="min-width:110px;white-space:nowrap;">'+(r.nickname||"")+'</td>'
       +'<td>'+sjSelStatusPill(r._selStatus)+'</td>'
       +'<td style="white-space:nowrap;">'+sjSnsLinks(r)+'</td>'
