@@ -1931,13 +1931,31 @@ function handleCreatorCSV(file){
   reader.readAsText(file);
 }
 
+/* Auto-register creators into the Creator Database (creators table).
+   Only sends username → merge-duplicates leaves existing rows/grades untouched. */
+function syncCreatorsToDb(handles){
+  var rows=[];
+  (handles||[]).forEach(function(h){
+    var u=String(h||"").replace(/^@/,"").trim();
+    if(!u)return;
+    rows.push({username:u});
+    if(!creatorGradeCache[u])creatorGradeCache[u]={};
+  });
+  if(!rows.length)return;
+  var chunks=[];for(var i=0;i<rows.length;i+=200)chunks.push(rows.slice(i,i+200));
+  chunks.reduce(function(p,ch){
+    return p.then(function(){return sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify(ch)});});
+  },Promise.resolve()).catch(function(e){console.warn('creator db sync failed',e);});
+}
+
 function applyCreatorCSV(){
   if(!parsedCreators.length)return;const c=getCampaign();if(!c)return;
   const existingHandles=new Set(c.creators.map(function(cr){return cr.handle.toLowerCase();}));
-  let added=0;
+  let added=0;var newHandles=[];
   parsedCreators.forEach(function(cr){
-    if(!existingHandles.has(cr.handle.toLowerCase())){c.creators.push(cr);added++;}
+    if(!existingHandles.has(cr.handle.toLowerCase())){c.creators.push(cr);added++;newHandles.push(cr.handle);}
   });
+  if(newHandles.length)syncCreatorsToDb(newHandles);
   buildState();renderSidebar();resetMainPanel();markChanged();saveToLocalStorage();
   const pf=document.getElementById("pfWarn");
   if(pf){pf.textContent=added>0?(added+" new creator"+(added>1?"s":"")+" added. Existing progress kept."):"No new creators -- all already in list.";pf.style.color=added>0?"#1D9E75":"#EF9F27";}
@@ -2885,6 +2903,7 @@ function addCreatorManually(){
   }
   var newCr={id:uid(),applyNum:String(c.creators.length+1),handle:h,nick:nick||h};
   c.creators.push(newCr);c.state[newCr.id]={checks:{},status:"Pending Review"};
+  syncCreatorsToDb([h]);
   c.master.forEach(function(s){s.items.forEach(function(it){c.state[newCr.id].checks[it.id]=false;});});
   saveToLocalStorage();if(activeCampaignId===campId)renderSidebar();
   st.textContent="Added: "+h+" to "+c.name;st.style.color="#1D9E75";
@@ -3582,9 +3601,11 @@ function importFromSunjeong() {
   if (!selected.length) { alert('No pre-selected creators in 선정!'); return; }
 
   var added = 0, skipped = 0;
+  var _syncHandles = [];
   selected.forEach(function(r) {
     var handle = r.username || '';
     if (!handle) return;
+    _syncHandles.push(handle);
     // Check if already in campaign
     var exists = c.creators.some(function(cr) { return cr.handle.toLowerCase() === handle.toLowerCase(); });
     if (exists) { skipped++; return; }
@@ -3600,6 +3621,7 @@ function importFromSunjeong() {
     c.master.forEach(function(s) { s.items.forEach(function(item) { c.state[newCr.id].checks[item.id] = false; }); });
     added++;
   });
+  if (_syncHandles.length) syncCreatorsToDb(_syncHandles);
 
   saveToLocalStorage();
   markChanged();
@@ -3897,10 +3919,12 @@ function sjSaveGrade(sel) {
   patch[dbField] = value || null;
 
   // Save to Supabase
-  sbFetch('creators?username=eq.' + encodeURIComponent(cleanUsername), {
-    method: 'PATCH',
-    prefer: 'return=minimal',
-    body: JSON.stringify(patch)
+  // Save to Supabase (upsert — works even if creator row doesn't exist yet)
+  patch.username = cleanUsername;
+  sbFetch('creators?on_conflict=username', {
+    method: 'POST',
+    prefer: 'resolution=merge-duplicates,return=minimal',
+    body: JSON.stringify([patch])
   }).then(function() {
     sel.style.outline = '2px solid #059669';
     setTimeout(function(){ sel.style.outline = ''; }, 1000);
@@ -5545,6 +5569,7 @@ function addCreatorManually() {
   };
   c.creators.push(newCr);
   c.state[newCr.id] = { checks: {}, status: 'Pending Review' };
+  syncCreatorsToDb([cleanHandle]);
   c.master.forEach(function(s) {
     s.items.forEach(function(it) { c.state[newCr.id].checks[it.id] = false; });
   });
