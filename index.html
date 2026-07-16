@@ -429,6 +429,8 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .meta-code-input{font-size:11px;padding:5px 9px;border-radius:8px;border:1.5px solid #e0d9a8;background:#fffdf2;color:#333;outline:none;width:150px;transition:border-color .15s,background .15s;}
 .meta-code-input:focus{border-color:#534AB7;background:#fff;}
 .meta-code-input.filled{border-color:#7fd4ae;background:#f2fcf7;}
+.meta-code-input.locked{cursor:pointer;color:#1D9E75;font-weight:600;}
+.meta-code-input.locked:focus{border-color:#7fd4ae;}
 .meta-code-copy{font-size:12px;padding:5px 7px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;color:#888;cursor:pointer;}
 .meta-code-copy:hover{color:#534AB7;border-color:#534AB7;}
 
@@ -580,7 +582,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
         </div>
         <div class="main-header-right">
           <div id="metaCodeWrap" style="display:none;align-items:center;gap:4px;">
-            <input id="metaCodeInput" class="meta-code-input" placeholder="Spark Ads code…" onchange="saveMetaCode(this.value)"/>
+            <input id="metaCodeInput" class="meta-code-input" placeholder="Spark Ads code…" onchange="saveMetaCode(this.value)" onclick="unlockMetaCode()"/>
             <button onclick="copyMetaCode()" title="Copy meta code" class="meta-code-copy"><i class="ti ti-copy"></i></button>
           </div>
           <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openFeedbackAndSetRevision()"><i class="ti ti-message-2"></i> Feedback</button>
@@ -826,14 +828,38 @@ function renderMetaCodeBar(){
   wrap.style.display="flex";
   var st=c.state[activeCreatorId]||{};
   var inp=document.getElementById("metaCodeInput");
+  var filled=!!(st.metaCode&&st.metaCode.trim());
   inp.value=st.metaCode||"";
-  inp.classList.toggle("filled",!!(st.metaCode&&st.metaCode.trim()));
+  inp.classList.toggle("filled",filled);
+  inp.classList.toggle("locked",filled);
+  inp.readOnly=filled;
+  inp.title=filled?"Code saved — click to change (confirmation required)":"";
+}
+function unlockMetaCode(){
+  var c=getCampaign();if(!c||!activeCreatorId)return;
+  var inp=document.getElementById("metaCodeInput");
+  if(!inp.readOnly)return;
+  var st=c.state[activeCreatorId]||{};
+  var msg=appLang==='kr'
+    ?'이미 저장된 메타 코드가 있습니다:\n\n'+(st.metaCode||'')+'\n\n정말 변경하시겠어요?'
+    :'A meta code is already saved for this creator:\n\n'+(st.metaCode||'')+'\n\nAre you sure you want to change it?';
+  if(!confirm(msg))return;
+  inp.readOnly=false;
+  inp.classList.remove("locked");
+  inp.focus();inp.select();
 }
 function saveMetaCode(v){
   var c=getCampaign();if(!c||!activeCreatorId)return;
   if(!c.state[activeCreatorId])c.state[activeCreatorId]={status:"Pending Review",checks:{}};
-  c.state[activeCreatorId].metaCode=v.trim();
-  document.getElementById("metaCodeInput").classList.toggle("filled",!!v.trim());
+  var old=(c.state[activeCreatorId].metaCode||"").trim();
+  var nv=v.trim();
+  if(old&&!nv){
+    /* clearing a saved code needs its own confirmation */
+    var cmsg=appLang==='kr'?'저장된 코드를 삭제하시겠어요?\n\n'+old:'Delete the saved code?\n\n'+old;
+    if(!confirm(cmsg)){renderMetaCodeBar();return;}
+  }
+  c.state[activeCreatorId].metaCode=nv;
+  renderMetaCodeBar();
   stampCreatorEdit(activeCreatorId);
   markChanged();
 }
