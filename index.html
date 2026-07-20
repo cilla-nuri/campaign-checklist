@@ -894,7 +894,7 @@ function exportMetaCodes(fmt){
     var st=(c.state||{})[cr.id]||{};
     var code=(st.metaCode||"").trim();
     if(code)filled++;
-    rows.push([cr.handle,cr.nick||"",st.status||"",code]);
+    rows.push([String(cr.handle||"").replace(/^@/,""),cr.nick||"",st.status||"",code]);
   });
   var fname=(c.name||"campaign").replace(/[^\w\-가-힣 #\[\]]/g,"").trim()+" - spark ads codes";
   if(fmt==='xlsx'){
