@@ -2831,8 +2831,11 @@ function openDownloadPicker(){
   var chosen=getDlColPrefs();
   var boxes=SJ_DL_COLUMNS.map(function(col){
     var on=chosen.indexOf(col.key)>=0;
-    return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;'+(on?'background:#f0efff;':'')+'" onmouseover="this.style.background=\'#f6f5ff\'" onmouseout="this.style.background=\''+(on?'#f0efff':'transparent')+'\'">'+
-      '<input type="checkbox" class="dl-col-chk" value="'+col.key+'"'+(on?' checked':'')+' style="accent-color:#534AB7;width:15px;height:15px;"/>'+col.label+'</label>';
+    var sens=(col.key==='note');
+    var baseBg=on?(sens?'#fdeaea':'#f0efff'):'transparent';
+    return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;background:'+baseBg+';'+(sens?'color:#c0392b;':'')+'" onmouseover="this.style.background=\''+(sens?'#fdeaea':'#f6f5ff')+'\'" onmouseout="this.style.background=\''+baseBg+'\'">'+
+      '<input type="checkbox" class="dl-col-chk" value="'+col.key+'"'+(on?' checked':'')+' style="accent-color:'+(sens?'#e24b4a':'#534AB7')+';width:15px;height:15px;"/>'+col.label+
+      (sens?' <i class="ti ti-lock" style="font-size:11px;margin-left:auto;"></i><span style="font-size:10px;font-weight:600;">sensitive</span>':'')+'</label>';
   }).join('');
   document.getElementById('panel').classList.remove('wide');
   document.getElementById('overlay').classList.add('open');
@@ -2867,6 +2870,12 @@ function runSjDownload(fmt){
   var chosen=[];
   document.querySelectorAll('.dl-col-chk:checked').forEach(function(cb){chosen.push(cb.value);});
   if(!chosen.length){alert('Pick at least one column.');return;}
+  if(chosen.indexOf('note')>=0){
+    var msg=appLang==='kr'
+      ?'⚠️ "Creator note"는 내부 민감 정보입니다.\n외부(브랜드 등)로 공유되는 파일에 포함하시겠어요?'
+      :'⚠️ "Creator note" is sensitive internal info.\nInclude it in a file that may be shared externally (e.g. with a brand)?';
+    if(!confirm(msg)){return;}
+  }
   try{localStorage.setItem('sjDlCols',JSON.stringify(chosen));}catch(e){}
   var scope=_dlScope;
   closePanel();
