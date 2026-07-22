@@ -2480,8 +2480,7 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('Region','sjFilterRegion',['영어권','CIS','SEA','MENA','South Asia','East Asia','Europe','Latin America','Other']);
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
-    toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'csv\')"><i class="ti ti-file-text"></i> CSV</button>';
-    toolbar+='<button class="sj-dl-btn" onclick="downloadSjSelected(\'xlsx\')"><i class="ti ti-file-spreadsheet"></i> Excel</button>';
+    toolbar+='<button class="sj-dl-btn" onclick="openDownloadPicker()"><i class="ti ti-download"></i> Download <i class="ti ti-chevron-down" style="font-size:9px;"></i></button>';
     toolbar+='<span style="position:relative;display:inline-flex;"><button class="sj-dl-btn" onclick="togglePreSelMenu(event)" style="background:#fff8e1;color:#d97706;border:1px solid #fcd34d;"><i class="ti ti-star"></i> Pre-selected <i class="ti ti-chevron-down" style="font-size:9px;"></i></button>'
       +'<div class="status-menu" id="preSelMenu" style="left:0;right:auto;top:calc(100% + 4px);">'
       +'<div class="status-menu-item" onclick="downloadPreSelected(\'xlsx\')"><i class="ti ti-file-spreadsheet" style="color:#1D9E75;font-size:13px;"></i>Excel (.xlsx)</div>'
@@ -2768,33 +2767,91 @@ function splitCSVLine(line){
   return result;
 }
 
-function downloadSjSelected(fmt){
+/* ---- Selection download: column picker ---- */
+var SJ_DL_COLUMNS=[
+  {key:'apply', label:'Apply number', def:true, get:function(r,g){return r._applyNum;}},
+  {key:'username', label:'Username', def:true, get:function(r,g){return r.username.replace(/^@/,'');}},
+  {key:'nickname', label:'Nickname', def:true, get:function(r,g){return r.nickname||'';}},
+  {key:'status', label:'Campaign status', def:false, get:function(r,g){return r._selStatus||'';}},
+  {key:'grade', label:'Grade (A/B/C)', def:false, get:function(r,g){return r.grade||'';}},
+  {key:'v', label:'V (video quality)', def:false, get:function(r,g){return g.video_quality||'';}},
+  {key:'e', label:'E (manager eval)', def:false, get:function(r,g){return g.manager_evaluation||'';}},
+  {key:'skin', label:'Skintone', def:false, get:function(r,g){return g.skintone||'';}},
+  {key:'vo', label:'English VO', def:true, get:function(r,g){return g.english_proficiency||'';}},
+  {key:'sub', label:'English Subtitle', def:true, get:function(r,g){return g.english_subtitle===true?'Y':(g.english_subtitle===false?'N':'');}},
+  {key:'country', label:'Country', def:false, get:function(r,g){return r.nationality||'';}},
+  {key:'tt_url', label:'TikTok URL', def:true, get:function(r,g){return r._tt_url||g.tiktok_url||'';}},
+  {key:'tt_flw', label:'TikTok followers', def:true, get:function(r,g){return r.tiktok_followers||'';}},
+  {key:'tt_avg', label:'TikTok avg views', def:false, get:function(r,g){return r.tiktok_avg_views||'';}},
+  {key:'ig_url', label:'Instagram URL', def:true, get:function(r,g){return r._ig_url||g.instagram_url||'';}},
+  {key:'ig_flw', label:'Instagram followers', def:true, get:function(r,g){return r.instagram_followers||'';}},
+  {key:'ig_avg', label:'Instagram avg views', def:false, get:function(r,g){return r.instagram_avg_views||'';}},
+  {key:'rank', label:'Rank', def:false, get:function(r,g){return r._rank||'';}},
+  {key:'meta', label:'Meta code (Spark Ads)', def:false, get:function(r,g){var c=getCampaign();if(!c)return'';var cr=(c.creators||[]).find(function(x){return x.handle.replace(/^@/,'').toLowerCase()===r.username.replace(/^@/,'').toLowerCase();});return cr&&c.state[cr.id]?(c.state[cr.id].metaCode||''):'';}},
+  {key:'note', label:'Creator note', def:false, get:function(r,g){return g.notes_manager||'';}}
+];
+function getDlColPrefs(){
+  try{var s=JSON.parse(localStorage.getItem('sjDlCols')||'null');if(s&&s.length)return s;}catch(e){}
+  return SJ_DL_COLUMNS.filter(function(c){return c.def;}).map(function(c){return c.key;});
+}
+function openDownloadPicker(){
+  var sel=sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
+  if(!sel.length){alert("No creators selected!");return;}
+  var chosen=getDlColPrefs();
+  var boxes=SJ_DL_COLUMNS.map(function(col){
+    var on=chosen.indexOf(col.key)>=0;
+    return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;'+(on?'background:#f0efff;':'')+'" onmouseover="this.style.background=\'#f6f5ff\'" onmouseout="this.style.background=\''+(on?'#f0efff':'transparent')+'\'">'+
+      '<input type="checkbox" class="dl-col-chk" value="'+col.key+'"'+(on?' checked':'')+' style="accent-color:#534AB7;width:15px;height:15px;"/>'+col.label+'</label>';
+  }).join('');
+  document.getElementById('panel').classList.remove('wide');
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panelTitle').textContent='Download '+sel.length+' selected';
+  document.getElementById('panelSub').textContent='Choose columns to include';
+  document.getElementById('panelBody').innerHTML=
+    '<div style="display:flex;gap:8px;margin-bottom:10px;">'+
+      '<button onclick="dlColSelectAll(true)" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;">Select all</button>'+
+      '<button onclick="dlColSelectAll(false)" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;">Clear</button>'+
+    '</div>'+
+    '<div style="max-height:340px;overflow-y:auto;border:1px solid #eee;border-radius:10px;padding:4px;">'+boxes+'</div>';
+  document.getElementById('panelFooter').innerHTML=
+    '<button class="pf-btn" onclick="runSjDownload(\'csv\')" style="background:#fff;border:1px solid #e0e0e0;color:#555;"><i class="ti ti-file-text"></i> CSV</button>'+
+    '<button class="pf-btn primary" onclick="runSjDownload(\'xlsx\')"><i class="ti ti-file-spreadsheet"></i> Excel</button>';
+}
+function dlColSelectAll(on){
+  document.querySelectorAll('.dl-col-chk').forEach(function(cb){
+    if(cb.value==='username'){cb.checked=true;return;} /* username always on */
+    cb.checked=on;
+  });
+}
+function runSjDownload(fmt){
+  var chosen=[];
+  document.querySelectorAll('.dl-col-chk:checked').forEach(function(cb){chosen.push(cb.value);});
+  if(!chosen.length){alert('Pick at least one column.');return;}
+  try{localStorage.setItem('sjDlCols',JSON.stringify(chosen));}catch(e){}
+  closePanel();
+  downloadSjSelected(fmt,chosen);
+}
+function downloadSjSelected(fmt,chosen){
   fmt=fmt||'csv';
   var sel=sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
   if(!sel.length){alert("No creators selected!");return;}
+  if(!chosen||!chosen.length)chosen=getDlColPrefs();
+  var cols=SJ_DL_COLUMNS.filter(function(c){return chosen.indexOf(c.key)>=0;});
   var c=getCampaign();
   var campName=c?c.name.replace(/[^a-zA-Z0-9_\-]/g,"_"):"selection";
-  var hdrs=["apply number","ID(username)","nickname","Campaign Status","english_VO","english_subtitle","tiktok_URL","tiktok_followers","instagram_URL","instagram_followers"];
+  var hdrs=cols.map(function(col){return col.label;});
   var rows=sel.map(function(r){
     var g=getCreatorGrade(r.username)||{};
-    var ttUrl=r._tt_url||g.tiktok_url||"";
-    var igUrl=r._ig_url||g.instagram_url||"";
-    var subv=g.english_subtitle===true?'Y':(g.english_subtitle===false?'N':'');
-    return[r._applyNum,r.username.replace(/^@/,''),r.nickname,"accepted",g.english_proficiency||"",subv,ttUrl,r.tiktok_followers,igUrl,r.instagram_followers];
+    return cols.map(function(col){return col.get(r,g);});
   });
+  if(fmt==='xlsx'){ downloadSjAsXlsx(hdrs,rows,campName); return; }
   var csv=[hdrs].concat(rows).map(function(row){
-    return row.map(function(v){var s=String(v);return s.indexOf(",")>=0?'"'+s+'"':s;}).join(",");
+    return row.map(function(v){var s=String(v==null?'':v);return s.indexOf(",")>=0||s.indexOf('"')>=0?'"'+s.replace(/"/g,'""')+'"':s;}).join(",");
   }).join("\n");
   var a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-    if(fmt==='xlsx'){
-    downloadSjAsXlsx(hdrs,rows,campName);
-  } else {
-    var a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-    a.download=campName+"_selection.csv";
-    a.click();
-  }
+  a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));
+  a.download=campName+"_selection.csv";
+  a.click();URL.revokeObjectURL(a.href);
 }
 
 /* ============ GRADE EDIT ============ */
