@@ -2794,9 +2794,40 @@ function getDlColPrefs(){
   try{var s=JSON.parse(localStorage.getItem('sjDlCols')||'null');if(s&&s.length)return s;}catch(e){}
   return SJ_DL_COLUMNS.filter(function(c){return c.def;}).map(function(c){return c.key;});
 }
+function getSjDownloadSet(scope){
+  var filtered=getSjFiltered();
+  if(scope==='checked')return sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
+  if(scope==='pre-selected')return filtered.filter(function(r){return r._selStatus==='pre-selected';});
+  if(scope==='selected')return filtered.filter(function(r){return r._selStatus==='selected';});
+  if(scope==='pre+sel')return filtered.filter(function(r){return r._selStatus==='pre-selected'||r._selStatus==='selected';});
+  return filtered; /* all shown (respects active filters) */
+}
+var _dlScope='checked';
 function openDownloadPicker(){
-  var sel=sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
-  if(!sel.length){alert("No creators selected!");return;}
+  var filtered=getSjFiltered();
+  var counts={
+    checked:sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);}).length,
+    'pre-selected':filtered.filter(function(r){return r._selStatus==='pre-selected';}).length,
+    selected:filtered.filter(function(r){return r._selStatus==='selected';}).length,
+    'pre+sel':filtered.filter(function(r){return r._selStatus==='pre-selected'||r._selStatus==='selected';}).length,
+    all:filtered.length
+  };
+  /* default scope: checked if any checked, else pre-selected if any, else all */
+  _dlScope = counts.checked>0?'checked':(counts['pre-selected']>0?'pre-selected':'all');
+  var scopes=[
+    {key:'checked', label:'✔ Checkbox-selected rows'},
+    {key:'pre-selected', label:'⭐ Pre-selected'},
+    {key:'selected', label:'✓ Selected'},
+    {key:'pre+sel', label:'⭐+✓ Pre-selected & Selected'},
+    {key:'all', label:'All shown (current filters)'}
+  ];
+  var scopeHtml=scopes.map(function(s){
+    var n=counts[s.key]||0;
+    return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:12px;cursor:'+(n?'pointer':'not-allowed')+';opacity:'+(n?'1':'.4')+';" onmouseover="if('+n+')this.style.background=\'#f6f5ff\'" onmouseout="this.style.background=\'transparent\'">'+
+      '<input type="radio" name="dlScope" value="'+s.key+'"'+(s.key===_dlScope?' checked':'')+(n?'':' disabled')+' onchange="_dlScope=this.value;updateDlScopeCount()" style="accent-color:#534AB7;"/>'+
+      s.label+' <span style="color:#aaa;font-size:11px;">('+n+')</span></label>';
+  }).join('');
+
   var chosen=getDlColPrefs();
   var boxes=SJ_DL_COLUMNS.map(function(col){
     var on=chosen.indexOf(col.key)>=0;
@@ -2805,17 +2836,26 @@ function openDownloadPicker(){
   }).join('');
   document.getElementById('panel').classList.remove('wide');
   document.getElementById('overlay').classList.add('open');
-  document.getElementById('panelTitle').textContent='Download '+sel.length+' selected';
-  document.getElementById('panelSub').textContent='Choose columns to include';
+  document.getElementById('panelTitle').textContent='Download creators';
+  document.getElementById('panelSub').textContent='Pick who to include, then which columns';
   document.getElementById('panelBody').innerHTML=
-    '<div style="display:flex;gap:8px;margin-bottom:10px;">'+
+    '<div style="font-size:11px;font-weight:700;color:#534AB7;letter-spacing:.4px;margin-bottom:6px;">1 · WHO TO DOWNLOAD</div>'+
+    '<div style="border:1px solid #eee;border-radius:10px;padding:4px;margin-bottom:16px;">'+scopeHtml+'</div>'+
+    '<div style="font-size:11px;font-weight:700;color:#534AB7;letter-spacing:.4px;margin-bottom:6px;">2 · COLUMNS</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px;">'+
       '<button onclick="dlColSelectAll(true)" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;">Select all</button>'+
       '<button onclick="dlColSelectAll(false)" style="font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;">Clear</button>'+
     '</div>'+
-    '<div style="max-height:340px;overflow-y:auto;border:1px solid #eee;border-radius:10px;padding:4px;">'+boxes+'</div>';
+    '<div style="max-height:260px;overflow-y:auto;border:1px solid #eee;border-radius:10px;padding:4px;">'+boxes+'</div>';
   document.getElementById('panelFooter').innerHTML=
+    '<span id="dlScopeCount" style="font-size:11px;color:#888;flex:1;"></span>'+
     '<button class="pf-btn" onclick="runSjDownload(\'csv\')" style="background:#fff;border:1px solid #e0e0e0;color:#555;"><i class="ti ti-file-text"></i> CSV</button>'+
     '<button class="pf-btn primary" onclick="runSjDownload(\'xlsx\')"><i class="ti ti-file-spreadsheet"></i> Excel</button>';
+  updateDlScopeCount();
+}
+function updateDlScopeCount(){
+  var el=document.getElementById('dlScopeCount');if(!el)return;
+  el.textContent=getSjDownloadSet(_dlScope).length+' creators will be exported';
 }
 function dlColSelectAll(on){
   document.querySelectorAll('.dl-col-chk').forEach(function(cb){
@@ -2828,17 +2868,19 @@ function runSjDownload(fmt){
   document.querySelectorAll('.dl-col-chk:checked').forEach(function(cb){chosen.push(cb.value);});
   if(!chosen.length){alert('Pick at least one column.');return;}
   try{localStorage.setItem('sjDlCols',JSON.stringify(chosen));}catch(e){}
+  var scope=_dlScope;
   closePanel();
-  downloadSjSelected(fmt,chosen);
+  downloadSjSelected(fmt,chosen,scope);
 }
-function downloadSjSelected(fmt,chosen){
+function downloadSjSelected(fmt,chosen,scope){
   fmt=fmt||'csv';
-  var sel=sjApplicants.filter(function(r){return sjSelected.has(r._applyNum);});
-  if(!sel.length){alert("No creators selected!");return;}
+  var sel=getSjDownloadSet(scope||'checked');
+  if(!sel.length){alert("No creators to download for this selection!");return;}
   if(!chosen||!chosen.length)chosen=getDlColPrefs();
   var cols=SJ_DL_COLUMNS.filter(function(c){return chosen.indexOf(c.key)>=0;});
   var c=getCampaign();
-  var campName=c?c.name.replace(/[^a-zA-Z0-9_\-]/g,"_"):"selection";
+  var scopeTag=scope&&scope!=='checked'?('_'+scope.replace('+','-')):'';
+  var campName=(c?c.name.replace(/[^a-zA-Z0-9_\-]/g,"_"):"selection")+scopeTag;
   var hdrs=cols.map(function(col){return col.label;});
   var rows=sel.map(function(r){
     var g=getCreatorGrade(r.username)||{};
