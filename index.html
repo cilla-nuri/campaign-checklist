@@ -4030,24 +4030,27 @@ function sjEditCreatorNote(username){
 }
 
 function sjSubToggle(username,val){
-  var uEsc=String(username).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   var on=val===true;
   var off=val===false;
   var cls=on?'sub-y':(off?'sub-n':'sub-u');
   var label=on?'Y':(off?'N':'–');
-  return '<span class="sub-toggle '+cls+'" onclick="event.stopPropagation();sjToggleSub(\''+uEsc+'\')" title="English subtitle 자막 (click to cycle Y / N / unset)">'+label+'</span>';
+  var uAttr=String(username).replace(/"/g,'&quot;');
+  return '<span class="sub-toggle '+cls+'" data-subuser="'+uAttr+'" onclick="event.stopPropagation();sjToggleSub(this)" title="English subtitle 자막 (click to cycle Y / N / unset)">'+label+'</span>';
 }
-function sjToggleSub(username){
-  var clean=String(username).replace(/^@/,'');
-  var g=getCreatorGrade(username)||{};
+function sjToggleSub(el){
+  var username=el.getAttribute('data-subuser');
+  var clean=String(username).replace(/^@/,'').toLowerCase();
+  var g=creatorGradeCache[clean]||{};
   var cur=g.english_subtitle;
   var next=(cur===true)?false:(cur===false?null:true); /* Y → N → unset → Y */
   if(!creatorGradeCache[clean])creatorGradeCache[clean]={};
   creatorGradeCache[clean].english_subtitle=next;
+  /* update this cell in place — no full re-render (keeps scroll position) */
+  el.className='sub-toggle '+(next===true?'sub-y':(next===false?'sub-n':'sub-u'));
+  el.textContent=next===true?'Y':(next===false?'N':'–');
   sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
-    body:JSON.stringify([{username:clean,english_subtitle:next}])})
+    body:JSON.stringify([{username:String(username).replace(/^@/,''),english_subtitle:next}])})
     .catch(function(err){console.error('subtitle save failed',err);});
-  if(typeof renderSjTable==='function')renderSjTable();
 }
 
 function sjGradeSel(field, username, current, options, cls) {
