@@ -365,6 +365,11 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .grade-edit-sel.e-sel{background:#e6f9ec;color:#15803d;}
 .grade-edit-sel.sk-sel{background:#ffece0;color:#9a3412;}
 .grade-edit-sel.en-sel{background:#f1f0f9;color:#6b6b8a;}
+.sub-toggle{display:inline-block;min-width:22px;text-align:center;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;cursor:pointer;user-select:none;border:1px solid transparent;}
+.sub-toggle.sub-y{background:#e6f7ef;color:#1D9E75;border-color:#a8e6c9;}
+.sub-toggle.sub-n{background:#fdeaea;color:#e24b4a;border-color:#f3c1c1;}
+.sub-toggle.sub-u{background:#f2f2f2;color:#bbb;}
+.sub-toggle:hover{filter:brightness(.96);}
 .grade-edit-sel:hover{opacity:0.85;}
 
 .sec-block.drag-over{border-top:2px solid #534AB7;}
@@ -2451,7 +2456,7 @@ window.addEventListener("DOMContentLoaded",function(){
 var sjApplicants=[];
 var sjSelected=new Set();
 var sjSortCol=null,sjSortDir=1;
-var sjFilterGrade=new Set(),sjFilterSearch="",sjFilterV=new Set(),sjFilterE=new Set(),sjFilterSkin=new Set(),sjFilterEng=new Set(),sjFilterStatus=new Set();
+var sjFilterGrade=new Set(),sjFilterSearch="",sjFilterV=new Set(),sjFilterE=new Set(),sjFilterSkin=new Set(),sjFilterEng=new Set(),sjFilterStatus=new Set(),sjFilterSub=new Set();
 
 function renderSunjeongArea(){
   sjLoadSettings();
@@ -2470,7 +2475,8 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('E','sjFilterE',['E1','E2','E3','E4','E5','-']);
     toolbar+=sjMsBtn('Skin','sjFilterSkin',['Light','Fair','Medium','Tan','Deep','-']);
     toolbar+=sjMsBtn('Status','sjFilterStatus',['pre-selected','selected','not-selected','-']);
-    toolbar+=sjMsBtn('Subtitle','sjFilterEng',['Fluent','Good','Not Bad','Bad','Subtitle only','-']);
+    toolbar+=sjMsBtn('VO','sjFilterEng',['Fluent','Good','Not Bad','Bad','-']);
+    toolbar+=sjMsBtn('Sub','sjFilterSub',['Y','N','-']);
     toolbar+=sjMsBtn('Region','sjFilterRegion',['영어권','CIS','SEA','MENA','South Asia','East Asia','Europe','Latin America','Other']);
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
@@ -2508,6 +2514,10 @@ function getSjFiltered(){
     if(sjFilterEng.size>0){
       var _en=g&&g.english_proficiency?g.english_proficiency:'-';
       if(!sjFilterEng.has(_en))return false;
+    }
+    if(sjFilterSub.size>0){
+      var _sub=g&&g.english_subtitle===true?'Y':(g&&g.english_subtitle===false?'N':'-');
+      if(!sjFilterSub.has(_sub))return false;
     }
     if(sjFilterSearch){
       var s=sjFilterSearch.toLowerCase();
@@ -2548,8 +2558,8 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  var labels=["Apply","Username","Nickname","Status","SNS","Grade","V","E","Skin","Subtitle","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠"];
-  var keys=["_applyNum","username","nickname","_selStatus","_sns","grade","_vr","_er","_sk","_en","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution"];
+  var labels=["Apply","Username","Nickname","Status","SNS","Grade","V","E","Skin","VO","Sub","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠"];
+  var keys=["_applyNum","username","nickname","_selStatus","_sns","grade","_vr","_er","_sk","_en","_sub","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk sj-select-all" data-selectall="1" '+
     (rows.length>0&&rows.every(function(r){return sjSelected.has(String(r._applyNum));})?'checked':'')+
     '/></th>';
@@ -2598,7 +2608,8 @@ function buildSjTable(rows){
       +'<td>'+(sjGradeSel('_vr',r.username,g.video_quality||'',['','V1','V2','V3','V4','V5'],'v-sel'))+'</td>'
       +'<td>'+(sjGradeSel('_er',r.username,g.manager_evaluation||'',['','E1','E2','E3','E4','E5'],'e-sel'))+'</td>'
       +'<td>'+sjGradeSel('_sk',r.username,g.skintone||'',['','Light','Fair','Medium','Tan','Deep'],'sk-sel')+'</td>'
-      +'<td>'+sjGradeSel('_en',r.username,g.english_proficiency||'',['','Fluent','Good','Not Bad','Bad','Subtitle only'],'en-sel')+'</td>'
+      +'<td>'+sjGradeSel('_en',r.username,g.english_proficiency||'',['','Fluent','Good','Not Bad','Bad'],'en-sel')+'</td>'
+      +'<td>'+sjSubToggle(r.username,g.english_subtitle)+'</td>'
       +'<td>'+(r.nationality||'-')+'</td>'
       +'<td>'+fmtNum(r.tiktok_followers)+'</td>'
       +'<td>'+fmtNum(r.tiktok_avg_views)+'</td>'
@@ -2763,12 +2774,13 @@ function downloadSjSelected(fmt){
   if(!sel.length){alert("No creators selected!");return;}
   var c=getCampaign();
   var campName=c?c.name.replace(/[^a-zA-Z0-9_\-]/g,"_"):"selection";
-  var hdrs=["apply number","ID(username)","nickname","Campaign Status","tiktok_URL","tiktok_followers","instagram_URL","instagram_followers"];
+  var hdrs=["apply number","ID(username)","nickname","Campaign Status","english_VO","english_subtitle","tiktok_URL","tiktok_followers","instagram_URL","instagram_followers"];
   var rows=sel.map(function(r){
     var g=getCreatorGrade(r.username)||{};
     var ttUrl=r._tt_url||g.tiktok_url||"";
     var igUrl=r._ig_url||g.instagram_url||"";
-    return[r._applyNum,r.username.replace(/^@/,''),r.nickname,"accepted",ttUrl,r.tiktok_followers,igUrl,r.instagram_followers];
+    var subv=g.english_subtitle===true?'Y':(g.english_subtitle===false?'N':'');
+    return[r._applyNum,r.username.replace(/^@/,''),r.nickname,"accepted",g.english_proficiency||"",subv,ttUrl,r.tiktok_followers,igUrl,r.instagram_followers];
   });
   var csv=[hdrs].concat(rows).map(function(row){
     return row.map(function(v){var s=String(v);return s.indexOf(",")>=0?'"'+s+'"':s;}).join(",");
@@ -2798,7 +2810,8 @@ function openGradeEdit(handle){
     '<div class="grade-edit-row"><span class="grade-edit-label">Video Quality</span>'+mkSel("ge_vq",g.video_quality||"",["V1","V2","V3","V4","V5"])+'</div>'
     +'<div class="grade-edit-row"><span class="grade-edit-label">Manager Eval</span>'+mkSel("ge_me",g.manager_evaluation||"",["E1","E2","E3","E4","E5"])+'</div>'
     +'<div class="grade-edit-row"><span class="grade-edit-label">Skintone</span>'+mkSel("ge_sk",g.skintone||"",["Light","Fair","Medium","Tan","Deep"])+'</div>'
-    +'<div class="grade-edit-row"><span class="grade-edit-label">English</span>'+mkSel("ge_en",g.english_proficiency||"",["Fluent","Good","Not Bad","Bad"])+'</div>'
+    +'<div class="grade-edit-row"><span class="grade-edit-label">English VO</span>'+mkSel("ge_en",g.english_proficiency||"",["Fluent","Good","Not Bad","Bad"])+'</div>'
+    +'<div class="grade-edit-row"><span class="grade-edit-label">English Subtitle</span><select class="grade-edit-select" id="ge_sub"><option value="">-</option><option value="true"'+(g.english_subtitle===true?' selected':'')+'>Y</option><option value="false"'+(g.english_subtitle===false?' selected':'')+'>N</option></select></div>'
     +'<div class="grade-edit-row"><span class="grade-edit-label">Blacklist</span><select class="grade-edit-select" id="ge_bl"><option value="false"'+(g.blacklist?'':' selected')+'>No</option><option value="true"'+(g.blacklist?' selected':'')+'>Yes</option></select></div>'
     +'<div class="grade-edit-row" style="border:none"><span class="grade-edit-label">Notes</span><input type="text" class="grade-edit-select" id="ge_notes" value="'+(g.notes_manager||"").replace(/"/g,"&quot;")+'" style="width:200px;" placeholder="Internal notes..."/></div>'
     +'<div id="ge_status" style="font-size:11px;color:#aaa;margin-top:8px;min-height:18px;"></div>';
@@ -2807,7 +2820,7 @@ function openGradeEdit(handle){
 
 async function saveGradeEdit(handle){
   var s=document.getElementById("ge_status");s.textContent="Saving...";s.style.color="#aaa";
-  var fields={video_quality:document.getElementById("ge_vq").value||null,manager_evaluation:document.getElementById("ge_me").value||null,skintone:document.getElementById("ge_sk").value||null,english_proficiency:document.getElementById("ge_en").value||null,blacklist:document.getElementById("ge_bl").value==="true",notes_manager:document.getElementById("ge_notes").value||null};
+  var fields={video_quality:document.getElementById("ge_vq").value||null,manager_evaluation:document.getElementById("ge_me").value||null,skintone:document.getElementById("ge_sk").value||null,english_proficiency:document.getElementById("ge_en").value||null,english_subtitle:(document.getElementById("ge_sub").value===""?null:document.getElementById("ge_sub").value==="true"),blacklist:document.getElementById("ge_bl").value==="true",notes_manager:document.getElementById("ge_notes").value||null};
   var ok=await upsertCreatorGrade(handle,fields);
   if(ok){
     s.textContent="\u2713 Saved!";s.style.color="#1D9E75";
@@ -3905,6 +3918,27 @@ function sjEditCreatorNote(username){
   sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
     body:JSON.stringify([{username:clean,notes_manager:v||null}])})
     .catch(function(err){console.error('Note save failed:',err);alert('Failed to save note — check connection.');});
+  if(typeof renderSjTable==='function')renderSjTable();
+}
+
+function sjSubToggle(username,val){
+  var uEsc=String(username).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var on=val===true;
+  var off=val===false;
+  var cls=on?'sub-y':(off?'sub-n':'sub-u');
+  var label=on?'Y':(off?'N':'–');
+  return '<span class="sub-toggle '+cls+'" onclick="event.stopPropagation();sjToggleSub(\''+uEsc+'\')" title="English subtitle 자막 (click to cycle Y / N / unset)">'+label+'</span>';
+}
+function sjToggleSub(username){
+  var clean=String(username).replace(/^@/,'');
+  var g=getCreatorGrade(username)||{};
+  var cur=g.english_subtitle;
+  var next=(cur===true)?false:(cur===false?null:true); /* Y → N → unset → Y */
+  if(!creatorGradeCache[clean])creatorGradeCache[clean]={};
+  creatorGradeCache[clean].english_subtitle=next;
+  sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
+    body:JSON.stringify([{username:clean,english_subtitle:next}])})
+    .catch(function(err){console.error('subtitle save failed',err);});
   if(typeof renderSjTable==='function')renderSjTable();
 }
 
