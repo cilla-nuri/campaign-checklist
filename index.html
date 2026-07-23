@@ -2541,8 +2541,8 @@ function getSjFiltered(){
 }
 
 function buildSjTable(rows){
-  var labels=["Apply","Username","Nickname","Status","SNS","Grade","V","E","Skin","VO","Sub","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠"];
-  var keys=["_applyNum","username","nickname","_selStatus","_sns","grade","_vr","_er","_sk","_en","_sub","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution"];
+  var labels=["Apply","Username","Nickname","Status","SNS","Grade","V","E","Skin","VO","Sub","Country","TT Flw","TT Avg","IG Flw","IG Avg","Rank","⚠",""];
+  var keys=["_applyNum","username","nickname","_selStatus","_sns","grade","_vr","_er","_sk","_en","_sub","nationality","tiktok_followers","tiktok_avg_views","instagram_followers","instagram_avg_views","_rank","caution","_del"];
   var th='<th style="width:32px;"><input type="checkbox" class="sj-chk sj-select-all" data-selectall="1" '+
     (rows.length>0&&rows.every(function(r){return sjSelected.has(String(r._applyNum));})?'checked':'')+
     '/></th>';
@@ -2600,6 +2600,7 @@ function buildSjTable(rows){
       +'<td>'+fmtNum(r.instagram_avg_views)+'</td>'
       +'<td><input type="text" value="'+(r._rank||'')+'" data-apply="'+r._applyNum+'" class="sj-rank-input" placeholder="-" style="width:38px;font-size:11px;padding:1px 3px;border-radius:5px;border:1px solid #e0e0e0;text-align:center;outline:none;background:transparent;"/></td>'
       +'<td>'+(r.caution&&r.caution.toUpperCase()!=="N"?'<span class="caution-dot"></span> '+r.caution:'-')+'</td>'
+      +'<td><button onclick="event.stopPropagation();sjDeleteApplicant(\''+r._applyNum+'\')" title="Remove from 선정" style="background:none;border:none;cursor:pointer;color:#ddd;font-size:13px;padding:2px 5px;" onmouseover="this.style.color=\'#e24b4a\'" onmouseout="this.style.color=\'#ddd\'"><i class="ti ti-trash"></i></button></td>'
             +'</tr>';
   }).join("");
   return '<table class="sj-table"><thead><tr>'+th+'</tr></thead><tbody>'+tbody+'</tbody></table>';
@@ -3918,6 +3919,25 @@ function sjSelStatusPill(status) {
     + '<option value="pre-selected"' + (val==='pre-selected'?' selected':'') + '>⭐ Pre-selected</option>'
     + '<option value="selected"' + (val==='selected'?' selected':'') + '>✓ Selected</option>'
     + '</select>';
+}
+
+function sjDeleteApplicant(applyNum){
+  var r = sjApplicants.find(function(a){ return String(a._applyNum)===String(applyNum); });
+  if(!r) return;
+  var c = getCampaign(); if(!c) return;
+  var name = r.nickname || r.username || applyNum;
+  var msg = appLang==='kr'
+    ? '"'+name+'" (지원번호 '+applyNum+')을(를) 선정 목록에서 삭제할까요?\n이 캠페인에서만 제거되며 되돌릴 수 없습니다.'
+    : 'Remove "'+name+'" (apply '+applyNum+') from 선정?\nThis only affects this campaign and can\'t be undone.';
+  if(!confirm(msg)) return;
+  // remove from memory + selection
+  sjApplicants = sjApplicants.filter(function(a){ return String(a._applyNum)!==String(applyNum); });
+  sjSelected.delete(applyNum); sjSelected.delete(String(applyNum));
+  // delete just this row in DB (scoped to campaign + apply_number)
+  sbFetch('campaign_applicants?campaign_name=eq.'+encodeURIComponent(c.name)+'&apply_number=eq.'+encodeURIComponent(applyNum), {
+    method:'DELETE', prefer:'return=minimal'
+  }).catch(function(){});
+  renderSunjeongArea();
 }
 
 function sjSetStatus(applyNum, value) {
