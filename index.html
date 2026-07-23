@@ -2949,7 +2949,16 @@ function openGradeEdit(handle){
 
 async function saveGradeEdit(handle){
   var s=document.getElementById("ge_status");s.textContent="Saving...";s.style.color="#aaa";
-  var fields={video_quality:document.getElementById("ge_vq").value||null,manager_evaluation:document.getElementById("ge_me").value||null,skintone:document.getElementById("ge_sk").value||null,english_proficiency:document.getElementById("ge_en").value||null,english_subtitle:(document.getElementById("ge_sub").value===""?null:document.getElementById("ge_sub").value==="true"),blacklist:document.getElementById("ge_bl").value==="true",notes_manager:document.getElementById("ge_notes").value||null};
+  var _clean=String(handle).replace(/^@/,'').toLowerCase();
+  var _prevG=creatorGradeCache[_clean]||{};
+  var _newNote=document.getElementById("ge_notes").value||null;
+  var fields={video_quality:document.getElementById("ge_vq").value||null,manager_evaluation:document.getElementById("ge_me").value||null,skintone:document.getElementById("ge_sk").value||null,english_proficiency:document.getElementById("ge_en").value||null,english_subtitle:(document.getElementById("ge_sub").value===""?null:document.getElementById("ge_sub").value==="true"),blacklist:document.getElementById("ge_bl").value==="true",notes_manager:_newNote};
+  // If the note changed to a non-empty value, append a history entry
+  if(_newNote && _newNote.trim() && _newNote.trim()!==(_prevG.notes_manager||'').trim()){
+    var _hist=Array.isArray(_prevG.notes_history)?_prevG.notes_history.slice():[];
+    _hist.push({by:_noteAuthor(),at:new Date().toISOString(),text:_newNote.trim()});
+    fields.notes_history=_hist;
+  }
   var ok=await upsertCreatorGrade(handle,fields);
   if(ok){
     s.textContent="\u2713 Saved!";s.style.color="#1D9E75";
@@ -4053,23 +4062,52 @@ function cnoteHtml(username){
   var uEsc=String(username).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   if(n&&String(n).trim()){
     var tEsc=String(n).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic has"></i><span class="cnote-tip">'+tEsc+'</span></span>';
+    var hist=Array.isArray(g.notes_history)?g.notes_history:[];
+    var histIc=hist.length?'<i class="ti ti-history" onclick="event.stopPropagation();sjViewNoteHistory(\''+uEsc+'\')" title="Note history" style="font-size:11px;color:#999;cursor:pointer;margin-left:2px;"></i>':'';
+    return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic has"></i><span class="cnote-tip">'+tEsc+'</span></span>'+histIc;
   }
   return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic add" title="Add creator note"></i></span>';
+}
+function _noteAuthor(){
+  return (window.currentUser && currentUser.email) ? currentUser.email.split('@')[0] : 'unknown';
+}
+function _fmtNoteTime(iso){
+  var d=iso?new Date(iso):new Date();
+  var p=function(n){return (n<10?'0':'')+n;};
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2)+' '+p(d.getHours())+':'+p(d.getMinutes());
 }
 function sjEditCreatorNote(username){
   var clean=String(username).replace(/^@/,'');
   var g=getCreatorGrade(username)||{};
   var cur=g.notes_manager||'';
-  var v=prompt((appLang==='kr'?'크리에이터 노트 (@'+clean+'):':'Creator note (@'+clean+'):'),cur);
+  var v=prompt((appLang==='kr'?'크리에이터 노트 추가 (@'+clean+'):\n(기존 노트는 히스토리에 보관됩니다)':'Add creator note (@'+clean+'):\n(previous notes are kept in history)'),'');
   if(v===null)return;
   v=v.trim();
+  if(!v)return;
+  var entry={by:_noteAuthor(),at:new Date().toISOString(),text:v};
+  var hist=Array.isArray(g.notes_history)?g.notes_history.slice():[];
+  hist.push(entry);
   if(!creatorGradeCache[clean])creatorGradeCache[clean]={};
-  creatorGradeCache[clean].notes_manager=v||null;
+  creatorGradeCache[clean].notes_manager=v;
+  creatorGradeCache[clean].notes_history=hist;
   sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
-    body:JSON.stringify([{username:clean,notes_manager:v||null}])})
+    body:JSON.stringify([{username:clean,notes_manager:v,notes_history:hist}])})
     .catch(function(err){console.error('Note save failed:',err);alert('Failed to save note — check connection.');});
   if(typeof renderSjTable==='function')renderSjTable();
+}
+function sjViewNoteHistory(username){
+  var clean=String(username).replace(/^@/,'');
+  var g=getCreatorGrade(username)||{};
+  var hist=Array.isArray(g.notes_history)?g.notes_history:[];
+  if(!hist.length){
+    // fall back to showing the single current note if no history yet
+    if(g.notes_manager){hist=[{by:'—',at:null,text:g.notes_manager}];}
+    else{alert(appLang==='kr'?'노트 기록이 없습니다.':'No note history yet.');return;}
+  }
+  var lines=hist.slice().reverse().map(function(e){
+    return '• ['+_fmtNoteTime(e.at)+'] '+(e.by||'—')+':\n   '+e.text;
+  }).join('\n\n');
+  alert((appLang==='kr'?'@'+clean+' 노트 히스토리\n\n':'@'+clean+' — note history\n\n')+lines);
 }
 
 function sjSubToggle(username,val){
