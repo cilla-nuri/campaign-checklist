@@ -2401,34 +2401,18 @@ function switchMainTab(tab){
     footer.style.display="none";
     document.getElementById("feedbackBtn").style.display="none";
     document.getElementById("sbadge").style.display="none";
-    // Auto-load from Supabase if empty
-    if(!sjApplicants.length){
-      var _c=getCampaign();
-      if(_c){
-        renderSunjeongArea(); // show loading state
-        loadSjFromSupabase(_c.name).then(async function(rows){
-          if(rows.length){
-            // Upsert: keep existing, add only new rows (by _applyNum)
-            var existingNums = new Set(sjApplicants.map(function(r){return String(r._applyNum);}));
-            var newRows = rows.filter(function(r){return !existingNums.has(String(r._applyNum));});
-            // For existing rows, update sel_status/grade if changed
-            rows.forEach(function(r){
-              var ex = sjApplicants.find(function(e){return String(e._applyNum)===String(r._applyNum);});
-              if(ex){
-                // Update fields that might change but preserve sel_status/grades
-                ex.nickname = r.nickname || ex.nickname;
-                ex._ig_url = r._ig_url || ex._ig_url;
-                ex._tt_url = r._tt_url || ex._tt_url;
-              }
-            });
-            if(newRows.length) sjApplicants = sjApplicants.concat(newRows);
-            if(!sjApplicants.length) sjApplicants = rows;
-            await loadCreatorGrades(sjApplicants.map(function(r){return r.username;}));
-            renderSunjeongArea();
-          }
-        });
-        return;
-      }
+    // Always reload for THIS campaign (never trust leftover sjApplicants from another one)
+    var _c=getCampaign();
+    if(_c){
+      if(sjArea.getAttribute('data-loaded-camp')!==_c.name){ sjApplicants=[]; sjSelected=new Set(); }
+      renderSunjeongArea(); // loading state
+      loadSjFromSupabase(_c.name).then(async function(rows){
+        sjApplicants = rows;                       // authoritative DB copy
+        sjArea.setAttribute('data-loaded-camp', _c.name);
+        await loadCreatorGrades(sjApplicants.map(function(r){return r.username;}));
+        renderSunjeongArea();
+      });
+      return;
     }
     renderSunjeongArea();
   }else{
@@ -2725,13 +2709,52 @@ function handleSjCSV(file){
     var ai=colExact("applynumber","applynum","apply"),ii=colExact("idusername","username"),ni=colExact("nickname","nick");
     var gi=colExact("grade"),tfi=colExact("tiktokfollowers"),tai=colExact("tiktokavgviews"),ifi=colExact("instagramfollowers"),iai=colExact("instagramavgviews"),nti=colExact("nationality"),ci=colExact("caution");
     var uidIdx=colExact("userid","user_id"),ttUrlIdx=colExact("tiktokurl","tiktokurl2","tiktok_url"),igUrlIdx=colExact("instagramurl","instagram_url");
-    sjApplicants=[];
+    // MERGE (not replace): load what's already in the campaign first, then
+    // apply the CSV on top — add new applicants, update profile fields on
+    // existing ones, but NEVER touch their selection (selected / sel_status).
+    var c=getCampaign();
+    var existing = c ? await loadSjFromSupabase(c.name) : [];
+    var byApply = {};
+    existing.forEach(function(r){ byApply[String(r._applyNum)] = r; });
+    // sjSelected was repopulated by loadSjFromSupabase — keep it.
+
+    var addedCount=0, updatedCount=0;
     for(var i=1;i<lines.length;i++){
       var cols=splitCSVLine(lines[i]);
       var uname=(cols[ii]||"").replace(/^@/,"");
       if(!uname)continue;
-      sjApplicants.push({_applyNum:cols[ai]||String(i),_userId:cols[uidIdx]||"",username:"@"+uname,nickname:cols[ni]||"",grade:(cols[gi]||"").toUpperCase(),tiktok_followers:cols[tfi]||"",tiktok_avg_views:cols[tai]||"",instagram_followers:cols[ifi]||"",instagram_avg_views:cols[iai]||"",nationality:cols[nti]||"",caution:cols[ci]||"",_ig_url:cols[igUrlIdx]||"",_tt_url:cols[ttUrlIdx]||""});
+      var applyNum = cols[ai]||String(i);
+      var fromCsv = {
+        _applyNum: applyNum,
+        _userId: cols[uidIdx]||"",
+        username: "@"+uname,
+        nickname: cols[ni]||"",
+        grade: (cols[gi]||"").toUpperCase(),
+        tiktok_followers: cols[tfi]||"",
+        tiktok_avg_views: cols[tai]||"",
+        instagram_followers: cols[ifi]||"",
+        instagram_avg_views: cols[iai]||"",
+        nationality: cols[nti]||"",
+        caution: cols[ci]||"",
+        _ig_url: cols[igUrlIdx]||"",
+        _tt_url: cols[ttUrlIdx]||""
+      };
+      var prev = byApply[String(applyNum)];
+      if(prev){
+        // existing applicant → update profile fields only, keep selection/status untouched
+        ['_userId','nickname','grade','tiktok_followers','tiktok_avg_views','instagram_followers','instagram_avg_views','nationality','caution','_ig_url','_tt_url'].forEach(function(k){
+          if(fromCsv[k]) prev[k]=fromCsv[k]; // only overwrite when CSV carries a value
+        });
+        prev.username = fromCsv.username || prev.username;
+        updatedCount++;
+      }else{
+        // brand-new applicant → add (no selection yet)
+        byApply[String(applyNum)] = fromCsv;
+        addedCount++;
+      }
     }
+    sjApplicants = Object.keys(byApply).map(function(k){ return byApply[k]; });
+
     await loadCreatorGrades(sjApplicants.map(function(r){return r.username;}));
     // Auto-add new creators + save IG/TT URLs to Supabase
     sjApplicants.forEach(function(r){
@@ -2739,18 +2762,15 @@ function handleSjCSV(file){
       var fields={};
       if(r._ig_url)fields.instagram_url=r._ig_url;
       if(r._tt_url)fields.tiktok_url=r._tt_url;
-      // If creator not in DB at all, create entry
       if(!g||Object.keys(fields).length>0){
         upsertCreatorGrade(r.username,fields);
       }
     });
-    sjSelected=new Set();
-    // Save to Supabase for persistence
-    var c=getCampaign();
+    // Save merged roster (saveSjToSupabase preserves selection via merge-duplicates)
     if(c)saveSjToSupabase(c.name,sjApplicants);
-    // Auto-insert new creators to creators DB
     syncNewCreatorsToSupabase(sjApplicants);
     renderSunjeongArea();
+    console.log('CSV merge: '+addedCount+' added, '+updatedCount+' updated, selections preserved');
   };
   reader.readAsText(file);
 }
@@ -3666,33 +3686,14 @@ var _selectionSaveTimer = null;
 
 
 
-/* Periodic full selection sync every 10 seconds when on 선정 tab */
-setInterval(function() {
-  if (activeMainTab === 'sunjeong' && sjApplicants.length > 0) {
-    var c = getCampaign();
-    if (!c) return;
-    // Batch save all current selections state
-    var toSave = [];
-    sjApplicants.forEach(function(r) {
-      toSave.push({
-        apply_number: r._applyNum,
-        selected: sjSelected.has(r._applyNum),
-        rank: r._rank || ''
-      });
-    });
-    if (!toSave.length) return;
-    // Update in chunks
-    for (var i = 0; i < toSave.length; i += 100) {
-      (function(chunk) {
-        sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c.name), {
-          method: 'PATCH', prefer: 'return=minimal',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({}) // noop batch - individual saves handle this
-        }).catch(function(){});
-      })(toSave.slice(i, i+100));
-    }
-  }
-}, 10000);
+/* Periodic full selection sync REMOVED.
+   It PATCHed campaign_applicants every 10s with an empty body (a noop that
+   only generated request noise) and fired for whatever campaign a stale tab
+   still held in memory — one of the ways stale tabs hammered the wrong
+   campaign. Selection changes are already persisted individually and reliably
+   via sjSaveSelection / sjSetStatus / bulkSetStatus at the moment they happen,
+   so no periodic sweep is needed. */
+
 
 /* Add spin animation */
 var style = document.createElement('style');
@@ -3894,15 +3895,15 @@ function selectCampaignFromHome(id) {
 function toggleArchive(id) {
   if (!campaigns[id]) return;
   campaigns[id].archived = !campaigns[id].archived;
+  var val = !!campaigns[id].archived;
   saveToLocalStorage();
-  markChanged();
+  // Write the flag directly so a stale tab's full-state autosave can't revert it
+  sbFetch('campaigns?id=eq.' + encodeURIComponent(id), {
+    method: 'PATCH', prefer: 'return=minimal',
+    body: JSON.stringify({archived: val})
+  }).catch(function(){ markChanged(); });
   refreshCampaignSelect();
-  // If we just archived the active campaign, deselect it
-  if (campaigns[id].archived && activeCampaignId === id) {
-    switchCampaign(null);
-  } else {
-    renderHomePage();
-  }
+  if (val && activeCampaignId === id) { switchCampaign(null); } else { renderHomePage(); }
 }
 
 
@@ -5337,7 +5338,7 @@ async function loadAllFromSupabase(){
     if(r.pay_type) c.payType = r.pay_type;
     if(r.deadline) c.deadline = r.deadline;
     if(r.period) c.period = r.period;
-    if(r.archived) c.archived = true;
+    c.archived = !!r.archived;
     if(s.sjSettings) c.sjSettings = s.sjSettings;
     if(s.notes) c.notes = s.notes;
     if(s.needsMetaCode) c.needsMetaCode = true;
