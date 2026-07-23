@@ -3322,23 +3322,21 @@ async function cpSaveRow(handle) {
    SUNJEONG PERSISTENCE (Supabase campaign_applicants)
    ============================================================ */
 
+/* MERGE upsert — never deletes. Existing rows are updated, new rows added.
+   Selection state (sel_status/selected) and grade/rank are preserved on
+   existing rows: we only overwrite them when the in-memory row actually
+   carries a value, so a fresh CSV import (which has none) can't wipe them. */
 async function saveSjToSupabase(campaignName, applicants) {
   if (!campaignName || !applicants.length) return;
   try {
-    // Delete existing applicants for this campaign
-    await sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName), {
-      method: "DELETE", prefer: "return=minimal"
-    });
-    // Insert new batch in chunks of 100
     for (var i = 0; i < applicants.length; i += 100) {
       var chunk = applicants.slice(i, i + 100).map(function(r) {
-        return {
+        var row = {
           campaign_name: campaignName,
           apply_number: r._applyNum || "",
           user_id: r._userId || "",
           username: r.username || "",
           nickname: r.nickname || "",
-          grade: r.grade || "",
           tiktok_followers: r.tiktok_followers || "",
           tiktok_avg_views: r.tiktok_avg_views || "",
           instagram_followers: r.instagram_followers || "",
@@ -3346,18 +3344,22 @@ async function saveSjToSupabase(campaignName, applicants) {
           nationality: r.nationality || "",
           caution: r.caution || "",
           ig_url: r._ig_url || "",
-          tt_url: r._tt_url || "",
-          rank: r._rank || "",
-          sel_status: r._selStatus || "",
-          selected: sjSelected.has(r._applyNum)||false
+          tt_url: r._tt_url || ""
         };
+        // Only include selection/grade/rank when we actually have a value,
+        // so merge-duplicates won't overwrite existing DB values with blanks.
+        if (r.grade) row.grade = r.grade;
+        if (r._rank) row.rank = r._rank;
+        if (r._selStatus && r._selStatus !== 'not-selected') row.sel_status = r._selStatus;
+        if (sjSelected.has(r._applyNum)) row.selected = true;
+        return row;
       });
-      await sbFetch("campaign_applicants", {
-        method: "POST", prefer: "resolution=ignore-duplicates,return=minimal",
+      await sbFetch("campaign_applicants?on_conflict=campaign_name,apply_number", {
+        method: "POST", prefer: "resolution=merge-duplicates,return=minimal",
         body: JSON.stringify(chunk)
       });
     }
-    console.log("Saved", applicants.length, "applicants for", campaignName);
+    console.log("Merged", applicants.length, "applicants for", campaignName);
   } catch(e) { console.warn("Save applicants failed:", e); }
 }
 
