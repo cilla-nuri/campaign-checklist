@@ -625,7 +625,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 
 <div id="autosaveIndicator" class="autosave-indicator"></div>
 
-<div class="bulk-bar" id="bulkBar"><span class="bulk-bar-label" id="bulkBarLabel">0 selected</span><span style="color:#e0e0e0;margin:0 4px;">|</span><span style="font-size:11px;color:#888;margin-right:4px;">Set as:</span><button class="bulk-btn bulk-btn-pre" onclick="bulkSetStatus('pre-selected')">⭐ Pre-selected</button><button class="bulk-btn bulk-btn-sel" onclick="bulkSetStatus('selected')">✓ Selected</button><button class="bulk-btn bulk-btn-not" onclick="bulkSetStatus('not-selected')">✗ Not selected</button><button class="bulk-btn bulk-btn-clear" onclick="bulkSetStatus('')">Clear</button></div>
+<div class="bulk-bar" id="bulkBar"><span class="bulk-bar-label" id="bulkBarLabel">0 selected</span><span style="color:#e0e0e0;margin:0 4px;">|</span><span style="font-size:11px;color:#888;margin-right:4px;">Set as:</span><button class="bulk-btn bulk-btn-pre" onclick="bulkSetStatus('pre-selected')">⭐ Pre-selected</button><button class="bulk-btn bulk-btn-sel" onclick="bulkSetStatus('selected')">✓ Selected</button><button class="bulk-btn bulk-btn-not" onclick="bulkSetStatus('not-selected')">✗ Not selected</button><button class="bulk-btn bulk-btn-clear" onclick="bulkSetStatus('')">Clear</button><span style="color:#e0e0e0;margin:0 4px;">|</span><button class="bulk-btn" onclick="bulkDeleteApplicants()" style="background:#fdeaea;color:#e24b4a;border:1px solid #f3c1c1;"><i class="ti ti-trash"></i> Delete</button></div>
 
 <div class="overlay" id="overlay" onclick="bgClick(event)">
   <div class="panel" id="panel">
@@ -3991,9 +3991,29 @@ function bulkSetStatus(status) {
   updateBulkBar();
 }
 
-
-
-
+function bulkDeleteApplicants() {
+  var c = getCampaign(); if(!c) return;
+  var affected = getSjFiltered().filter(function(r){ return sjSelected.has(String(r._applyNum)); });
+  if (!affected.length) return;
+  var msg = appLang==='kr'
+    ? affected.length+'명을 선정 목록에서 삭제할까요?\n이 캠페인에서만 제거되며 되돌릴 수 없습니다.'
+    : 'Delete '+affected.length+' creator'+(affected.length>1?'s':'')+' from 선정?\nThis only affects this campaign and can\'t be undone.';
+  if(!confirm(msg)) return;
+  var nums = affected.map(function(r){ return String(r._applyNum); });
+  var numSet = new Set(nums);
+  sjApplicants = sjApplicants.filter(function(a){ return !numSet.has(String(a._applyNum)); });
+  nums.forEach(function(n){ sjSelected.delete(n); });
+  // delete in chunks via IN filter
+  for (var i=0;i<nums.length;i+=100){
+    var chunk = nums.slice(i,i+100);
+    var inList = chunk.map(function(n){ return '"'+n+'"'; }).join(',');
+    sbFetch('campaign_applicants?campaign_name=eq.'+encodeURIComponent(c.name)+'&apply_number=in.('+encodeURIComponent(inList)+')', {
+      method:'DELETE', prefer:'return=minimal'
+    }).catch(function(){});
+  }
+  renderSjTable();
+  updateBulkBar();
+}
 /* ============================================================
    REGION MAPPING
    ============================================================ */
