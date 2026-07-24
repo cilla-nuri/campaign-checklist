@@ -370,6 +370,11 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .sub-toggle.sub-n{background:#fdeaea;color:#e24b4a;border-color:#f3c1c1;}
 .sub-toggle.sub-u{background:#f2f2f2;color:#bbb;}
 .sub-toggle:hover{filter:brightness(.96);}
+.nh-entry{border:1px solid #eee;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fbfbfe;}
+.nh-meta{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#999;margin-bottom:5px;}
+.nh-del{border:none;background:none;cursor:pointer;color:#ddd;font-size:12px;padding:2px 4px;}
+.nh-del:hover{color:#e24b4a;}
+.nh-text{font-size:12.5px;color:#2c2c38;white-space:pre-wrap;line-height:1.5;}
 .grade-edit-sel:hover{opacity:0.85;}
 
 .sec-block.drag-over{border-top:2px solid #534AB7;}
@@ -2710,6 +2715,7 @@ function handleSjCSV(file){
     var ai=colExact("applynumber","applynum","apply"),ii=colExact("idusername","username"),ni=colExact("nickname","nick");
     var gi=colExact("grade"),tfi=colExact("tiktokfollowers"),tai=colExact("tiktokavgviews"),ifi=colExact("instagramfollowers"),iai=colExact("instagramavgviews"),nti=colExact("nationality"),ci=colExact("caution");
     var uidIdx=colExact("userid","user_id"),ttUrlIdx=colExact("tiktokurl","tiktokurl2","tiktok_url"),igUrlIdx=colExact("instagramurl","instagram_url");
+    var emailIdx=colExact("email","emailaddress","mail");
     // MERGE (not replace): load what's already in the campaign first, then
     // apply the CSV on top — add new applicants, update profile fields on
     // existing ones, but NEVER touch their selection (selected / sel_status).
@@ -2738,12 +2744,13 @@ function handleSjCSV(file){
         nationality: cols[nti]||"",
         caution: cols[ci]||"",
         _ig_url: cols[igUrlIdx]||"",
-        _tt_url: cols[ttUrlIdx]||""
+        _tt_url: cols[ttUrlIdx]||"",
+        _email: cols[emailIdx]||""
       };
       var prev = byApply[String(applyNum)];
       if(prev){
         // existing applicant → update profile fields only, keep selection/status untouched
-        ['_userId','nickname','grade','tiktok_followers','tiktok_avg_views','instagram_followers','instagram_avg_views','nationality','caution','_ig_url','_tt_url'].forEach(function(k){
+        ['_userId','nickname','grade','tiktok_followers','tiktok_avg_views','instagram_followers','instagram_avg_views','nationality','caution','_ig_url','_tt_url','_email'].forEach(function(k){
           if(fromCsv[k]) prev[k]=fromCsv[k]; // only overwrite when CSV carries a value
         });
         prev.username = fromCsv.username || prev.username;
@@ -2757,12 +2764,13 @@ function handleSjCSV(file){
     sjApplicants = Object.keys(byApply).map(function(k){ return byApply[k]; });
 
     await loadCreatorGrades(sjApplicants.map(function(r){return r.username;}));
-    // Auto-add new creators + save IG/TT URLs to Supabase
+    // Auto-add new creators + save IG/TT URLs + email to Supabase (profile only)
     sjApplicants.forEach(function(r){
       var g=getCreatorGrade(r.username);
       var fields={};
       if(r._ig_url)fields.instagram_url=r._ig_url;
       if(r._tt_url)fields.tiktok_url=r._tt_url;
+      if(r._email)fields.email=r._email;
       if(!g||Object.keys(fields).length>0){
         upsertCreatorGrade(r.username,fields);
       }
@@ -2809,7 +2817,8 @@ var SJ_DL_COLUMNS=[
   {key:'ig_avg', label:'Instagram avg views', def:false, get:function(r,g){return r.instagram_avg_views||'';}},
   {key:'rank', label:'Rank', def:false, get:function(r,g){return r._rank||'';}},
   {key:'meta', label:'Meta code (Spark Ads)', def:false, get:function(r,g){var c=getCampaign();if(!c)return'';var cr=(c.creators||[]).find(function(x){return x.handle.replace(/^@/,'').toLowerCase()===r.username.replace(/^@/,'').toLowerCase();});return cr&&c.state[cr.id]?(c.state[cr.id].metaCode||''):'';}},
-  {key:'note', label:'Creator note', def:false, get:function(r,g){return g.notes_manager||'';}}
+  {key:'note', label:'Creator note', def:false, get:function(r,g){return g.notes_manager||'';}},
+  {key:'email', label:'Email (creator)', def:false, get:function(r,g){return r._email||g.email||'';}}
 ];
 function getDlColPrefs(){
   try{var s=JSON.parse(localStorage.getItem('sjDlCols')||'null');if(s&&s.length)return s;}catch(e){}
@@ -4099,15 +4108,46 @@ function sjViewNoteHistory(username){
   var clean=String(username).replace(/^@/,'');
   var g=getCreatorGrade(username)||{};
   var hist=Array.isArray(g.notes_history)?g.notes_history:[];
-  if(!hist.length){
-    // fall back to showing the single current note if no history yet
-    if(g.notes_manager){hist=[{by:'—',at:null,text:g.notes_manager}];}
-    else{alert(appLang==='kr'?'노트 기록이 없습니다.':'No note history yet.');return;}
+  if(!hist.length && g.notes_manager){hist=[{by:'—',at:null,text:g.notes_manager}];}
+  _noteHistUser=clean;
+  var body=hist.length?hist.map(function(e,idx){
+    return '<div class="nh-entry"><div class="nh-meta"><span>'+_fmtNoteTime(e.at)+'</span>'+
+      '<button class="nh-del" onclick="sjDeleteNoteEntry('+idx+')" title="Delete this entry"><i class="ti ti-trash"></i></button></div>'+
+      '<div class="nh-text"></div></div>';
+  }).join(''):'<div style="color:#999;font-size:12px;padding:20px;text-align:center;">'+(appLang==='kr'?'노트 기록이 없습니다.':'No note history yet.')+'</div>';
+  var ov=document.getElementById('noteHistOverlay');
+  if(!ov){
+    ov=document.createElement('div');ov.id='noteHistOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(30,28,46,.4);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+    ov.onclick=function(e){if(e.target===ov)ov.remove();};
+    document.body.appendChild(ov);
   }
-  var lines=hist.slice().reverse().map(function(e){
-    return '• ['+_fmtNoteTime(e.at)+'] '+(e.by||'—')+':\n   '+e.text;
-  }).join('\n\n');
-  alert((appLang==='kr'?'@'+clean+' 노트 히스토리\n\n':'@'+clean+' — note history\n\n')+lines);
+  ov.innerHTML='<div style="background:#fff;border-radius:14px;width:100%;max-width:440px;max-height:80vh;overflow:auto;padding:18px;">'+
+    '<div style="display:flex;align-items:center;margin-bottom:12px;"><b style="font-size:14px;flex:1;">@'+clean+' — note history</b>'+
+    '<button onclick="document.getElementById(\'noteHistOverlay\').remove()" style="border:none;background:none;font-size:16px;cursor:pointer;color:#999;">✕</button></div>'+
+    '<div id="nhList">'+body+'</div></div>';
+  // set text safely (avoid HTML injection from note content)
+  var nodes=ov.querySelectorAll('.nh-text');
+  hist.forEach(function(e,idx){ if(nodes[idx]) nodes[idx].textContent=(e.by&&e.by!=='—'?'('+e.by+') ':'')+e.text; });
+}
+var _noteHistUser=null;
+function sjDeleteNoteEntry(idx){
+  if(!_noteHistUser)return;
+  var clean=_noteHistUser;
+  var g=creatorGradeCache[clean.toLowerCase()]||creatorGradeCache[clean]||{};
+  var hist=Array.isArray(g.notes_history)?g.notes_history.slice():[];
+  if(idx<0||idx>=hist.length)return;
+  if(!confirm(appLang==='kr'?'이 노트 항목을 삭제할까요?':'Delete this note entry?'))return;
+  hist.splice(idx,1);
+  var latest=hist.length?hist[hist.length-1].text:null;
+  var key=clean.toLowerCase();
+  if(!creatorGradeCache[key])creatorGradeCache[key]={};
+  creatorGradeCache[key].notes_history=hist;
+  creatorGradeCache[key].notes_manager=latest;
+  sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
+    body:JSON.stringify([{username:clean,notes_history:hist,notes_manager:latest}])}).catch(function(){});
+  if(typeof renderSjTable==='function')renderSjTable();
+  sjViewNoteHistory(clean); // refresh modal
 }
 
 function sjSubToggle(username,val){
