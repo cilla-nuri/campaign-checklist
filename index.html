@@ -4101,20 +4101,25 @@ function sjEditCreatorNote(username){
   var clean=String(username).replace(/^@/,'');
   var g=getCreatorGrade(username)||{};
   var cur=g.notes_manager||'';
-  var v=prompt((appLang==='kr'?'크리에이터 노트 추가 (@'+clean+'):\n(기존 노트는 히스토리에 보관됩니다)':'Add creator note (@'+clean+'):\n(previous notes are kept in history)'),'');
-  if(v===null)return;
+  // Prefill with the current note so it can be edited/kept, not wiped.
+  var v=prompt((appLang==='kr'?'크리에이터 노트 (@'+clean+'):\n(수정 시 이전 내용은 히스토리에 보관됩니다)':'Creator note (@'+clean+'):\n(the previous version is kept in history)'),cur);
+  if(v===null)return; // cancelled
   v=v.trim();
-  if(!v)return;
-  var entry={by:_noteAuthor(),at:new Date().toISOString(),text:v};
+  if(v===cur.trim())return; // no change
   var hist=Array.isArray(g.notes_history)?g.notes_history.slice():[];
-  hist.push(entry);
+  // If the old note isn't already the most recent history entry, keep it before replacing.
+  if(cur.trim() && (!hist.length || hist[hist.length-1].text!==cur.trim())){
+    hist.push({by:'—',at:null,text:cur.trim()});
+  }
+  if(v){ hist.push({by:_noteAuthor(),at:new Date().toISOString(),text:v}); }
   if(!creatorGradeCache[clean])creatorGradeCache[clean]={};
-  creatorGradeCache[clean].notes_manager=v;
+  creatorGradeCache[clean].notes_manager=v||null;
   creatorGradeCache[clean].notes_history=hist;
   sbFetch('creators?on_conflict=username',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
-    body:JSON.stringify([{username:clean,notes_manager:v,notes_history:hist}])})
+    body:JSON.stringify([{username:clean,notes_manager:v||null,notes_history:hist}])})
     .catch(function(err){console.error('Note save failed:',err);alert('Failed to save note — check connection.');});
   if(typeof renderSjTable==='function')renderSjTable();
+  if(document.getElementById('crBody'))renderCreatorsPanel();
 }
 function sjViewNoteHistory(username){
   var clean=String(username).replace(/^@/,'');
