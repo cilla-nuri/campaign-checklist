@@ -2983,6 +2983,17 @@ async function saveGradeEdit(handle){
 }
 
 /* ============ CREATORS PANEL ============ */
+function crNoteCell(handle,g){
+  var n=g&&g.notes_manager?String(g.notes_manager):'';
+  var uEsc=String(handle).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var hist=g&&Array.isArray(g.notes_history)?g.notes_history:[];
+  var histIc=hist.length?' <i class="ti ti-history" onclick="event.stopPropagation();sjViewNoteHistory(\''+uEsc+'\')" title="Note history" style="font-size:11px;color:#999;cursor:pointer;"></i>':'';
+  if(n && n.trim()){
+    var tEsc=n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    return '<span onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')" title="'+tEsc+'" style="cursor:pointer;font-size:11px;color:#555;display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">'+tEsc+'</span>'+histIc;
+  }
+  return '<span onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')" title="Add note" style="cursor:pointer;font-size:11px;color:#ccc;">+ note</span>';
+}
 function buildCreatorRow(cr,g){
   var bl=g&&g.blacklist;
     return '<tr class="cp-editing">' +
@@ -2992,6 +3003,7 @@ function buildCreatorRow(cr,g){
     +'<td style="padding:6px 8px;">'+(g&&sjGradeSel('_er',r.username,g.manager_evaluation||'',['','E1','E2','E3','E4','E5'],'e-sel'))+'</td>'
     +'<td style="padding:6px 8px;">'+(g&&g.skintone||'-')+'</td>'
     +'<td style="padding:6px 8px;">'+(g&&g.english_proficiency||'-')+'</td>'
+    +'<td style="padding:6px 8px;max-width:180px;">'+crNoteCell(cr.handle,g)+'</td>'
     +'<td style="padding:6px 8px;font-size:10px;color:#888;max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="'+(cr.campaigns||[]).join(', ')+'">'+(cr.campaigns||[]).join(', ')+'</td>'
     +'<td style="padding:6px 8px;"><button class="cr-edit-btn" data-handle="'+cr.handle+'" style="font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;color:#534AB7;">Edit</button></td>'
     +'</tr>';
@@ -3009,7 +3021,7 @@ function renderCreatorsPanel(){
   });
   var list=Object.values(all).sort(function(a,b){return a.handle.localeCompare(b.handle);});
   var ths='padding:6px 8px;text-align:left;font-size:10px;color:#aaa;font-weight:600;text-transform:uppercase;border-bottom:1px solid #e5e5e5;position:sticky;top:0;background:#fafafa;white-space:nowrap;';
-  var head='<tr>'+'<th style="'+ths+'">Username</th><th style="'+ths+'">Nick</th><th style="'+ths+'">V</th><th style="'+ths+'">E</th><th style="'+ths+'">Skintone</th><th style="'+ths+'">English</th><th style="'+ths+'">Campaigns</th><th style="'+ths+'"></th>'+'</tr>';
+  var head='<tr>'+'<th style="'+ths+'">Username</th><th style="'+ths+'">Nick</th><th style="'+ths+'">V</th><th style="'+ths+'">E</th><th style="'+ths+'">Skintone</th><th style="'+ths+'">English</th><th style="'+ths+'">Note</th><th style="'+ths+'">Campaigns</th><th style="'+ths+'"></th>'+'</tr>';
   var rows=list.map(function(cr){return buildCreatorRow(cr,getCreatorGrade(cr.handle)||{});}).join("");
   document.getElementById("panelBody").innerHTML=
     '<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;">'
