@@ -3231,7 +3231,6 @@ function buildCreatorsPage(el) {
     {key:'_er', label:'E'},
     {key:'_sk', label:'Skintone'},
     {key:'_en', label:'English'},
-    {key:'_note', label:'Note'},
     {key:'_ig', label:'Instagram'},
     {key:'_tt', label:'TikTok'},
     {key:'_camps', label:'Campaigns'},
@@ -3266,7 +3265,7 @@ function cpNoteCell(handle,g){
     var tEsc=n.replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic has"></i><span class="cnote-tip">'+tEsc+'</span></span>'+histIc;
   }
-  return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic add" title="Add note"></i></span>';
+  return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')" title="Add note" style="color:#ddd;cursor:pointer;font-size:12px;">—</span>';
 }
 function buildCpRow(cr) {
   var g = getCreatorGrade(cr.handle) || {};
@@ -3283,12 +3282,12 @@ function buildCpRow(cr) {
     }
     return '<tr data-handle="'+cr.handle+'" data-nick="'+(cr.nick||'')+'">' +
       '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+
-      '<label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#e24b4a;font-weight:600;margin-top:4px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="cpe_bl"'+(bl?' checked':'')+' style="accent-color:#e24b4a;margin:0;"/> Blacklist</label></td>' +
+      '<label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#e24b4a;font-weight:600;margin-top:4px;cursor:pointer;white-space:nowrap;"><input type="checkbox" id="cpe_bl"'+(bl?' checked':'')+' style="accent-color:#e24b4a;margin:0;"/> Blacklist</label>'+
+      '<textarea class="cp-inline-note" id="cpe_note" placeholder="note..." style="margin-top:5px;width:100%;">'+(g.notes_manager?String(g.notes_manager).replace(/</g,'&lt;'):'')+'</textarea></td>' +
       '<td>'+mkSel('vq',g.video_quality||'',['V1','V2','V3','V4','V5'])+'</td>' +
       '<td>'+mkSel('me',g.manager_evaluation||'',['E1','E2','E3','E4','E5'])+'</td>' +
       '<td>'+mkSel('sk',g.skintone||'',['Light','Fair','Medium','Tan','Deep'])+'</td>' +
       '<td>'+mkSel('en',g.english_proficiency||'',['Fluent','Good','Not Bad','Bad'])+'</td>' +
-      '<td><textarea class="cp-inline-note" id="cpe_note" placeholder="note...">'+(g.notes_manager?String(g.notes_manager).replace(/</g,'&lt;'):'')+'</textarea></td>' +
       '<td><input class="cp-inline-url" id="cpe_ig" value="'+(g.instagram_url||'')+'" placeholder="https://instagram.com/..."/></td>' +
       '<td><input class="cp-inline-url" id="cpe_tt" value="'+(g.tiktok_url||'')+'" placeholder="https://tiktok.com/@..."/></td>' +
       '<td style="font-size:11px;color:#bbb;">'+(cr.campaigns||[]).join(', ')+'</td>' +
@@ -3311,12 +3310,11 @@ function buildCpRow(cr) {
   if(!window.cpHandleLookup) window.cpHandleLookup={};
   window.cpHandleLookup[cr.handle]={handle:cr.handle,nick:cr.nick||''};
   return '<tr data-handle="'+cr.handle+'" data-nick="'+(cr.nick||'')+'">' +
-    '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+'<div style="font-size:11px;color:#bbb;">'+cr.nick+'</div></td>' +
+    '<td><span style="'+nameStyle+'">'+cr.handle+'</span>'+blBadge+' '+noteCell+'<div style="font-size:11px;color:#bbb;">'+cr.nick+'</div></td>' +
     '<td>'+vPill+'</td>' +
     '<td>'+ePill+'</td>' +
     '<td>'+sk+'</td>' +
     '<td>'+en+'</td>' +
-    '<td>'+noteCell+'</td>' +
     '<td>'+igLink+'</td>' +
     '<td>'+ttLink+'</td>' +
     '<td>'+camps+'</td>' +
