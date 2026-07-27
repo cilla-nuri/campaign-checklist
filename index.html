@@ -375,6 +375,8 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 .nh-del{border:none;background:none;cursor:pointer;color:#ddd;font-size:12px;padding:2px 4px;}
 .nh-del:hover{color:#e24b4a;}
 .nh-text{font-size:12.5px;color:#2c2c38;white-space:pre-wrap;line-height:1.5;}
+.cp-inline-note{width:150px;min-height:34px;font-size:11px;font-family:inherit;padding:5px 7px;border:1px solid #fcd34d;border-radius:7px;background:#fffdf5;resize:vertical;outline:none;line-height:1.4;}
+.cp-inline-note:focus{border-color:#534AB7;background:#fff;}
 .grade-edit-sel:hover{opacity:0.85;}
 
 .sec-block.drag-over{border-top:2px solid #534AB7;}
@@ -3229,6 +3231,7 @@ function buildCreatorsPage(el) {
     {key:'_er', label:'E'},
     {key:'_sk', label:'Skintone'},
     {key:'_en', label:'English'},
+    {key:'_note', label:'Note'},
     {key:'_ig', label:'Instagram'},
     {key:'_tt', label:'TikTok'},
     {key:'_camps', label:'Campaigns'},
@@ -3236,6 +3239,7 @@ function buildCreatorsPage(el) {
   ];
   var thead = '<tr>' + cols.map(function(c) {
     if (c.key === '_actions') return '<th style="width:80px;"></th>';
+    if (c.key === '_note') return '<th>'+c.label+'</th>';
     var sc = cpSortCol === c.key ? (cpSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
     return '<th class="' + sc + '" onclick="cpSort(\'' + c.key + '\')">' + c.label + '</th>';
   }).join('') + '</tr>';
@@ -3253,6 +3257,17 @@ function buildCreatorsPage(el) {
     '</div>';
 }
 
+function cpNoteCell(handle,g){
+  var n=g&&g.notes_manager?String(g.notes_manager):'';
+  var uEsc=String(handle).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var hist=g&&Array.isArray(g.notes_history)?g.notes_history:[];
+  var histIc=hist.length?'<i class="ti ti-history" onclick="event.stopPropagation();sjViewNoteHistory(\''+uEsc+'\')" title="Note history" style="font-size:11px;color:#999;cursor:pointer;margin-left:3px;"></i>':'';
+  if(n && n.trim()){
+    var tEsc=n.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic has"></i><span class="cnote-tip">'+tEsc+'</span></span>'+histIc;
+  }
+  return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic add" title="Add note"></i></span>';
+}
 function buildCpRow(cr) {
   var g = getCreatorGrade(cr.handle) || {};
   var isEditing = cpEditingHandle === cr.handle;
@@ -3273,6 +3288,7 @@ function buildCpRow(cr) {
       '<td>'+mkSel('me',g.manager_evaluation||'',['E1','E2','E3','E4','E5'])+'</td>' +
       '<td>'+mkSel('sk',g.skintone||'',['Light','Fair','Medium','Tan','Deep'])+'</td>' +
       '<td>'+mkSel('en',g.english_proficiency||'',['Fluent','Good','Not Bad','Bad'])+'</td>' +
+      '<td><textarea class="cp-inline-note" id="cpe_note" placeholder="note...">'+(g.notes_manager?String(g.notes_manager).replace(/</g,'&lt;'):'')+'</textarea></td>' +
       '<td><input class="cp-inline-url" id="cpe_ig" value="'+(g.instagram_url||'')+'" placeholder="https://instagram.com/..."/></td>' +
       '<td><input class="cp-inline-url" id="cpe_tt" value="'+(g.tiktok_url||'')+'" placeholder="https://tiktok.com/@..."/></td>' +
       '<td style="font-size:11px;color:#bbb;">'+(cr.campaigns||[]).join(', ')+'</td>' +
@@ -3287,6 +3303,7 @@ function buildCpRow(cr) {
   var ePill = g.manager_evaluation ? '<span class="egrade-pill">'+g.manager_evaluation+'</span>' : '<span style="color:#ddd">—</span>';
   var sk = g.skintone || '<span style="color:#ddd">—</span>';
   var en = g.english_proficiency || '<span style="color:#ddd">—</span>';
+  var noteCell = cpNoteCell(cr.handle, g);
   var igLink = g.instagram_url ? '<a class="cp-link" href="'+g.instagram_url+'" target="_blank"><i class="ti ti-brand-instagram"></i> IG</a>' : '<span style="color:#ddd;font-size:11px;">—</span>';
   var ttLink = g.tiktok_url ? '<a class="cp-link" href="'+g.tiktok_url+'" target="_blank"><i class="ti ti-brand-tiktok"></i> TT</a>' : '<span style="color:#ddd;font-size:11px;">—</span>';
   var camps = '<span style="font-size:11px;color:#bbb;max-width:160px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(cr.campaigns||[]).join(', ')+'">'+(cr.campaigns||[]).join(', ')+'</span>';
@@ -3299,6 +3316,7 @@ function buildCpRow(cr) {
     '<td>'+ePill+'</td>' +
     '<td>'+sk+'</td>' +
     '<td>'+en+'</td>' +
+    '<td>'+noteCell+'</td>' +
     '<td>'+igLink+'</td>' +
     '<td>'+ttLink+'</td>' +
     '<td>'+camps+'</td>' +
@@ -3355,6 +3373,22 @@ async function cpSaveRow(handle) {
     tiktok_url: document.getElementById('cpe_tt').value || null,
     blacklist: document.getElementById('cpe_bl') ? document.getElementById('cpe_bl').checked : false
   };
+  // Note: save + append to history when it changed
+  var noteEl = document.getElementById('cpe_note');
+  if (noteEl) {
+    var newNote = noteEl.value.trim();
+    var gPrev = getCreatorGrade(handle) || {};
+    var prevNote = (gPrev.notes_manager || '').trim();
+    if (newNote !== prevNote) {
+      var hist = Array.isArray(gPrev.notes_history) ? gPrev.notes_history.slice() : [];
+      if (prevNote && (!hist.length || hist[hist.length-1].text !== prevNote)) {
+        hist.push({by:'—', at:null, text:prevNote});
+      }
+      if (newNote) hist.push({by:_noteAuthor(), at:new Date().toISOString(), text:newNote});
+      fields.notes_manager = newNote || null;
+      fields.notes_history = hist;
+    }
+  }
   var btn = document.querySelector('.cp-save-btn');
   if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
   var ok = await upsertCreatorGrade(handle, fields);
