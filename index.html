@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Campaign Checklist</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <style>
@@ -1987,6 +1988,7 @@ function renderMasterPanel(){
     '<div class="divider"></div>'+
     '<div id="masterItems">'+(masterDraft.length?masterDraft.map(renderSecBlock).join(''):'<div style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">No items yet.</div>')+'</div>';
   document.getElementById("panelFooter").innerHTML='<button class="smb" onclick="addSec()"><i class="ti ti-plus"></i> Section</button><span class="pf-warn" id="pfWarn"></span><button class="apply-btn" onclick="applyMaster()">Apply to all</button><button onclick="copyMasterAsCSV()" style="margin-left:6px;padding:6px 11px;border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;font-size:11px;">&#128203; Copy CSV</button><button onclick="applyMasterToCampaign()" style="margin-left:6px;padding:6px 11px;border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;color:#555;cursor:pointer;font-size:11px;">&#8594; Apply to...</button>';
+  initMasterSortable();
 }
 
 function handleChecklistCSV(file){
@@ -2014,6 +2016,7 @@ function handleChecklistCSV(file){
     setPanelDirty('CSV imported — click Apply to all before closing!');
     document.getElementById("checklistImportPreview").innerHTML='<div style="font-size:11px;color:#1D9E75;padding:6px 0;">'+total+' items across '+masterDraft.length+' sections -- review then Apply.</div>';
     document.getElementById("masterItems").innerHTML=masterDraft.map(renderSecBlock).join('');
+    initMasterSortable();
     document.getElementById("pfWarn").textContent="";
   };
   reader.readAsText(file);
@@ -2121,44 +2124,57 @@ function toggleItmOpt(sid,iid,btn){
 }
 function itmRowHtml(sid,it,isNew){
   return '<div class="irow" id="ir-'+it.id+'" data-sid="'+sid+'" data-iid="'+it.id+'" style="flex-wrap:wrap;">'+
-    '<span style="display:inline-flex;flex-direction:column;line-height:0;margin-right:2px;">'+
-      '<i class="ti ti-chevron-up mv-btn" onclick="moveItm(\''+sid+'\',\''+it.id+'\',-1)" title="Move up"></i>'+
-      '<i class="ti ti-chevron-down mv-btn" onclick="moveItm(\''+sid+'\',\''+it.id+'\',1)" title="Move down"></i>'+
-    '</span>'+
+    '<i class="ti ti-grip-vertical itm-handle" style="color:#ccc;font-size:14px;cursor:grab;" title="Drag to reorder"></i>'+
     '<input class="itxt" value="'+String(it.text||'').replace(/"/g,'&quot;')+'" oninput="updItm(\''+sid+'\',\''+it.id+'\',this.value)"'+(isNew?' style="background:#f5f5f5;"':'')+'/>'+
     itmOptBtn(sid,it)+
     '<button class="dibtn" onclick="delItm(\''+sid+'\',\''+it.id+'\')"'+(isNew?' style="opacity:1"':'')+'><i class="ti ti-x"></i></button>'+
     '<input class="itxt" value="'+String(it.textKr||'').replace(/"/g,'&quot;')+'" placeholder="&#54620;&#44397;&#50612; (optional)" oninput="updItmKr(\''+sid+'\',\''+it.id+'\',this.value)" style="flex-basis:100%;margin-left:19px;font-size:11px;color:#666;border-style:dashed;"/>'+
   '</div>';
 }
-/* ---- Master checklist reorder via up/down buttons ---- */
-function moveItm(sid,iid,dir){
-  var s=masterDraft.find(function(x){return x.id===sid;});
-  if(!s)return;
-  var i=s.items.findIndex(function(x){return x.id===iid;});
-  if(i<0)return;
-  var j=i+dir;
-  if(j<0||j>=s.items.length)return; // already at edge
-  var tmp=s.items[i]; s.items[i]=s.items[j]; s.items[j]=tmp;
-  document.getElementById('masterItems').innerHTML=masterDraft.map(renderSecBlock).join('');
-  setPanelDirty('Order changed — Apply to all before closing!');
+/* ---- Master checklist reorder via SortableJS drag ---- */
+function initMasterSortable(){
+  if(typeof Sortable==='undefined')return;
+  var container=document.getElementById('masterItems');
+  if(!container)return;
+  // Sections sortable (drag by section handle)
+  if(container._sortable)try{container._sortable.destroy();}catch(_){}
+  container._sortable=Sortable.create(container,{
+    handle:'.sec-handle', animation:150, draggable:'.sec-block',
+    onEnd:function(){ rebuildMasterOrderFromDOM(); }
+  });
+  // Items sortable within each section (can drag across sections too)
+  container.querySelectorAll('.sec-block').forEach(function(sb){
+    if(sb._sortable)try{sb._sortable.destroy();}catch(_){}
+    sb._sortable=Sortable.create(sb,{
+      handle:'.itm-handle', animation:150, draggable:'.irow', group:'items',
+      onEnd:function(){ rebuildMasterOrderFromDOM(); }
+    });
+  });
 }
-function moveSec(sid,dir){
-  var i=masterDraft.findIndex(function(x){return x.id===sid;});
-  if(i<0)return;
-  var j=i+dir;
-  if(j<0||j>=masterDraft.length)return;
-  var tmp=masterDraft[i]; masterDraft[i]=masterDraft[j]; masterDraft[j]=tmp;
-  document.getElementById('masterItems').innerHTML=masterDraft.map(renderSecBlock).join('');
+function rebuildMasterOrderFromDOM(){
+  var container=document.getElementById('masterItems');
+  if(!container)return;
+  var newOrder=[];
+  container.querySelectorAll('.sec-block').forEach(function(sb){
+    var sec=masterDraft.find(function(s){return s.id===sb.dataset.sid;});
+    if(!sec)return;
+    var items=[];
+    sb.querySelectorAll('.irow').forEach(function(row){
+      var it=null;
+      // find item in any section (could have moved across)
+      masterDraft.forEach(function(s){ var f=s.items.find(function(x){return x.id===row.dataset.iid;}); if(f)it=f; });
+      if(it)items.push(it);
+    });
+    sec.items=items;
+    newOrder.push(sec);
+  });
+  if(newOrder.length)masterDraft=newOrder;
   setPanelDirty('Order changed — Apply to all before closing!');
 }
 
 function renderSecBlock(s){
   return '<div class="sec-block" id="sb-'+s.id+'" data-sid="'+s.id+'">'+
-    '<div class="sec-row"><span style="display:inline-flex;flex-direction:column;line-height:0;margin-right:4px;">'+
-      '<i class="ti ti-chevron-up mv-btn" onclick="moveSec(\''+s.id+'\',-1)" title="Move section up"></i>'+
-      '<i class="ti ti-chevron-down mv-btn" onclick="moveSec(\''+s.id+'\',1)" title="Move section down"></i>'+
-    '</span><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
+    '<div class="sec-row"><i class="ti ti-grip-vertical sec-handle" style="color:#ccc;font-size:14px;cursor:grab;margin-right:4px;" title="Drag to reorder section"></i><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
     '<button class="smb" onclick="addItm(\''+s.id+'\')"><i class="ti ti-plus"></i> Item</button>'+
     '<button class="dsbtn" onclick="delSec(\''+s.id+'\')"><i class="ti ti-trash"></i></button></div>'+
     s.items.map(function(it){return itmRowHtml(s.id,it,false);}).join('')+
@@ -2181,6 +2197,7 @@ function addSec(){
   const s={id:uid(),name:"New section",items:[]};setPanelDirty('Master not applied yet. Apply to all first!');
   masterDraft.push(s);
   document.getElementById("masterItems").insertAdjacentHTML("beforeend",renderSecBlock(s));
+  initMasterSortable();
   const inp=document.querySelector("#sb-"+s.id+" .sec-inp");if(inp){inp.focus();inp.select();}
 }
 /* ---- Backup & Restore ---- */
