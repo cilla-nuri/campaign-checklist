@@ -2118,17 +2118,57 @@ function toggleItmOpt(sid,iid,btn){
   setPanelDirty('Master not applied yet. Apply to all first!');
 }
 function itmRowHtml(sid,it,isNew){
-  return '<div class="irow" id="ir-'+it.id+'" data-sid="'+sid+'" data-iid="'+it.id+'" style="flex-wrap:wrap;">'+
-    '<i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;"></i>'+
+  return '<div class="irow" id="ir-'+it.id+'" data-sid="'+sid+'" data-iid="'+it.id+'" draggable="true" ondragstart="itmDragStart(event,\''+sid+'\',\''+it.id+'\')" ondragover="itmDragOver(event)" ondrop="itmDrop(event,\''+sid+'\',\''+it.id+'\')" ondragend="itmDragEnd(event)" style="flex-wrap:wrap;">'+
+    '<i class="ti ti-grip-vertical drag-h" style="color:#ccc;font-size:13px;cursor:grab;"></i>'+
     '<input class="itxt" value="'+String(it.text||'').replace(/"/g,'&quot;')+'" oninput="updItm(\''+sid+'\',\''+it.id+'\',this.value)"'+(isNew?' style="background:#f5f5f5;"':'')+'/>'+
     itmOptBtn(sid,it)+
     '<button class="dibtn" onclick="delItm(\''+sid+'\',\''+it.id+'\')"'+(isNew?' style="opacity:1"':'')+'><i class="ti ti-x"></i></button>'+
     '<input class="itxt" value="'+String(it.textKr||'').replace(/"/g,'&quot;')+'" placeholder="&#54620;&#44397;&#50612; (optional)" oninput="updItmKr(\''+sid+'\',\''+it.id+'\',this.value)" style="flex-basis:100%;margin-left:19px;font-size:11px;color:#666;border-style:dashed;"/>'+
   '</div>';
 }
+/* ---- Master checklist drag-to-sort ---- */
+var _dragItem=null, _dragSec=null;
+function itmDragStart(e,sid,iid){ _dragItem={sid:sid,iid:iid}; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain',iid);}catch(_){}; var r=document.getElementById('ir-'+iid); if(r)setTimeout(function(){r.style.opacity='.4';},0); e.stopPropagation(); }
+function itmDragOver(e){ if(_dragItem){ e.preventDefault(); e.dataTransfer.dropEffect='move'; } }
+function itmDrop(e,targetSid,targetIid){
+  e.preventDefault(); e.stopPropagation();
+  if(!_dragItem) return;
+  if(_dragItem.sid===targetSid && _dragItem.iid===targetIid) return;
+  var fromSec=masterDraft.find(function(s){return s.id===_dragItem.sid;});
+  var toSec=masterDraft.find(function(s){return s.id===targetSid;});
+  if(!fromSec||!toSec) return;
+  var fi=fromSec.items.findIndex(function(x){return x.id===_dragItem.iid;});
+  if(fi<0) return;
+  var moved=fromSec.items.splice(fi,1)[0];
+  var ti=toSec.items.findIndex(function(x){return x.id===targetIid;});
+  if(ti<0) ti=toSec.items.length;
+  toSec.items.splice(ti,0,moved);
+  _dragItem=null;
+  document.getElementById('masterItems').innerHTML=masterDraft.map(renderSecBlock).join('');
+  setPanelDirty('Order changed — Apply to all before closing!');
+}
+function itmDragEnd(e){ _dragItem=null; document.querySelectorAll('.irow').forEach(function(r){r.style.opacity='';}); }
+
+function secDragStart(e,sid){ _dragSec=sid; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain',sid);}catch(_){}; e.stopPropagation(); }
+function secDragOver(e){ if(_dragSec){ e.preventDefault(); e.dataTransfer.dropEffect='move'; } }
+function secDrop(e,targetSid){
+  if(!_dragSec){ return; }
+  e.preventDefault();
+  if(_dragSec===targetSid){ _dragSec=null; return; }
+  var fromIdx=masterDraft.findIndex(function(s){return s.id===_dragSec;});
+  var toIdx=masterDraft.findIndex(function(s){return s.id===targetSid;});
+  if(fromIdx<0||toIdx<0){ _dragSec=null; return; }
+  var moved=masterDraft.splice(fromIdx,1)[0];
+  masterDraft.splice(toIdx,0,moved);
+  _dragSec=null;
+  document.getElementById('masterItems').innerHTML=masterDraft.map(renderSecBlock).join('');
+  setPanelDirty('Order changed — Apply to all before closing!');
+}
+function secDragEnd(e){ _dragSec=null; }
+
 function renderSecBlock(s){
-  return '<div class="sec-block" id="sb-'+s.id+'" data-sid="'+s.id+'">'+
-    '<div class="sec-row"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;margin-right:4px;" title="Drag to reorder section"></i><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
+  return '<div class="sec-block" id="sb-'+s.id+'" data-sid="'+s.id+'" ondragover="secDragOver(event)" ondrop="secDrop(event,\''+s.id+'\')">'+
+    '<div class="sec-row"><i class="ti ti-grip-vertical" style="color:#ccc;font-size:13px;cursor:grab;margin-right:4px;" title="Drag to reorder section" draggable="true" ondragstart="secDragStart(event,\''+s.id+'\')" ondragend="secDragEnd(event)"></i><input class="sec-inp" value="'+s.name+'" oninput="updSecName(\''+s.id+'\',this.value)"/>'+
     '<button class="smb" onclick="addItm(\''+s.id+'\')"><i class="ti ti-plus"></i> Item</button>'+
     '<button class="dsbtn" onclick="delSec(\''+s.id+'\')"><i class="ti ti-trash"></i></button></div>'+
     s.items.map(function(it){return itmRowHtml(s.id,it,false);}).join('')+
