@@ -441,7 +441,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 /* ===== STICKY FIRST COLS ===== */
 
 /* ---- Meta code (Spark Ads) input ---- */
-.meta-code-input{font-size:11px;padding:5px 9px;border-radius:8px;border:1.5px solid #e0d9a8;background:#fffdf2;color:#333;outline:none;width:150px;transition:border-color .15s,background .15s;}
+.meta-code-input{font-size:11px;padding:5px 9px;border-radius:8px;border:1.5px solid #e0d9a8;background:#fffdf2;color:#333;outline:none;width:135px;transition:border-color .15s,background .15s;}
 .meta-code-input:focus{border-color:#534AB7;background:#fff;}
 .meta-code-input.filled{border-color:#7fd4ae;background:#f2fcf7;}
 .meta-code-input.locked{cursor:pointer;color:#1D9E75;font-weight:600;}
@@ -596,10 +596,7 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
         <div id="creatorNoteBar" style="display:none;font-size:11px;color:#f59e0b;background:#fff8e1;padding:3px 8px;border-radius:6px;margin-top:3px;max-width:600px;"></div>
         </div>
         <div class="main-header-right">
-          <div id="metaCodeWrap" style="display:none;align-items:center;gap:4px;">
-            <input id="metaCodeInput" class="meta-code-input" placeholder="Spark Ads code…" onblur="saveMetaCode(this.value)" onkeydown="if(event.key==='Enter')this.blur()" onclick="unlockMetaCode()"/>
-            <button onclick="copyMetaCode()" title="Copy meta code" class="meta-code-copy"><i class="ti ti-copy"></i></button>
-          </div>
+          <div id="metaCodeWrap" style="display:none;align-items:center;gap:8px;flex-wrap:wrap;"></div>
           <button class="feedback-btn" id="feedbackBtn" style="display:none" onclick="openFeedbackAndSetRevision()"><i class="ti ti-message-2"></i> Feedback</button>
           <div style="position:relative;">
             <div class="sbadge" id="sbadge" style="display:none" onclick="toggleStatusMenu(event)"></div>
@@ -836,62 +833,83 @@ function renderCampNotes(){
   }
 }
 /* ---- Spark Ads meta code per creator ---- */
+/* Code/asset types a campaign can request. field = per-creator state key. */
+var CODE_TYPES=[
+  {key:'meta',  field:'metaCode', flag:'needsMeta',  label:'Meta Partnership Code', ph:'Meta partnership code…'},
+  {key:'spark', field:'sparkCode',flag:'needsSpark', label:'Spark Ads Code',         ph:'Spark Ads code…'},
+  {key:'clean', field:'cleanVer', flag:'needsClean', label:'Clean version (GDrive)', ph:'Google Drive link…'}
+];
+function campActiveCodeTypes(c){
+  if(!c)return [];
+  return CODE_TYPES.filter(function(t){ return !!c[t.flag]; });
+}
+/* look up a saved code value for a 선정 row (matches creator by handle) */
+function _codeForRow(r,field){
+  var c=getCampaign();if(!c)return'';
+  var cr=(c.creators||[]).find(function(x){return x.handle.replace(/^@/,'').toLowerCase()===r.username.replace(/^@/,'').toLowerCase();});
+  return cr&&c.state[cr.id]?(c.state[cr.id][field]||''):'';
+}
 function renderMetaCodeBar(){
   var wrap=document.getElementById("metaCodeWrap");if(!wrap)return;
   var c=getCampaign();
-  if(!c||!c.needsMetaCode||!activeCreatorId){wrap.style.display="none";return;}
+  var types=campActiveCodeTypes(c);
+  if(!c||!types.length||!activeCreatorId){wrap.style.display="none";return;}
+  // don't rebuild while user is mid-edit in one of the inputs
+  var ae=document.activeElement;
+  if(ae&&ae.classList&&ae.classList.contains('meta-code-input')&&!ae.readOnly)return;
   wrap.style.display="flex";
-  var inp=document.getElementById("metaCodeInput");
-  /* user is actively editing (unlocked + focused): don't reset value or re-lock under their cursor */
-  if(document.activeElement===inp&&!inp.readOnly)return;
   var st=c.state[activeCreatorId]||{};
-  var filled=!!(st.metaCode&&st.metaCode.trim());
-  inp.value=st.metaCode||"";
-  inp.classList.toggle("filled",filled);
-  inp.classList.toggle("locked",filled);
-  inp.readOnly=filled;
-  inp.title=filled?"Code saved — click to change (confirmation required)":"";
+  wrap.innerHTML=types.map(function(t){
+    var val=(st[t.field]||"");
+    var filled=!!val.trim();
+    return '<span style="display:inline-flex;align-items:center;gap:3px;">'+
+      '<span style="font-size:9px;color:#888;font-weight:600;white-space:nowrap;">'+t.label+'</span>'+
+      '<input class="meta-code-input'+(filled?' filled locked':'')+'" data-codekey="'+t.key+'" placeholder="'+t.ph+'" value="'+val.replace(/"/g,'&quot;')+'"'+(filled?' readonly':'')+
+        ' onblur="saveCode(\''+t.key+'\',this.value)" onkeydown="if(event.key===\'Enter\')this.blur()" onclick="unlockCode(this)"'+
+        (filled?' title="Saved — click to change"':'')+'/>'+
+      '<button onclick="copyCode(\''+t.key+'\')" title="Copy" class="meta-code-copy"><i class="ti ti-copy"></i></button>'+
+    '</span>';
+  }).join('');
 }
-function unlockMetaCode(){
-  var c=getCampaign();if(!c||!activeCreatorId)return;
-  var inp=document.getElementById("metaCodeInput");
+function _codeType(key){return CODE_TYPES.filter(function(t){return t.key===key;})[0];}
+function unlockCode(inp){
   if(!inp.readOnly)return;
+  var c=getCampaign();if(!c||!activeCreatorId)return;
+  var t=_codeType(inp.getAttribute('data-codekey'));if(!t)return;
   var st=c.state[activeCreatorId]||{};
   var msg=appLang==='kr'
-    ?'이미 저장된 메타 코드가 있습니다:\n\n'+(st.metaCode||'')+'\n\n정말 변경하시겠어요?'
-    :'A meta code is already saved for this creator:\n\n'+(st.metaCode||'')+'\n\nAre you sure you want to change it?';
+    ?'이미 저장된 '+t.label+' 값이 있습니다:\n\n'+(st[t.field]||'')+'\n\n정말 변경하시겠어요?'
+    :'A '+t.label+' is already saved:\n\n'+(st[t.field]||'')+'\n\nAre you sure you want to change it?';
   if(!confirm(msg))return;
-  inp.readOnly=false;
-  inp.classList.remove("locked");
-  inp.focus();inp.select();
+  inp.readOnly=false;inp.classList.remove("locked");inp.focus();inp.select();
 }
-function saveMetaCode(v){
+function saveCode(key,v){
   var c=getCampaign();if(!c||!activeCreatorId)return;
-  var inp=document.getElementById("metaCodeInput");
-  if(inp&&inp.readOnly)return; /* locked — blur on a locked field does nothing */
+  var t=_codeType(key);if(!t)return;
   if(!c.state[activeCreatorId])c.state[activeCreatorId]={status:"Pending Review",checks:{}};
-  var old=(c.state[activeCreatorId].metaCode||"").trim();
+  var old=(c.state[activeCreatorId][t.field]||"").trim();
   var nv=v.trim();
-  if(old===nv){renderMetaCodeBar();return;} /* unchanged — just re-lock */
+  if(old===nv){renderMetaCodeBar();return;}
   if(old&&!nv){
-    /* clearing a saved code needs its own confirmation */
-    var cmsg=appLang==='kr'?'저장된 코드를 삭제하시겠어요?\n\n'+old:'Delete the saved code?\n\n'+old;
+    var cmsg=appLang==='kr'?'저장된 값을 삭제하시겠어요?\n\n'+old:'Delete the saved '+t.label+'?\n\n'+old;
     if(!confirm(cmsg)){renderMetaCodeBar();return;}
   }
-  c.state[activeCreatorId].metaCode=nv;
-  renderMetaCodeBar(); /* re-locks immediately when filled */
+  c.state[activeCreatorId][t.field]=nv;
+  renderMetaCodeBar();
   stampCreatorEdit(activeCreatorId);
   markChanged();
 }
-function copyMetaCode(){
+function copyCode(key){
   var c=getCampaign();if(!c||!activeCreatorId)return;
+  var t=_codeType(key);if(!t)return;
   var st=c.state[activeCreatorId]||{};
-  if(!st.metaCode||!st.metaCode.trim()){alert(appLang==='kr'?'저장된 메타 코드가 없습니다.':'No meta code saved for this creator yet.');return;}
-  navigator.clipboard.writeText(st.metaCode.trim()).then(function(){
-    var btn=document.querySelector('.meta-code-copy');
-    if(btn){btn.innerHTML='<i class="ti ti-check" style="color:#1D9E75;"></i>';setTimeout(function(){btn.innerHTML='<i class="ti ti-copy"></i>';},1200);}
-  });
+  var val=(st[t.field]||"").trim();
+  if(!val){alert(appLang==='kr'?'저장된 값이 없습니다.':'Nothing saved yet.');return;}
+  navigator.clipboard.writeText(val);
 }
+/* legacy aliases (kept so older calls don't break) */
+function saveMetaCode(v){return saveCode('meta',v);}
+function copyMetaCode(){return copyCode('meta');}
 function toggleCodesMenu(e){
   if(e)e.stopPropagation();
   var m=document.getElementById('codesMenu');if(!m)return;
@@ -904,22 +922,25 @@ document.addEventListener('click',function(e){
 function exportMetaCodes(fmt){
   var m=document.getElementById('codesMenu');if(m)m.classList.remove('open');
   var c=getCampaign();if(!c)return;
-  var rows=[["handle","nickname","status","meta_code"]];var filled=0;
+  var types=campActiveCodeTypes(c);
+  if(!types.length){alert(appLang==='kr'?'이 캠페인에는 활성화된 코드 유형이 없습니다.':'No code types enabled for this campaign.');return;}
+  var header=["handle","nickname","status"].concat(types.map(function(t){return t.label;}));
+  var rows=[header];
+  var anyFilled=0;
   (c.creators||[]).forEach(function(cr){
     var st=(c.state||{})[cr.id]||{};
-    var code=(st.metaCode||"").trim();
-    if(code)filled++;
-    rows.push([String(cr.handle||"").replace(/^@/,""),cr.nick||"",st.status||"",code]);
+    var vals=types.map(function(t){var v=(st[t.field]||"").trim();if(v)anyFilled++;return v;});
+    rows.push([String(cr.handle||"").replace(/^@/,""),cr.nick||"",st.status||""].concat(vals));
   });
-  var fname=(c.name||"campaign").replace(/[^\w\-가-힣 #\[\]]/g,"").trim()+" - spark ads codes";
+  var fname=(c.name||"campaign").replace(/[^\w\-가-힣 #\[\]]/g,"").trim()+" - codes";
   if(fmt==='xlsx'){
     try{
       var ws=XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols']=[{wch:24},{wch:20},{wch:18},{wch:34}];
+      ws['!cols']=[{wch:24},{wch:20},{wch:18}].concat(types.map(function(){return {wch:34};}));
       var wb=XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb,ws,'Spark Ads Codes');
+      XLSX.utils.book_append_sheet(wb,ws,'Codes');
       XLSX.writeFile(wb,fname+'.xlsx');
-      alert(filled+" / "+(c.creators||[]).length+" creators have codes.\nExcel downloaded.");
+      alert((c.creators||[]).length+' creators exported.\nExcel downloaded.');
       return;
     }catch(err){console.error('xlsx export failed, falling back to CSV',err);}
   }
@@ -931,7 +952,7 @@ function exportMetaCodes(fmt){
   a.download=fname+".csv";
   a.click();URL.revokeObjectURL(a.href);
   navigator.clipboard.writeText(lines.join("\n")).catch(function(){});
-  alert(filled+" / "+(c.creators||[]).length+" creators have codes.\nCSV downloaded + copied to clipboard.");
+  alert((c.creators||[]).length+' creators exported.\nCSV downloaded + copied to clipboard.');
 }
 
 function editCampNotes(){
@@ -1057,7 +1078,7 @@ function resetMainPanel(){
   document.getElementById("sbadge").style.display="none";document.getElementById("feedbackBtn").style.display="none";
   renderCampNotes();
   var _mcw=document.getElementById("metaCodeWrap");if(_mcw)_mcw.style.display="none";
-  var _bec=document.getElementById("btnExportCodes");if(_bec)_bec.style.display=(c&&c.needsMetaCode)?"":"none";
+  var _bec=document.getElementById("btnExportCodes");if(_bec)_bec.style.display=(c&&campActiveCodeTypes(c).length)?"":"none";
   document.getElementById("checklistArea").innerHTML='<div style="color:#aaa;font-size:12px;margin-top:80px;text-align:center;line-height:2.2;"><i class="ti ti-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>'+(c&&c.creators.length?"Select a creator from the sidebar":"Import creators via CSV and load checklist via Edit Checklist")+'</div>';
   document.getElementById("ftext").textContent="-- / -- items";document.getElementById("pbarFill").style.width="0%";
   document.getElementById("saveStatus").textContent="";updateSaveButtons();
@@ -2882,7 +2903,9 @@ var SJ_DL_COLUMNS=[
   {key:'ig_flw', label:'Instagram followers', def:true, get:function(r,g){return r.instagram_followers||'';}},
   {key:'ig_avg', label:'Instagram avg views', def:false, get:function(r,g){return r.instagram_avg_views||'';}},
   {key:'rank', label:'Rank', def:false, get:function(r,g){return r._rank||'';}},
-  {key:'meta', label:'Meta code (Spark Ads)', def:false, get:function(r,g){var c=getCampaign();if(!c)return'';var cr=(c.creators||[]).find(function(x){return x.handle.replace(/^@/,'').toLowerCase()===r.username.replace(/^@/,'').toLowerCase();});return cr&&c.state[cr.id]?(c.state[cr.id].metaCode||''):'';}},
+  {key:'meta', label:'Meta Partnership Code', def:false, get:function(r,g){return _codeForRow(r,'metaCode');}},
+  {key:'spark', label:'Spark Ads Code', def:false, get:function(r,g){return _codeForRow(r,'sparkCode');}},
+  {key:'clean', label:'Clean version (GDrive)', def:false, get:function(r,g){return _codeForRow(r,'cleanVer');}},
   {key:'note', label:'Creator note', def:false, get:function(r,g){return g.notes_manager||'';}},
   {key:'email', label:'Email (creator)', def:false, get:function(r,g){return r._email||g.email||'';}},
   {key:'branch', label:'Branch', def:false, get:function(r,g){return r._branch||'';}},
@@ -4624,7 +4647,7 @@ function resolveFeedbackTemplateKey(missing){
   var c=getCampaign(),st=c&&activeCreatorId&&c.state[activeCreatorId];
   if(st&&st.status==='Dropped')return 'drop';
   if(missing.length)return 'revision';
-  if(c&&c.needsMetaCode){
+  if(c&&c.needsMeta){
     return (st&&st.metaCode&&st.metaCode.trim())?'closed':'approved';
   }
   return 'closed';
@@ -5075,12 +5098,13 @@ function renderEditCampMetaPanel() {
     +'<button class="sj-sns-btn'+(c.period==="1"?" active":"")+'" data-period="1" onclick="selectPeriod(this)">1 wk</button>'
     +'<button class="sj-sns-btn'+(c.period==="2"?" active":"")+'" data-period="2" onclick="selectPeriod(this)">2 wk</button>'
     +'</div></div>'
-    +'<div><label class="field-label">Meta code</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#555;cursor:pointer;margin-top:4px;">'
-    +'<input type="checkbox" id="ecmMetaCode"'+(c.needsMetaCode?' checked':'')+' style="accent-color:#534AB7;width:15px;height:15px;"/>'
-    +'This campaign needs Spark Ads meta code'
-    +'</label>'
-    +'<div style="font-size:10px;color:#aaa;margin-top:3px;">ON: approved message asks for the meta code &middot; OFF: simple closing thank-you message</div></div></div>';
+    +'<div><label class="field-label">Codes / assets required</label>'
+    +'<div style="display:flex;flex-direction:column;gap:7px;margin-top:5px;">'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#555;cursor:pointer;"><input type="checkbox" id="ecmMeta"'+(c.needsMeta?' checked':'')+' style="accent-color:#534AB7;width:15px;height:15px;"/>Meta Partnership Code</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#555;cursor:pointer;"><input type="checkbox" id="ecmSpark"'+(c.needsSpark?' checked':'')+' style="accent-color:#534AB7;width:15px;height:15px;"/>Spark Ads Code</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#555;cursor:pointer;"><input type="checkbox" id="ecmClean"'+(c.needsClean?' checked':'')+' style="accent-color:#534AB7;width:15px;height:15px;"/>Clean version (Google Drive link)</label>'
+    +'</div>'
+    +'<div style="font-size:10px;color:#aaa;margin-top:5px;">Enabled types show input fields on each creator in Check tab, and columns in the Codes export.</div></div></div>';
   document.getElementById('panelFooter').innerHTML =
     '<button class="apply-btn" onclick="saveCampMeta()">Save</button>';
 }
@@ -5089,7 +5113,9 @@ function saveCampMeta() {
   var c = getCampaign();
   if (!c) return;
   c.payType = (document.getElementById('ecmPayType')||{}).value || '';
-  c.needsMetaCode = !!(document.getElementById('ecmMetaCode')||{}).checked;
+  c.needsMeta = !!(document.getElementById('ecmMeta')||{}).checked;
+  c.needsSpark = !!(document.getElementById('ecmSpark')||{}).checked;
+  c.needsClean = !!(document.getElementById('ecmClean')||{}).checked;
   c.deadline = parseDDMMYYYY((document.getElementById('ecmDeadline')||{}).value || '');
   var pb = document.querySelector('[data-period].active');
   c.period = pb ? pb.getAttribute('data-period') : '';
@@ -5601,7 +5627,9 @@ async function loadAllFromSupabase(){
     c.archived = !!r.archived;
     if(s.sjSettings) c.sjSettings = s.sjSettings;
     if(s.notes) c.notes = s.notes;
-    if(s.needsMetaCode) c.needsMetaCode = true;
+    if(s.needsMeta||s.needsMetaCode) c.needsMeta = true;
+    if(s.needsSpark) c.needsSpark = true;
+    if(s.needsClean) c.needsClean = true;
     if(s.feedbackTemplates) c.feedbackTemplates = s.feedbackTemplates;
     if(r.last_edited_at){ c.lastEditedAt = r.last_edited_at; c.lastEditedBy = r.last_edited_by || null; }
     campaigns[lid] = c;
@@ -5614,9 +5642,9 @@ async function loadAllFromSupabase(){
     var lid = byUuid[r.campaign_id]; var c = campaigns[lid]; if(!c) return;
     var crid = r.legacy_creator_id || ("h_"+r.creator_handle);
     c.creators.push({id:crid, handle:"@"+r.creator_handle, nick:r.nick||r.creator_handle, applyNum:r.apply_num||""});
-    if((r.checks && Object.keys(r.checks).length) || r.status || r.meta_code){
+    if((r.checks && Object.keys(r.checks).length) || r.status || r.meta_code || r.spark_ads_code || r.clean_version){
       c.state[crid] = {status:r.status||undefined, checks:r.checks||{}, savedAt:(r.updated_at||"").slice(0,10),
-                       _editedAt:r.updated_at||null, _editedBy:r.updated_by||null, metaCode:r.meta_code||""};
+                       _editedAt:r.updated_at||null, _editedBy:r.updated_by||null, metaCode:r.meta_code||"", sparkCode:r.spark_ads_code||"", cleanVer:r.clean_version||""};
     }
   });
   /* recompute id counter to avoid collisions with loaded legacy ids */
@@ -5632,7 +5660,9 @@ async function saveCampaignToSupabase(cid){
   var settings = {};
   if(c.sjSettings) settings.sjSettings = c.sjSettings;
   if(c.notes) settings.notes = c.notes;
-  if(c.needsMetaCode) settings.needsMetaCode = true;
+  if(c.needsMeta) settings.needsMeta = true;
+  if(c.needsSpark) settings.needsSpark = true;
+  if(c.needsClean) settings.needsClean = true;
   if(c.feedbackTemplates) settings.feedbackTemplates = c.feedbackTemplates;
   var row = {id:cu, legacy_id:cid, name:c.name, pay_type:c.payType||null, deadline:__validDate(c.deadline),
              period:c.period||null, archived:!!c.archived, settings:settings};
@@ -5648,7 +5678,7 @@ async function saveCampaignToSupabase(cid){
     var base = {campaign_id:cu, creator_handle:String(cr.handle||"").replace(/^@/,""), checks:st.checks||{},
             status:st.status||null, legacy_creator_id:cr.id||null,
             apply_num:cr.applyNum?String(cr.applyNum):null, nick:cr.nick||null,
-            meta_code:(st.metaCode||"").trim()||null};
+            meta_code:(st.metaCode||"").trim()||null, spark_ads_code:(st.sparkCode||"").trim()||null, clean_version:(st.cleanVer||"").trim()||null};
     if(!base.creator_handle) return;
     if(__dirtyCreators[cr.id]){
       base.updated_by=(st._editedBy||__userId());
