@@ -2494,6 +2494,11 @@ window.addEventListener("DOMContentLoaded",function(){
 var sjApplicants=[];
 var sjSelected=new Set();
 var sjSortCol=null,sjSortDir=1;
+var _applyDateSort=0; // 0 off, 1 oldest-first, -1 newest-first
+function sjToggleApplyDateSort(){
+  _applyDateSort = _applyDateSort===0 ? -1 : (_applyDateSort===-1 ? 1 : 0); // newest → oldest → off
+  renderSjTable();
+}
 var sjFilterGrade=new Set(),sjFilterSearch="",sjFilterV=new Set(),sjFilterE=new Set(),sjFilterSkin=new Set(),sjFilterEng=new Set(),sjFilterStatus=new Set(),sjFilterSub=new Set();
 
 function renderSunjeongArea(){
@@ -2516,6 +2521,7 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('VO','sjFilterEng',['Fluent','Good','Not Bad','Bad','-']);
     toolbar+=sjMsBtn('Sub','sjFilterSub',['Y','N','-']);
     toolbar+=sjMsBtn('Region','sjFilterRegion',['영어권','CIS','SEA','MENA','South Asia','East Asia','Europe','Latin America','Other']);
+    toolbar+='<button class="sj-msbtn" onclick="sjToggleApplyDateSort()" title="Sort by apply date" style="'+(_applyDateSort?'background:#534AB7;color:#fff;border-color:#534AB7;':'')+'"><i class="ti ti-calendar"></i> '+(appLang==='kr'?'지원일':'Apply date')+(_applyDateSort===1?' ↑':(_applyDateSort===-1?' ↓':''))+'</button>';
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
     toolbar+='<button class="sj-dl-btn" onclick="openDownloadPicker()"><i class="ti ti-download"></i> Download <i class="ti ti-chevron-down" style="font-size:9px;"></i></button>';
@@ -2591,6 +2597,14 @@ function getSjFiltered(){
     });
   }
   if(sjSettings&&sjSettings._showEligibleOnly&&(sjSettings.minFollowers>0||sjSettings.maxFollowers>0)){results=results.filter(isEligible);}
+  if(_applyDateSort!==0){
+    results=results.slice().sort(function(a,b){
+      var da=a._applyDate||'', db=b._applyDate||'';
+      if(da===db)return 0;
+      if(!da)return 1; if(!db)return -1; // blanks last
+      return da<db ? -_applyDateSort : _applyDateSort;
+    });
+  }
   return results;
 }
 
@@ -2765,6 +2779,7 @@ function handleSjCSV(file){
     var gi=colExact("grade"),tfi=colExact("tiktokfollowers"),tai=colExact("tiktokavgviews"),ifi=colExact("instagramfollowers"),iai=colExact("instagramavgviews"),nti=colExact("nationality"),ci=colExact("caution");
     var uidIdx=colExact("userid","user_id"),ttUrlIdx=colExact("tiktokurl","tiktokurl2","tiktok_url"),igUrlIdx=colExact("instagramurl","instagram_url");
     var emailIdx=colExact("email","emailaddress","mail");
+    var branchIdx=colExact("branch"),applyDateIdx=colExact("applicantdate","applydate","applytime","appliedat"),statusIdx=colExact("campaignstatus","status");
     // MERGE (not replace): load what's already in the campaign first, then
     // apply the CSV on top — add new applicants, update profile fields on
     // existing ones, but NEVER touch their selection (selected / sel_status).
@@ -2794,12 +2809,14 @@ function handleSjCSV(file){
         caution: cols[ci]||"",
         _ig_url: cols[igUrlIdx]||"",
         _tt_url: cols[ttUrlIdx]||"",
-        _email: cols[emailIdx]||""
+        _email: cols[emailIdx]||"",
+        _branch: cols[branchIdx]||"",
+        _applyDate: cols[applyDateIdx]||""
       };
       var prev = byApply[String(applyNum)];
       if(prev){
         // existing applicant → update profile fields only, keep selection/status untouched
-        ['_userId','nickname','grade','tiktok_followers','tiktok_avg_views','instagram_followers','instagram_avg_views','nationality','caution','_ig_url','_tt_url','_email'].forEach(function(k){
+        ['_userId','nickname','grade','tiktok_followers','tiktok_avg_views','instagram_followers','instagram_avg_views','nationality','caution','_ig_url','_tt_url','_email','_branch','_applyDate'].forEach(function(k){
           if(fromCsv[k]) prev[k]=fromCsv[k]; // only overwrite when CSV carries a value
         });
         prev.username = fromCsv.username || prev.username;
@@ -2867,7 +2884,9 @@ var SJ_DL_COLUMNS=[
   {key:'rank', label:'Rank', def:false, get:function(r,g){return r._rank||'';}},
   {key:'meta', label:'Meta code (Spark Ads)', def:false, get:function(r,g){var c=getCampaign();if(!c)return'';var cr=(c.creators||[]).find(function(x){return x.handle.replace(/^@/,'').toLowerCase()===r.username.replace(/^@/,'').toLowerCase();});return cr&&c.state[cr.id]?(c.state[cr.id].metaCode||''):'';}},
   {key:'note', label:'Creator note', def:false, get:function(r,g){return g.notes_manager||'';}},
-  {key:'email', label:'Email (creator)', def:false, get:function(r,g){return r._email||g.email||'';}}
+  {key:'email', label:'Email (creator)', def:false, get:function(r,g){return r._email||g.email||'';}},
+  {key:'branch', label:'Branch', def:false, get:function(r,g){return r._branch||'';}},
+  {key:'applydate', label:'Apply date', def:false, get:function(r,g){return r._applyDate||'';}}
 ];
 function getDlColPrefs(){
   try{var s=JSON.parse(localStorage.getItem('sjDlCols')||'null');if(s&&s.length)return s;}catch(e){}
@@ -2931,6 +2950,7 @@ function openDownloadPicker(){
     '<div style="max-height:260px;overflow-y:auto;border:1px solid #eee;border-radius:10px;padding:4px;">'+boxes+'</div>';
   document.getElementById('panelFooter').innerHTML=
     '<span id="dlScopeCount" style="font-size:11px;color:#888;flex:1;"></span>'+
+    '<button class="pf-btn" onclick="exportAsUploadedFormat()" style="background:#f0efff;border:1px solid #d9d6f5;color:#534AB7;" title="apply number, user_id, ID(username), nickname, branch, Campaign Status">↩ Upload format</button>'+
     '<button class="pf-btn" onclick="runSjDownload(\'csv\')" style="background:#fff;border:1px solid #e0e0e0;color:#555;"><i class="ti ti-file-text"></i> CSV</button>'+
     '<button class="pf-btn primary" onclick="runSjDownload(\'xlsx\')"><i class="ti ti-file-spreadsheet"></i> Excel</button>';
   updateDlScopeCount();
@@ -2982,6 +3002,28 @@ function downloadSjSelected(fmt,chosen,scope){
   a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));
   a.download=campName+"_selection.csv";
   a.click();URL.revokeObjectURL(a.href);
+}
+
+/* Map app selection status → CSV raw Campaign Status wording */
+function _appStatusToRaw(selStatus){
+  if(selStatus==='pre-selected'||selStatus==='selected')return 'accepted';
+  if(selStatus==='not-selected')return 'not accepted';
+  return 'waiting'; // neutral / undecided
+}
+/* Export exactly in the uploaded CSV shape (re-uploadable) */
+function exportAsUploadedFormat(){
+  var scope=_dlScope||'checked';
+  var sel=getSjDownloadSet(scope);
+  if(!sel.length){alert(appLang==='kr'?'내보낼 대상이 없습니다.':'No one to export for this selection.');return;}
+  var c=getCampaign();
+  var scopeTag=scope&&scope!=='checked'?('_'+scope.replace('+','-')):'';
+  var campName=(c?c.name.replace(/[^a-zA-Z0-9_\-]/g,"_"):"export")+scopeTag;
+  var hdrs=["apply number","user_id","ID(username)","nickname","branch","Campaign Status"];
+  var rows=sel.map(function(r){
+    return [r._applyNum||'', r._userId||'', r.username.replace(/^@/,''), r.nickname||'', r._branch||'', _appStatusToRaw(r._selStatus)];
+  });
+  closePanel();
+  downloadSjAsXlsx(hdrs,rows,campName); // Excel by default; keeps Korean/emoji safe
 }
 
 /* ============ GRADE EDIT ============ */
@@ -3474,7 +3516,9 @@ async function saveSjToSupabase(campaignName, applicants) {
           nationality: r.nationality || "",
           caution: r.caution || "",
           ig_url: r._ig_url || "",
-          tt_url: r._tt_url || ""
+          tt_url: r._tt_url || "",
+          branch: r._branch || "",
+          apply_date: r._applyDate || ""
         };
         // Only include selection/grade/rank when we actually have a value,
         // so merge-duplicates won't overwrite existing DB values with blanks.
@@ -3513,6 +3557,8 @@ async function loadSjFromSupabase(campaignName) {
         caution: r.caution || "",
         _ig_url: r.ig_url || "",
         _tt_url: r.tt_url || "",
+        _branch: r.branch || "",
+        _applyDate: r.apply_date || "",
         _rank: r.rank || "",
         _selStatus: r.sel_status || 'not-selected'
       };
