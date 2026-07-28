@@ -2542,7 +2542,7 @@ function renderSunjeongArea(){
     toolbar+=sjMsBtn('VO','sjFilterEng',['Fluent','Good','Not Bad','Bad','-']);
     toolbar+=sjMsBtn('Sub','sjFilterSub',['Y','N','-']);
     toolbar+=sjMsBtn('Region','sjFilterRegion',['영어권','CIS','SEA','MENA','South Asia','East Asia','Europe','Latin America','Other']);
-    toolbar+='<button class="sj-msbtn" onclick="sjToggleApplyDateSort()" title="Sort by apply date" style="'+(_applyDateSort?'background:#534AB7;color:#fff;border-color:#534AB7;':'')+'"><i class="ti ti-calendar"></i> '+(appLang==='kr'?'지원일':'Apply date')+(_applyDateSort===1?' ↑':(_applyDateSort===-1?' ↓':''))+'</button>';
+    toolbar+='<button class="ms-btn'+(_applyDateSort?' active':'')+'" onclick="sjToggleApplyDateSort()" title="Sort by apply date" style="min-width:auto;gap:4px;"><i class="ti ti-calendar" style="font-size:12px;"></i> '+(appLang==='kr'?'지원일':'Apply date')+(_applyDateSort===-1?' ↓':(_applyDateSort===1?' ↑':''))+'</button>';
     toolbar+='<input class="sj-search" type="text" placeholder="Search..." value="'+sjFilterSearch+'" oninput="sjFilterSearch=this.value;renderSjTable()"/>';
     toolbar+='<span class="sj-count">'+selCount+' selected / '+filtered.length+' shown / '+sjApplicants.length+' total</span>';
     toolbar+='<button class="sj-dl-btn" onclick="openDownloadPicker()"><i class="ti ti-download"></i> Download <i class="ti ti-chevron-down" style="font-size:9px;"></i></button>';
