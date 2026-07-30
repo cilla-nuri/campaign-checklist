@@ -442,6 +442,10 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 
 /* ---- Meta code (Spark Ads) input ---- */
 .meta-code-input{font-size:11px;padding:5px 9px;border-radius:8px;border:1.5px solid #e0d9a8;background:#fffdf2;color:#333;outline:none;width:135px;transition:border-color .15s,background .15s;}
+.code-chip{display:inline-flex;flex-direction:column;gap:3px;padding:5px 8px;border-radius:10px;background:#fbfaf4;border:1px solid #f0ecd8;}
+.code-chip.filled{background:#f2fcf7;border-color:#d3efe1;}
+.code-chip-lbl{font-size:9px;font-weight:700;letter-spacing:.2px;color:#a08a4a;text-transform:uppercase;white-space:nowrap;display:flex;align-items:center;gap:3px;}
+.code-chip.filled .code-chip-lbl{color:#1D9E75;}
 .meta-code-input:focus{border-color:#534AB7;background:#fff;}
 .meta-code-input.filled{border-color:#7fd4ae;background:#f2fcf7;}
 .meta-code-input.locked{cursor:pointer;color:#1D9E75;font-weight:600;}
@@ -862,13 +866,14 @@ function renderMetaCodeBar(){
   wrap.innerHTML=types.map(function(t){
     var val=(st[t.field]||"");
     var filled=!!val.trim();
-    return '<span style="display:inline-flex;align-items:center;gap:3px;">'+
-      '<span style="font-size:9px;color:#888;font-weight:600;white-space:nowrap;">'+t.label+'</span>'+
-      '<input class="meta-code-input'+(filled?' filled locked':'')+'" data-codekey="'+t.key+'" placeholder="'+t.ph+'" value="'+val.replace(/"/g,'&quot;')+'"'+(filled?' readonly':'')+
-        ' onblur="saveCode(\''+t.key+'\',this.value)" onkeydown="if(event.key===\'Enter\')this.blur()" onclick="unlockCode(this)"'+
-        (filled?' title="Saved — click to change"':'')+'/>'+
-      '<button onclick="copyCode(\''+t.key+'\')" title="Copy" class="meta-code-copy"><i class="ti ti-copy"></i></button>'+
-    '</span>';
+    return '<span class="code-chip'+(filled?' filled':'')+'">'+
+      '<span class="code-chip-lbl">'+t.label+(filled?' <i class="ti ti-lock" style="font-size:9px;"></i>':'')+'</span>'+
+      '<span style="display:flex;align-items:center;gap:3px;">'+
+        '<input class="meta-code-input'+(filled?' filled locked':'')+'" data-codekey="'+t.key+'" placeholder="'+t.ph+'" value="'+val.replace(/"/g,'&quot;')+'"'+(filled?' readonly':'')+
+          ' onblur="saveCode(\''+t.key+'\',this.value)" onkeydown="if(event.key===\'Enter\')this.blur()" onclick="unlockCode(this)"'+
+          (filled?' title="Saved — click to change"':'')+'/>'+
+        '<button onclick="copyCode(\''+t.key+'\')" title="Copy" class="meta-code-copy"><i class="ti ti-copy"></i></button>'+
+      '</span></span>';
   }).join('');
 }
 function _codeType(key){return CODE_TYPES.filter(function(t){return t.key===key;})[0];}
