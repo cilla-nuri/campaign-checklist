@@ -514,6 +514,10 @@ mark{background:#EF9F2722;color:#b06a00;border-radius:3px;padding:0 2px;}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<div id="refreshBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#534AB7;color:#fff;padding:11px 18px;text-align:center;font-size:14px;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,.2);">
+  <span id="refreshBannerMsg">🔄 A new version is available. 새 버전이 있어요.</span>
+  <button onclick="location.reload(true)" style="margin-left:14px;background:#fff;color:#534AB7;border:none;border-radius:8px;padding:5px 16px;font-weight:700;cursor:pointer;">Refresh now / 새로고침</button>
+</div>
 <div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#f8f8f8;align-items:center;justify-content:center;">
   <div style="background:#fff;border:1px solid #efefef;border-radius:24px;padding:44px 48px;text-align:center;box-shadow:0 8px 40px rgba(83,74,183,0.08);max-width:360px;">
     <div style="font-size:40px;margin-bottom:10px;">&#10024;</div>
@@ -2426,6 +2430,24 @@ async function sbFetch(path,opts){
   if(!res.ok)throw new Error(txt);
   return txt?JSON.parse(txt):null;
 }
+
+/* ---- "Please refresh" signal: shows a banner when a newer version is pushed ---- */
+var _appLoadTime = Date.now();
+async function checkRefreshSignal(){
+  try{
+    var rows = await sbFetch("app_meta?key=eq.refresh_after&select=value");
+    if(rows && rows.length){
+      var after = parseInt(rows[0].value,10) || 0;
+      // If the "refresh after" timestamp is newer than when this tab loaded, prompt refresh
+      if(after > _appLoadTime){
+        var b=document.getElementById('refreshBanner');
+        if(b) b.style.display='block';
+      }
+    }
+  }catch(e){}
+}
+setInterval(checkRefreshSignal, 60000); // check every 60s
+setTimeout(checkRefreshSignal, 8000);   // and once shortly after load
 
 async function loadCreatorGrades(handles){
   if(!handles||!handles.length)return;
