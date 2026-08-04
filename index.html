@@ -3600,16 +3600,42 @@ async function loadSjFromSupabase(campaignName) {
 
 /* ============ PERSIST SELECTION ============ */
 var _sjSelectionDebounce = {};
+/* Build a full applicant row for upsert — so if the row doesn't exist under
+   this campaign name yet, it gets CREATED (not silently skipped by a PATCH). */
+function _applicantUpsertRow(r, extra){
+  var row = {
+    campaign_name: getCampaign().name,
+    apply_number: r._applyNum||"",
+    user_id: r._userId||"",
+    username: r.username||"",
+    nickname: r.nickname||"",
+    tiktok_followers: r.tiktok_followers||"",
+    tiktok_avg_views: r.tiktok_avg_views||"",
+    instagram_followers: r.instagram_followers||"",
+    instagram_avg_views: r.instagram_avg_views||"",
+    nationality: r.nationality||"",
+    caution: r.caution||"",
+    ig_url: r._ig_url||"", tt_url: r._tt_url||"",
+    branch: r._branch||"", apply_date: r._applyDate||""
+  };
+  if(r.grade) row.grade=r.grade;
+  if(r._rank) row.rank=r._rank;
+  if(r._selStatus && r._selStatus!=='not-selected') row.sel_status=r._selStatus;
+  Object.assign(row, extra||{});
+  return row;
+}
 function sjSaveSelection(applyNum, selected) {
   var c = getCampaign();
   if (!c) return;
-  // Debounce per applyNum to avoid too many requests
+  var r = sjApplicants.find(function(x){return String(x._applyNum)===String(applyNum);});
+  if (!r) return;
   clearTimeout(_sjSelectionDebounce[applyNum]);
   _sjSelectionDebounce[applyNum] = setTimeout(function() {
-    sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(c.name) + "&apply_number=eq." + encodeURIComponent(applyNum), {
-      method: "PATCH", prefer: "resolution=merge-duplicates,return=minimal",
-      body: JSON.stringify({selected: selected})
-    }).catch(function() {}); // silent fail - data might not be in DB yet
+    // UPSERT (not PATCH): creates the row if it's missing so the selection is never lost
+    sbFetch("campaign_applicants?on_conflict=campaign_name,apply_number", {
+      method: "POST", prefer: "resolution=merge-duplicates,return=minimal",
+      body: JSON.stringify([_applicantUpsertRow(r, {selected: selected})])
+    }).catch(function() {});
   }, 300);
 }
 
@@ -4134,9 +4160,9 @@ function sjSetStatus(applyNum, value) {
   }
   var c = getCampaign();
   if (!c) return;
-  sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c.name) + '&apply_number=eq.' + encodeURIComponent(applyNum), {
-    method: 'PATCH', prefer: 'return=minimal',
-    body: JSON.stringify({sel_status: value})
+  sbFetch('campaign_applicants?on_conflict=campaign_name,apply_number', {
+    method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
+    body: JSON.stringify([_applicantUpsertRow(r, {sel_status: value})])
   }).catch(function(){});
 }
 
@@ -4160,16 +4186,16 @@ function bulkSetStatus(status) {
   var filtered = getSjFiltered();
   var affected = filtered.filter(function(r){ return sjSelected.has(String(r._applyNum)); });
   if (!affected.length) return;
-  affected.forEach(function(r) {
-    r._selStatus = status || 'not-selected';
-    // Save to Supabase
-    if (c) {
-      sbFetch('campaign_applicants?campaign_name=eq.' + encodeURIComponent(c.name) + '&apply_number=eq.' + encodeURIComponent(r._applyNum), {
-        method: 'PATCH', prefer: 'return=minimal',
-        body: JSON.stringify({sel_status: status})
+  affected.forEach(function(r){ r._selStatus = status || 'not-selected'; });
+  if (c) {
+    var rows = affected.map(function(r){ return _applicantUpsertRow(r, {sel_status: status||null}); });
+    for (var i=0;i<rows.length;i+=100){
+      sbFetch('campaign_applicants?on_conflict=campaign_name,apply_number', {
+        method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
+        body: JSON.stringify(rows.slice(i,i+100))
       }).catch(function(){});
     }
-  });
+  }
   renderSjTable();
   updateBulkBar();
 }
