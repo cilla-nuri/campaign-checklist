@@ -3642,8 +3642,12 @@ async function loadSjFromSupabase(campaignName) {
 var _sjSelectionDebounce = {};
 /* Build a full applicant row for upsert — so if the row doesn't exist under
    this campaign name yet, it gets CREATED (not silently skipped by a PATCH). */
-/* extract the stable #NNNN code from a campaign name */
-function campCode(name){ var m=String(name||'').match(/#(\d+)/); return m?m[1]:''; }
+/* extract the stable code: prefer the campaign's explicit ID, else parse #NNNN from name */
+function campCode(name){
+  var c=getCampaign();
+  if(c && c.code && String(c.code).trim() && c.name===name) return String(c.code).trim();
+  var m=String(name||'').match(/#(\d+)/); return m?m[1]:'';
+}
 function _applicantUpsertRow(r, extra){
   var nm=getCampaign().name;
   var row = {
@@ -5169,6 +5173,8 @@ function renderEditCampMetaPanel() {
   }).join('');
   document.getElementById('panelBody').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">'
+    +'<div><label class="field-label">Campaign ID <span style="color:#aaa;font-weight:400;">(e.g. 3108 — the # number)</span></label>'
+    +'<input class="nc-input" id="ecmCode" type="text" placeholder="3108" value="'+((c.code||campCode(c.name))||'').replace(/"/g,'&quot;')+'" style="font-weight:600;"/></div>'
     +'<div><label class="field-label">Campaign name</label>'
     +'<input class="nc-input" id="ecmName" type="text" value="'+c.name.replace(/"/g,'&quot;')+'"/></div>'
     +'<div><label class="field-label">Payment type</label>'
@@ -5195,6 +5201,11 @@ function renderEditCampMetaPanel() {
 function saveCampMeta() {
   var c = getCampaign();
   if (!c) return;
+  var oldName = c.name;
+  var newName = (document.getElementById('ecmName')||{}).value || c.name;
+  var newCode = ((document.getElementById('ecmCode')||{}).value || '').trim();
+  c.code = newCode || campCode(newName);
+  c.name = newName.trim() || c.name;
   c.payType = (document.getElementById('ecmPayType')||{}).value || '';
   c.needsMeta = !!(document.getElementById('ecmMeta')||{}).checked;
   c.needsSpark = !!(document.getElementById('ecmSpark')||{}).checked;
@@ -5204,6 +5215,14 @@ function saveCampMeta() {
   c.period = pb ? pb.getAttribute('data-period') : '';
   saveToLocalStorage();
   markChanged();
+  // If the name changed, keep 선정 applicant rows linked (move name + stamp code)
+  if(newName.trim() && newName.trim()!==oldName){
+    sbFetch("campaign_applicants?campaign_name=eq."+encodeURIComponent(oldName),{
+      method:"PATCH", prefer:"return=minimal",
+      body:JSON.stringify({campaign_name:newName.trim(), campaign_code:c.code})
+    }).catch(function(){});
+    var _t=document.getElementById('mainTitle'); if(_t)_t.textContent=newName.trim();
+  }
   // Refresh subtitle
   var _meta=[];
   if(c.payType)_meta.push(c.payType);
@@ -5711,6 +5730,7 @@ async function loadAllFromSupabase(){
     if(s.sjSettings) c.sjSettings = s.sjSettings;
     if(s.notes) c.notes = s.notes;
     if(s.needsMeta||s.needsMetaCode) c.needsMeta = true;
+    if(s.code) c.code = s.code;
     if(s.needsSpark) c.needsSpark = true;
     if(s.needsClean) c.needsClean = true;
     if(s.feedbackTemplates) c.feedbackTemplates = s.feedbackTemplates;
@@ -5746,6 +5766,7 @@ async function saveCampaignToSupabase(cid){
   if(c.needsMeta) settings.needsMeta = true;
   if(c.needsSpark) settings.needsSpark = true;
   if(c.needsClean) settings.needsClean = true;
+  if(c.code) settings.code = c.code;
   if(c.feedbackTemplates) settings.feedbackTemplates = c.feedbackTemplates;
   var row = {id:cu, legacy_id:cid, name:c.name, pay_type:c.payType||null, deadline:__validDate(c.deadline),
              period:c.period||null, archived:!!c.archived, settings:settings};
