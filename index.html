@@ -3555,6 +3555,7 @@ async function saveSjToSupabase(campaignName, applicants) {
       var chunk = applicants.slice(i, i + 100).map(function(r) {
         var row = {
           campaign_name: campaignName,
+          campaign_code: campCode(campaignName),
           apply_number: r._applyNum || "",
           user_id: r._userId || "",
           username: r.username || "",
@@ -3590,9 +3591,27 @@ async function saveSjToSupabase(campaignName, applicants) {
 async function loadSjFromSupabase(campaignName) {
   if (!campaignName) return [];
   try {
-    var data = await sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName) + "&order=apply_number.desc&limit=2000");
+    var code = campCode(campaignName);
+    // Match by exact name OR by the stable #code (recovers rows saved under an old/renamed name)
+    var q;
+    if (code) {
+      q = "campaign_applicants?or=(campaign_name.eq." + encodeURIComponent(campaignName) + ",campaign_code.eq." + encodeURIComponent(code) + ")&order=apply_number.desc&limit=3000";
+    } else {
+      q = "campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName) + "&order=apply_number.desc&limit=3000";
+    }
+    var data = await sbFetch(q);
     if (!data || !data.length) return [];
-    var rows = data.map(function(r) {
+    // De-dupe by apply_number (a row may appear under both name and code); prefer one with selection/grade
+    var byApply = {};
+    data.forEach(function(r){
+      var k = String(r.apply_number);
+      var prev = byApply[k];
+      if(!prev){ byApply[k]=r; return; }
+      var score=function(x){return (x.selected?4:0)+(x.sel_status&&x.sel_status!=='not-selected'?2:0)+(x.grade?1:0);};
+      if(score(r)>score(prev)) byApply[k]=r;
+    });
+    var deduped = Object.keys(byApply).map(function(k){return byApply[k];});
+    var rows = deduped.map(function(r) {
       return {
         _applyNum: r.apply_number || "",
         _userId: r.user_id || "",
@@ -3613,8 +3632,7 @@ async function loadSjFromSupabase(campaignName) {
         _selStatus: r.sel_status || 'not-selected'
       };
     });
-    // Restore selections (must be BEFORE return)
-    sjSelected = new Set(data.filter(function(r){return r.selected;}).map(function(r){return r.apply_number;}));
+    sjSelected = new Set(deduped.filter(function(r){return r.selected;}).map(function(r){return r.apply_number;}));
     return rows;
   } catch(e) { console.warn("Load applicants failed:", e); return []; }
 }
@@ -3624,9 +3642,13 @@ async function loadSjFromSupabase(campaignName) {
 var _sjSelectionDebounce = {};
 /* Build a full applicant row for upsert — so if the row doesn't exist under
    this campaign name yet, it gets CREATED (not silently skipped by a PATCH). */
+/* extract the stable #NNNN code from a campaign name */
+function campCode(name){ var m=String(name||'').match(/#(\d+)/); return m?m[1]:''; }
 function _applicantUpsertRow(r, extra){
+  var nm=getCampaign().name;
   var row = {
-    campaign_name: getCampaign().name,
+    campaign_name: nm,
+    campaign_code: campCode(nm),
     apply_number: r._applyNum||"",
     user_id: r._userId||"",
     username: r.username||"",
@@ -4668,18 +4690,26 @@ function _msDragEnd(e) {
 
 function renameCampaign(id) {
   if (!campaigns[id]) return;
-  var newName = prompt('Rename campaign:', campaigns[id].name);
-  if (!newName || !newName.trim() || newName.trim() === campaigns[id].name) return;
-  campaigns[id].name = newName.trim();
+  var oldName = campaigns[id].name;
+  var newName = prompt('Rename campaign:', oldName);
+  if (!newName || !newName.trim() || newName.trim() === oldName) return;
+  newName = newName.trim();
+  campaigns[id].name = newName;
   saveToLocalStorage();
   markChanged();
   refreshCampaignSelect();
   renderHomePage();
-  // Update header if this is the active campaign
   if (activeCampaignId === id) {
     var el = document.getElementById('mainTitle');
-    if (el) el.textContent = newName.trim();
+    if (el) el.textContent = newName;
   }
+  // Keep 선정 applicant rows linked: move them from the old name to the new name,
+  // and stamp the stable #code. Prevents renames from splitting/orphaning data.
+  var newCode = campCode(newName);
+  sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(oldName), {
+    method: "PATCH", prefer: "return=minimal",
+    body: JSON.stringify({campaign_name: newName, campaign_code: newCode})
+  }).catch(function(){});
 }
 
 
