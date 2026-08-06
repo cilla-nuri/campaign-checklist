@@ -1864,29 +1864,98 @@ function openPanel(type){
 
 
 
+var HOWTO_TOPICS=[
+ {id:'start',ico:'🔑',ten:'Getting started',tkr:'시작하기',
+  steps:[['Sign in with your Google account. The whole team sees the same campaigns & data.','구글 계정으로 로그인. 팀 전체가 같은 캠페인·데이터를 봅니다.'],
+         ['If a purple "Please refresh" banner appears, click it — a newer version is ready.','보라색 "Please refresh" 배너가 뜨면 클릭 — 새 버전이 준비된 거예요.']],
+  notes:[['warn','If the app has been open a while, hard-refresh (Ctrl+Shift+R) before working — avoids stale tabs overwriting newer data.','오래 열어뒀다면 작업 전 하드 새로고침(Ctrl+Shift+R) — 오래된 탭이 최신 데이터를 덮어쓰는 걸 막아요.']]},
+ {id:'campaign',ico:'🗂️',ten:'Create a campaign',tkr:'캠페인 만들기',
+  steps:[['Click + New and enter the full name (e.g. #3108 [Paid] …).','+ New 클릭 → 전체 이름 입력 (예: #3108 …).'],
+         ['Open Edit campaign details → fill the Campaign ID field with the number only (e.g. 3108).','Edit campaign details → Campaign ID 칸에 숫자만 (예: 3108).'],
+         ['Set payment type, deadline, encouragement period, tick required codes. Save.','결제 유형·마감일·독려 기간 설정, 필요한 코드 체크 후 저장.']],
+  notes:[['good','Campaign ID is the stable key — change the name later and applicants/selections stay linked. Data can\'t get split.','Campaign ID가 안정적인 키 — 이름을 바꿔도 지원자·선정이 연결돼요.'],
+         ['tip','Always fill Campaign ID for a new campaign.','새 캠페인엔 Campaign ID 꼭 입력.']]},
+ {id:'sunjeong',ico:'📥',ten:'선정 — Upload applicants',tkr:'선정 — 지원자 업로드',
+  steps:[['선정 tab → Upload CSV → choose the quest applicant CSV. Columns auto-detected.','선정 탭 → Upload CSV → 퀘스트 CSV 선택. 열 자동 인식.'],
+         ['Re-uploading merges — new applicants added, existing profiles updated, your work never wiped.','재업로드는 병합 — 새 지원자 추가, 기존 프로필 업데이트, 작업 유지.']],
+  notes:[['good','Selections & grades are always kept on re-upload.','재업로드 시 선정·등급은 항상 유지.'],
+         ['tip','Email, branch, user_id are stored but hidden in the table; they still appear in downloads.','이메일·branch·user_id는 저장되지만 표엔 숨김. 다운로드엔 포함.']]},
+ {id:'grade',ico:'⭐',ten:'Grading & filtering',tkr:'등급 & 필터',
+  steps:[['Set grades inline in the 선정 table — they save instantly to the Creator DB.','선정 표에서 등급 바로 입력 → 즉시 DB 저장.'],
+         ['V=video, E=evaluation, Skin=skintone, VO=English voiceover, Sub=subtitle (click to cycle Y/N/–).','V=영상, E=평가, Skin=피부톤, VO=영어 보이스오버, Sub=자막(클릭 전환).'],
+         ['Use pill filters + follower min/max. Click Apply date to sort newest/oldest.','필터+팔로워 min/max 사용. Apply date로 최신·오래된 순 정렬.']],
+  notes:[]},
+ {id:'select',ico:'✅',ten:'셀렉 — Selecting',tkr:'셀렉 — 크리에이터 선정',
+  steps:[['Tick a row, or select many and use the bulk bar.','행 체크 또는 여러 개 선택 후 일괄 바 사용.'],
+         ['⭐ Pre-selected = shortlist · ✓ Selected = confirmed · ✗ Not selected = rejected.','⭐ 후보 · ✓ 확정 · ✗ 탈락.'],
+         ['Remove someone: row trash icon, or bulk Delete (confirms first).','제거: 행 휴지통 또는 일괄 Delete(확인).']],
+  notes:[['good','Every click saves to the database immediately — can\'t be lost to a name mismatch.','클릭 즉시 DB 저장 — 이름 불일치로 사라지지 않아요.'],
+         ['warn','Don\'t edit the same campaign in two tabs at once.','같은 캠페인을 두 탭에서 동시에 편집 금지.']]},
+ {id:'download',ico:'⬇️',ten:'Downloading lists',tkr:'다운로드',
+  steps:[['Download → step 1 choose who, step 2 choose columns → Excel or CSV.','Download → 1단계 누구, 2단계 열 → Excel/CSV.'],
+         ['Upload format button = same shape as the uploaded CSV (apply number, user_id, ID, nickname, branch, status).','Upload format = 업로드 CSV와 같은 형식.']],
+  notes:[['tip','Upload format status: pre-selected/selected→accepted, not-selected→not accepted, undecided→waiting.','상태 매핑: pre/selected→accepted, not-selected→not accepted, 미정→waiting.'],
+         ['warn','Creator note column is sensitive — don\'t send it to brands.','크리에이터 노트 열은 민감 — 브랜드에 보내지 마세요.']]},
+ {id:'checklist',ico:'📋',ten:'Building the checklist',tkr:'체크리스트 만들기',
+  steps:[['Edit Checklist → add sections & items ("Need to / Do not" lines).','Edit Checklist → 섹션·항목 추가.'],
+         ['Drag the grip ⠿ to reorder; items can move between sections.','⠿ 드래그로 순서 변경, 섹션 간 이동 가능.'],
+         ['Click Apply to all — pushes the checklist to every creator.','Apply to all 클릭 → 모든 크리에이터 반영.']],
+  notes:[['tip','You can send a brand guideline to Claude to get a ready checklist CSV.','브랜드 가이드라인을 Claude에 보내면 체크리스트 CSV 생성.']]},
+ {id:'codes',ico:'🔐',ten:'Codes & assets',tkr:'코드 & 자료',
+  steps:[['Edit campaign → tick needed codes: Meta Partnership, Spark Ads, Clean version (GDrive).','Edit campaign → 필요한 코드 체크: Meta / Spark / Clean.'],
+         ['Each creator shows those inputs in Check tab (only enabled ones).','Check 탭 각 크리에이터에 입력칸 표시(켠 것만).'],
+         ['Type a code → it locks (green). Click + confirm to change; old value shown first.','코드 입력 → 잠김(초록). 변경은 클릭+확인.'],
+         ['Codes button (Check tab) exports all codes; columns match enabled types.','Codes 버튼으로 전체 코드 내보내기.']],
+  notes:[]},
+ {id:'feedback',ico:'💬',ten:'Feedback messages',tkr:'피드백 메시지',
+  steps:[['Open a creator → Feedback → pick a template (Revision/Approved/Closed/Drop/custom).','크리에이터 → Feedback → 템플릿 선택.'],
+         ['Toggle EN/KR; name & product auto-fill.','EN/KR 전환, 이름·제품 자동 입력.'],
+         ['Templates are per campaign.','템플릿은 캠페인별 저장.']],
+  notes:[]},
+ {id:'notes',ico:'📝',ten:'Notes',tkr:'노트',
+  steps:[['Click the note icon by a name (선정 or DB). Editing pre-fills the current note.','이름 옆 노트 아이콘 클릭. 수정 시 기존 내용 채워짐.'],
+         ['Every note records who + when. Click 🕘 for history + per-entry delete.','작성자·시간 기록. 🕘로 히스토리 + 개별 삭제.']],
+  notes:[['tip','Notes show inline by the username; hover to read the full text.','노트는 아이디 옆 표시, 호버로 전체 보기.']]},
+ {id:'db',ico:'👥',ten:'Creator Database',tkr:'크리에이터 DB',
+  steps:[['Master list across all campaigns: grades, note, social links.','전 캠페인 마스터 목록: 등급·노트·SNS.'],
+         ['Grades sync everywhere. Search + filter to find someone. Edit a row to update.','등급 어디서나 동기화. 검색·필터, Edit로 수정.']],
+  notes:[]},
+ {id:'rules',ico:'⚠️',ten:'Important notes',tkr:'중요 노트',
+  steps:[],
+  notes:[['warn','1. Don\'t leave old tabs open — they can overwrite newer changes. Hard-refresh before working.','1. 오래된 탭 열어두지 마세요. 작업 전 하드 새로고침.'],
+         ['warn','2. One campaign, one tab at a time. Teammate in the same one? Both refresh first.','2. 한 캠페인은 한 탭에서. 같이 있으면 둘 다 새로고침.'],
+         ['good','3. Re-uploading a CSV is safe (merges, keeps selections).','3. CSV 재업로드는 안전(병합·선정 유지).'],
+         ['good','4. Always set the Campaign ID for new campaigns.','4. 새 캠페인엔 Campaign ID 꼭 설정.'],
+         ['tip','5. Apply to all after editing a checklist; confirm codes are locked before exporting.','5. 체크리스트 후 Apply to all, 코드 잠금 확인 후 내보내기.'],
+         ['tip','6. Click the "Please refresh" banner when it appears.','6. "Please refresh" 배너 뜨면 클릭.']]}
+];
 function renderHowToPanel(){
   var isKR = appLang === 'kr';
   document.getElementById('panelTitle').textContent = isKR ? '사용법' : 'How to use';
   var tourBtn='<button onclick="startTour()" style="width:100%;margin-bottom:14px;padding:10px;border-radius:10px;border:none;background:#534AB7;color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;"><i class="ti ti-player-play"></i>'+(isKR?'인터랙티브 투어 시작':'Start interactive tour')+'</button>';
-  document.getElementById('panelBody').innerHTML = tourBtn + (isKR ? `
-    <div class="how-to">
-      <div class="how-to-title"><i class="ti ti-rocket" style="font-size:18px;"></i> 캠페인 체크리스트 앱</div>
-      <div class="how-to-section"><div class="how-to-step">1</div><div><b>새 캠페인 만들기</b><br>상단의 + New 버튼으로 캠페인을 만드세요.</div></div>
-      <div class="how-to-section"><div class="how-to-step">2</div><div><b>가이드라인 체크리스트 설정</b><br>Edit Checklist 버튼 → CSV 업로드 또는 직접 추가 → Apply to all</div></div>
-      <div class="how-to-section"><div class="how-to-step">3</div><div><b>선정 탭: 크리에이터 불러오기</b><br>Quest CSV 업로드 → 상태 설정 (pre-selected/selected)</div></div>
-      <div class="how-to-section"><div class="how-to-step">4</div><div><b>체크 탭: 콘텐츠 검토</b><br>사이드바에서 크리에이터 선택 → 체크리스트 항목 체크 → 피드백 작성</div></div>
-      <div class="how-to-section"><div class="how-to-step">5</div><div><b>자동 상태 변경</b><br>항목 체크 시 → 검토 중 / 피드백 클릭 시 → 수정 요청 / 100% 완료 → 승인</div></div>
-      <div class="how-to-section"><div class="how-to-step">6</div><div><b>저장</b><br>Save all 버튼으로 GitHub에 전체 저장</div></div>
-    </div>` : `
-    <div class="how-to">
-      <div class="how-to-title"><i class="ti ti-rocket" style="font-size:18px;"></i> Campaign Checklist App</div>
-      <div class="how-to-section"><div class="how-to-step">1</div><div><b>Create a campaign</b><br>Click + New in the top bar to create a new campaign.</div></div>
-      <div class="how-to-section"><div class="how-to-step">2</div><div><b>Set up master checklist</b><br>Click Master → upload CSV or add items manually → Apply to all</div></div>
-      <div class="how-to-section"><div class="how-to-step">3</div><div><b>선정 tab: Import creators</b><br>Upload Quest CSV → set status (pre-selected / selected)</div></div>
-      <div class="how-to-section"><div class="how-to-step">4</div><div><b>Check tab: Review content</b><br>Select creator in sidebar → check items → write feedback</div></div>
-      <div class="how-to-section"><div class="how-to-step">5</div><div><b>Auto status</b><br>Check item → In Review / Click Feedback → Revision Requested / 100% → Approved</div></div>
-      <div class="how-to-section"><div class="how-to-step">6</div><div><b>Save</b><br>Click Save all to save everything to GitHub</div></div>
-    </div>`);
+  var cards='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+HOWTO_TOPICS.map(function(t){
+    return '<div onclick="howtoOpen(\''+t.id+'\')" style="background:#fff;border:1px solid #ececf2;border-radius:12px;padding:11px 12px;cursor:pointer;transition:border-color .12s;" onmouseover="this.style.borderColor=\'#d9d6f5\'" onmouseout="this.style.borderColor=\'#ececf2\'">'+
+      '<div style="font-size:19px;margin-bottom:4px;">'+t.ico+'</div>'+
+      '<div style="font-size:12.5px;font-weight:600;line-height:1.35;">'+(isKR?t.tkr:t.ten)+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+  document.getElementById('panelBody').innerHTML = tourBtn +
+    '<div style="font-size:11px;color:#aaa;margin-bottom:9px;">'+(isKR?'주제를 선택하세요':'Pick a topic')+'</div>' + cards;
+}
+function howtoOpen(id){
+  var isKR = appLang==='kr';
+  var t=HOWTO_TOPICS.filter(function(x){return x.id===id;})[0];if(!t)return;
+  var steps=t.steps.length?'<div style="margin-top:6px;">'+t.steps.map(function(s,i){
+    return '<div class="how-to-section"><div class="how-to-step">'+(i+1)+'</div><div>'+(isKR?s[1]:s[0])+'</div></div>';
+  }).join('')+'</div>':'';
+  var nc={warn:'#fdeaea;border-left:3px solid #e24b4a',tip:'#f0efff;border-left:3px solid #534AB7',good:'#eafaf3;border-left:3px solid #1D9E75'};
+  var notes=t.notes.map(function(n){
+    return '<div style="background:'+nc[n[0]]+';border-radius:0 9px 9px 0;padding:9px 12px;margin:9px 0;font-size:12.5px;line-height:1.5;">'+(isKR?n[2]:n[1])+'</div>';
+  }).join('');
+  document.getElementById('panelBody').innerHTML=
+    '<button onclick="renderHowToPanel()" style="background:none;border:none;color:#534AB7;font-size:13px;font-weight:600;cursor:pointer;padding:0;margin-bottom:12px;">← '+(isKR?'전체 목록':'All topics')+'</button>'+
+    '<div style="font-size:17px;font-weight:700;color:#534AB7;margin-bottom:12px;">'+t.ico+' '+(isKR?t.tkr:t.ten)+'</div>'+
+    steps+notes;
 }
 
 function renderNewCampaignPanel(){
