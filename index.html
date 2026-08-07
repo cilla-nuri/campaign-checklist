@@ -2707,7 +2707,7 @@ function getSjFiltered(){
       var ttF = parseFloat(r.tiktok_followers)||0;
       var igF = parseFloat(r.instagram_followers)||0;
       var sns = (sjSettings||{}).snsType||'both';
-      var f = sns==='tt' ? ttF : sns==='ig' ? igF : Math.max(ttF, igF);
+      var f = sns==='tt' ? ttF : sns==='ig' ? igF : sns==='combined' ? (ttF+igF) : Math.max(ttF, igF);
       if (_min > 0 && f < _min) return false;
       if (_max > 0 && f > _max) return false;
       return true;
@@ -3813,6 +3813,7 @@ function isEligible(r) {
   }
   if (sjSettings.snsType === 'ig') return inRange(igF);
   if (sjSettings.snsType === 'tt') return inRange(ttF);
+  if (sjSettings.snsType === 'combined') return inRange(igF + ttF);
   return inRange(igF) || inRange(ttF);
 }
 
@@ -3945,7 +3946,8 @@ function buildSettingsRow() {
   html += '<span class="sj-settings-label" style="margin-left:8px;">SNS</span>';
   html += '<button class="sj-sns-btn' + (s.snsType==='ig'?' active':'') + '" data-setsns="ig"><i class="ti ti-brand-instagram"></i> IG</button>';
   html += '<button class="sj-sns-btn' + (s.snsType==='tt'?' active':'') + '" data-setsns="tt"><i class="ti ti-brand-tiktok"></i> TT</button>';
-  html += '<button class="sj-sns-btn' + (s.snsType==='both'?' active':'') + '" data-setsns="both">Both</button>';
+  html += '<button class="sj-sns-btn' + (s.snsType==='both'?' active':'') + '" data-setsns="both" title="IG or TT in range">Both</button>';
+  html += '<button class="sj-sns-btn' + (s.snsType==='combined'?' active':'') + '" data-setsns="combined" title="IG + TT followers added together">Σ Combined</button>';
   if (s.minFollowers > 0) {
     html += '<button class="sj-sns-btn' + (s._showEligibleOnly?' active':'') + '" data-toggleeligible="1" style="margin-left:8px;">Eligible only</button>';
   }
