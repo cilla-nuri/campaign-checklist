@@ -1988,6 +1988,12 @@ function createCampaign(){
   document.getElementById("delCampaignBtn").style.display="flex";
   refreshCampaignSelect();renderSidebar();resetMainPanel();
   saveToLocalStorage();closePanel();
+  // Push the new campaign to Supabase right away so it's shared with the team
+  // (previously it only lived in this tab's localStorage until a later sync,
+  // which sometimes never happened — making the campaign invisible to others).
+  if(typeof saveCampaignToSupabase==='function'){
+    saveCampaignToSupabase(id).catch(function(e){console.warn('new campaign sync failed',e);});
+  }
 }
 
 function selectPeriod(btn) {
