@@ -3679,14 +3679,20 @@ async function loadSjFromSupabase(campaignName) {
   if (!campaignName) return [];
   try {
     var code = campCode(campaignName);
-    // Match by exact name OR by the stable #code (recovers rows saved under an old/renamed name)
+    // Match by the stable #code when we have one (code is unique & reliable, and
+    // avoids PostgREST or=() parsing issues with names containing commas/spaces).
+    // Fall back to exact name only when there's no code.
     var q;
     if (code) {
-      q = "campaign_applicants?or=(campaign_name.eq." + encodeURIComponent(campaignName) + ",campaign_code.eq." + encodeURIComponent(code) + ")&order=apply_number.desc&limit=3000";
+      q = "campaign_applicants?campaign_code=eq." + encodeURIComponent(code) + "&order=apply_number.desc&limit=3000";
     } else {
       q = "campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName) + "&order=apply_number.desc&limit=3000";
     }
     var data = await sbFetch(q);
+    // Safety net: if a code match somehow returns nothing, try the exact name
+    if ((!data || !data.length) && code) {
+      data = await sbFetch("campaign_applicants?campaign_name=eq." + encodeURIComponent(campaignName) + "&order=apply_number.desc&limit=3000");
+    }
     if (!data || !data.length) return [];
     // De-dupe by apply_number (a row may appear under both name and code); prefer one with selection/grade
     var byApply = {};
