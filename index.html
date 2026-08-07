@@ -1988,11 +1988,23 @@ function createCampaign(){
   document.getElementById("delCampaignBtn").style.display="flex";
   refreshCampaignSelect();renderSidebar();resetMainPanel();
   saveToLocalStorage();closePanel();
-  // Push the new campaign to Supabase right away so it's shared with the team
-  // (previously it only lived in this tab's localStorage until a later sync,
-  // which sometimes never happened — making the campaign invisible to others).
+  // Push the new campaign to Supabase right away so it's shared with the team.
+  // First guard against duplicates: if another user already created a campaign
+  // with the same #code, adopt that one instead of creating a second row.
   if(typeof saveCampaignToSupabase==='function'){
-    saveCampaignToSupabase(id).catch(function(e){console.warn('new campaign sync failed',e);});
+    (async function(){
+      try{
+        var code=(campaigns[id]&&campaigns[id].code)||campCode(name);
+        if(code){
+          var existing=await sbFetch("campaigns?select=id,legacy_id,name&or=(settings->>code.eq."+encodeURIComponent(code)+",name.ilike.*%23"+encodeURIComponent(code)+"*)&limit=1");
+          if(existing&&existing.length){
+            // A campaign with this code already exists — link to it, don't duplicate
+            __campUuid[id]=existing[0].id;
+          }
+        }
+      }catch(e){}
+      saveCampaignToSupabase(id).catch(function(e){console.warn('new campaign sync failed',e);});
+    })();
   }
 }
 
