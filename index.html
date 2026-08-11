@@ -3448,7 +3448,7 @@ function buildCreatorsPage(el) {
     '<option value="ok"'+(cpFilterBL==='ok'?' selected':'')+'>Active</option>' +
     '</select>' +
     '<span class="cp-count" id="cpCount">' + cpFiltered.length + ' / ' + cpAllCreators.length + ' creators</span>' +
-    '<button onclick="exportCreatorsDb()" style="margin-left:auto;padding:6px 13px;border-radius:8px;border:1px solid #d9d6f5;background:#f0efff;color:#534AB7;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><i class="ti ti-download"></i> Export</button>' +
+    '<button onclick="exportCreatorsDb()" class="cp-export-btn" style="padding:6px 14px;border-radius:8px;border:1px solid #534AB7;background:#534AB7;color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;"><i class="ti ti-download"></i> Export Excel</button>' +
     '</div>';
 
   var thStyle = '';
