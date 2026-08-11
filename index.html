@@ -3448,6 +3448,7 @@ function buildCreatorsPage(el) {
     '<option value="ok"'+(cpFilterBL==='ok'?' selected':'')+'>Active</option>' +
     '</select>' +
     '<span class="cp-count" id="cpCount">' + cpFiltered.length + ' / ' + cpAllCreators.length + ' creators</span>' +
+    '<button onclick="exportCreatorsDb()" style="margin-left:auto;padding:6px 13px;border-radius:8px;border:1px solid #d9d6f5;background:#f0efff;color:#534AB7;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><i class="ti ti-download"></i> Export</button>' +
     '</div>';
 
   var thStyle = '';
@@ -3492,6 +3493,44 @@ function cpNoteCell(handle,g){
     return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')"><i class="ti ti-note cnote-ic has"></i><span class="cnote-tip">'+tEsc+'</span></span>'+histIc;
   }
   return '<span class="cnote-wrap" onclick="event.stopPropagation();sjEditCreatorNote(\''+uEsc+'\')" title="Add note" style="color:#ddd;cursor:pointer;font-size:12px;">—</span>';
+}
+function exportCreatorsDb(){
+  var list = (cpFiltered && cpFiltered.length) ? cpFiltered : cpAllCreators;
+  if(!list || !list.length){ alert(appLang==='kr'?'내보낼 크리에이터가 없습니다.':'No creators to export.'); return; }
+  var header=["Username","Nickname","Video (V)","Evaluation (E)","Skintone","English","Blacklist","Note","Instagram","TikTok","Campaigns"];
+  var rows=[header];
+  list.forEach(function(cr){
+    var g=getCreatorGrade(cr.handle)||{};
+    rows.push([
+      String(cr.handle||'').replace(/^@/,''),
+      cr.nick||'',
+      g.video_quality||'',
+      g.manager_evaluation||'',
+      g.skintone||'',
+      g.english_proficiency||'',
+      g.blacklist?'Y':'',
+      g.notes_manager||'',
+      g.instagram_url||'',
+      g.tiktok_url||'',
+      (cr.campaigns||[]).join(', ')
+    ]);
+  });
+  var fname='Creator Database ('+list.length+')';
+  if(typeof XLSX!=='undefined'){
+    try{
+      var ws=XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols']=[{wch:22},{wch:18},{wch:10},{wch:12},{wch:10},{wch:10},{wch:9},{wch:40},{wch:34},{wch:34},{wch:40}];
+      var wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,'Creators');
+      XLSX.writeFile(wb,fname+'.xlsx');
+      return;
+    }catch(e){console.warn('xlsx failed, csv fallback',e);}
+  }
+  var q=function(s){s=String(s||'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  var csv="\uFEFF"+rows.map(function(r){return r.map(q).join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=fname+'.csv'; a.click(); URL.revokeObjectURL(a.href);
 }
 function buildCpRow(cr) {
   var g = getCreatorGrade(cr.handle) || {};
